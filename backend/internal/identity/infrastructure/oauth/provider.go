@@ -60,7 +60,7 @@ func (p *Provider) Exchange(ctx context.Context, code string) (string, string, s
 	if err != nil {
 		return "", "", "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return "", "", "", errors.New("oauth token exchange failed: " + resp.Status)
 	}
@@ -86,7 +86,7 @@ func (p *Provider) userinfo(ctx context.Context, accessToken string) (string, st
 	if err != nil {
 		return "", "", "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return "", "", "", errors.New("oauth userinfo failed: " + resp.Status)
 	}

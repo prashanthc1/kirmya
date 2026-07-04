@@ -68,7 +68,7 @@ func (c *Client) Complete(ctx context.Context, system string, messages []domain.
 
 	return domain.Completion{
 		Text:         sb.String(),
-		Model:        string(model),
+		Model:        model,
 		InputTokens:  int(resp.Usage.InputTokens),
 		OutputTokens: int(resp.Usage.OutputTokens),
 	}, nil

@@ -160,6 +160,10 @@ func (s *Source) FallbackSearch(ctx context.Context, query string, types []strin
 			}
 			hits = append(hits, search.Hit{Type: "user", RefID: id, Title: title, Subtitle: headline})
 		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, err
+		}
 		rows.Close()
 	}
 
@@ -178,6 +182,10 @@ func (s *Source) FallbackSearch(ctx context.Context, query string, types []strin
 				return nil, err
 			}
 			hits = append(hits, search.Hit{Type: "job", RefID: id, Title: title, Subtitle: company + " · " + location, URL: "/jobs"})
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, err
 		}
 		rows.Close()
 	}
@@ -198,6 +206,10 @@ func (s *Source) FallbackSearch(ctx context.Context, query string, types []strin
 			}
 			hits = append(hits, search.Hit{Type: "community", RefID: id, Title: name, Subtitle: category, URL: "/communities/" + slug})
 		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, err
+		}
 		rows.Close()
 	}
 
@@ -214,6 +226,10 @@ func (s *Source) FallbackSearch(ctx context.Context, query string, types []strin
 				return nil, err
 			}
 			hits = append(hits, search.Hit{Type: "skill", RefID: name, Title: name, Subtitle: "Skill", URL: "/jobs?q=" + name})
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, err
 		}
 		rows.Close()
 	}

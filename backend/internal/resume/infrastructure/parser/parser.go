@@ -69,7 +69,7 @@ func extractDocx(data []byte) (string, error) {
 			return "", err
 		}
 		raw, err := io.ReadAll(rc)
-		rc.Close()
+		_ = rc.Close()
 		if err != nil {
 			return "", err
 		}
@@ -119,7 +119,7 @@ func inflate(b []byte) ([]byte, bool) {
 	if err != nil {
 		return nil, false
 	}
-	defer zr.Close()
+	defer func() { _ = zr.Close() }()
 	out, err := io.ReadAll(zr)
 	if err != nil || len(out) == 0 {
 		return nil, false

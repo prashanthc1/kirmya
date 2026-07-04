@@ -220,7 +220,7 @@ func (o *OpenSearch) do(ctx context.Context, method, path string, body any) ([]b
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	data, _ := io.ReadAll(res.Body)
 	if res.StatusCode >= 300 {
 		return nil, fmt.Errorf("opensearch %s %s: %d %s", method, path, res.StatusCode, truncate(data))
@@ -240,8 +240,8 @@ func (o *OpenSearch) status(ctx context.Context, method, path string) (int, erro
 	if err != nil {
 		return 0, err
 	}
-	defer res.Body.Close()
-	io.Copy(io.Discard, res.Body)
+	defer func() { _ = res.Body.Close() }()
+	_, _ = io.Copy(io.Discard, res.Body)
 	return res.StatusCode, nil
 }
 

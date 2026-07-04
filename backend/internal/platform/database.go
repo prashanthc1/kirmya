@@ -41,7 +41,7 @@ func OpenDatabase() (*sql.DB, error) {
 	db.SetMaxIdleConns(5)
 
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, err
 	}
 

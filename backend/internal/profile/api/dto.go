@@ -3,19 +3,19 @@ package api
 import "workspace-app/internal/profile/domain"
 
 type profileResponse struct {
-	UserID         string              `json:"user_id"`
-	Headline       string              `json:"headline"`
-	About          string              `json:"about"`
-	PhotoURL       string              `json:"photo_url"`
-	Bio            string              `json:"bio"`
-	Location       string              `json:"location"`
-	Website        string              `json:"website"`
-	Experiences    []experienceDTO     `json:"experiences"`
-	Educations     []educationDTO      `json:"educations"`
-	Certifications []certificationDTO  `json:"certifications"`
-	Skills         []string            `json:"skills"`
-	Languages      []languageDTO       `json:"languages"`
-	Portfolio      []portfolioLinkDTO  `json:"portfolio"`
+	UserID         string             `json:"user_id"`
+	Headline       string             `json:"headline"`
+	About          string             `json:"about"`
+	PhotoURL       string             `json:"photo_url"`
+	Bio            string             `json:"bio"`
+	Location       string             `json:"location"`
+	Website        string             `json:"website"`
+	Experiences    []experienceDTO    `json:"experiences"`
+	Educations     []educationDTO     `json:"educations"`
+	Certifications []certificationDTO `json:"certifications"`
+	Skills         []string           `json:"skills"`
+	Languages      []languageDTO      `json:"languages"`
+	Portfolio      []portfolioLinkDTO `json:"portfolio"`
 }
 
 type experienceDTO struct {
@@ -89,11 +89,11 @@ func toResponse(p *domain.Profile) profileResponse {
 	r := profileResponse{
 		UserID: p.UserID, Headline: p.Headline, About: p.About, PhotoURL: p.PhotoURL,
 		Bio: p.Bio, Location: p.Location, Website: p.Website, Skills: p.Skills,
-		Experiences: make([]experienceDTO, 0, len(p.Experiences)),
-		Educations:  make([]educationDTO, 0, len(p.Educations)),
+		Experiences:    make([]experienceDTO, 0, len(p.Experiences)),
+		Educations:     make([]educationDTO, 0, len(p.Educations)),
 		Certifications: make([]certificationDTO, 0, len(p.Certifications)),
-		Languages: make([]languageDTO, 0, len(p.Languages)),
-		Portfolio: make([]portfolioLinkDTO, 0, len(p.Portfolio)),
+		Languages:      make([]languageDTO, 0, len(p.Languages)),
+		Portfolio:      make([]portfolioLinkDTO, 0, len(p.Portfolio)),
 	}
 	if r.Skills == nil {
 		r.Skills = []string{}
@@ -116,6 +116,6 @@ func toResponse(p *domain.Profile) profileResponse {
 	return r
 }
 
-func (d experienceDTO) toDomain() domain.WorkExperience       { return domain.WorkExperience(d) }
-func (d educationDTO) toDomain() domain.Education              { return domain.Education(d) }
-func (d certificationDTO) toDomain() domain.Certification      { return domain.Certification(d) }
+func (d experienceDTO) toDomain() domain.WorkExperience   { return domain.WorkExperience(d) }
+func (d educationDTO) toDomain() domain.Education         { return domain.Education(d) }
+func (d certificationDTO) toDomain() domain.Certification { return domain.Certification(d) }

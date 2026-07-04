@@ -8,10 +8,10 @@ import "net/http"
 // paths ("saved", "applications") take precedence over "{id}".
 func RegisterRoutes(mux *http.ServeMux, h *Handler, auth, recruiterOnly func(http.Handler) http.Handler) {
 	reg := func(pattern string, fn http.HandlerFunc) {
-		mux.Handle(pattern, auth(http.HandlerFunc(fn)))
+		mux.Handle(pattern, auth(fn))
 	}
 	recruiter := func(pattern string, fn http.HandlerFunc) {
-		mux.Handle(pattern, recruiterOnly(http.HandlerFunc(fn)))
+		mux.Handle(pattern, recruiterOnly(fn))
 	}
 
 	// Seeker / any authenticated user.

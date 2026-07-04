@@ -44,7 +44,7 @@ func OpenTestDB(t *testing.T) *sql.DB {
 	if _, err := db.Exec("TRUNCATE users RESTART IDENTITY CASCADE"); err != nil {
 		t.Fatalf("truncate users: %v", err)
 	}
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { _ = db.Close() })
 	return db
 }
 

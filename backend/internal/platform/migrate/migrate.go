@@ -75,7 +75,7 @@ func runMigration(db *sql.DB, filePath, filename string) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Strip "--" line comments BEFORE splitting on ";" — a comment may itself
 	// contain a semicolon, which would otherwise split a statement incorrectly.

@@ -42,7 +42,7 @@ func Run(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	s := &seeder{tx: tx, hash: hash}
 	if err := s.run(); err != nil {

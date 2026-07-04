@@ -44,7 +44,7 @@ func readUpload(w http.ResponseWriter, r *http.Request) (application.UploadInput
 		common.WriteValidationError(w, "a 'file' field is required")
 		return application.UploadInput{}, false
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	data, err := io.ReadAll(file)
 	if err != nil {
 		common.WriteValidationError(w, "could not read uploaded file")

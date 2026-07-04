@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	ErrNotFound     = errors.New("not found")
-	ErrLLMNotReady  = errors.New("AI provider is not configured")
+	ErrNotFound    = errors.New("not found")
+	ErrLLMNotReady = errors.New("AI provider is not configured")
 )
 
 const (

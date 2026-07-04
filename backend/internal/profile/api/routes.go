@@ -5,7 +5,7 @@ import "net/http"
 // RegisterRoutes mounts profile endpoints, all behind the auth middleware.
 func RegisterRoutes(mux *http.ServeMux, h *Handler, auth func(http.Handler) http.Handler) {
 	reg := func(pattern string, fn http.HandlerFunc) {
-		mux.Handle(pattern, auth(http.HandlerFunc(fn)))
+		mux.Handle(pattern, auth(fn))
 	}
 
 	reg("GET /api/v1/profiles/me", h.GetMe)

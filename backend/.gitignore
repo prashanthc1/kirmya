@@ -20,6 +20,8 @@
 # Environment files
 .env
 
-workspace-app
+# The compiled server binary (built at the backend root). Anchored with a
+# leading slash so it does not also match the cmd/workspace-app/ source package.
+/workspace-app
 coverage
 coverage.html

@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	ErrNotFound     = errors.New("resume not found")
-	ErrUnsupported  = errors.New("unsupported file type")
-	ErrEmptyUpload  = errors.New("uploaded file is empty")
+	ErrNotFound    = errors.New("resume not found")
+	ErrUnsupported = errors.New("unsupported file type")
+	ErrEmptyUpload = errors.New("uploaded file is empty")
 )
 
 type Resume struct {
@@ -20,9 +20,9 @@ type Resume struct {
 	Title     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Versions  []Version    // optional, loaded on detail
-	Latest    *Version     // optional
-	Score     *Score       // optional, latest score
+	Versions  []Version // optional, loaded on detail
+	Latest    *Version  // optional
+	Score     *Score    // optional, latest score
 }
 
 type Version struct {

@@ -35,7 +35,7 @@ func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
 	ch, cancel := h.svc.Subscribe(uid)
 	defer cancel()
 
-	fmt.Fprint(w, ": connected\n\n")
+	_, _ = fmt.Fprint(w, ": connected\n\n")
 	if rc.Flush() != nil {
 		return
 	}
@@ -52,12 +52,12 @@ func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			data, _ := json.Marshal(toDTO(&n))
-			fmt.Fprintf(w, "event: notification\ndata: %s\n\n", data)
+			_, _ = fmt.Fprintf(w, "event: notification\ndata: %s\n\n", data)
 			if rc.Flush() != nil {
 				return
 			}
 		case <-ping.C:
-			fmt.Fprint(w, ": ping\n\n")
+			_, _ = fmt.Fprint(w, ": ping\n\n")
 			if rc.Flush() != nil {
 				return
 			}

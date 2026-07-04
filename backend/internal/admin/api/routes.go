@@ -7,7 +7,7 @@ import "net/http"
 // any authenticated user via auth.
 func RegisterRoutes(mux *http.ServeMux, h *Handler, auth, adminOnly func(http.Handler) http.Handler) {
 	admin := func(pattern string, fn http.HandlerFunc) {
-		mux.Handle(pattern, adminOnly(http.HandlerFunc(fn)))
+		mux.Handle(pattern, adminOnly(fn))
 	}
 
 	// Analytics.

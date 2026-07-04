@@ -18,7 +18,7 @@ func (r *Repository) CreateConversation(ctx context.Context, c *domain.Conversat
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	if err := tx.QueryRowContext(ctx,
 		`INSERT INTO conversations (is_group, title, created_by) VALUES ($1, NULLIF($2,''), $3)

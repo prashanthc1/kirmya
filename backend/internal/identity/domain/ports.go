@@ -8,10 +8,10 @@ import (
 
 // Sentinel errors returned by ports and mapped to HTTP statuses in the api layer.
 var (
-	ErrUserNotFound      = errors.New("user not found")
-	ErrEmailTaken        = errors.New("email already registered")
-	ErrTokenNotFound     = errors.New("token not found")
-	ErrOptimisticLock    = errors.New("stale update (version mismatch)")
+	ErrUserNotFound   = errors.New("user not found")
+	ErrEmailTaken     = errors.New("email already registered")
+	ErrTokenNotFound  = errors.New("token not found")
+	ErrOptimisticLock = errors.New("stale update (version mismatch)")
 )
 
 // UserRepository persists the User aggregate and its role assignments.

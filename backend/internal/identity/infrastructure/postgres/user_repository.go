@@ -48,8 +48,8 @@ func (r *UserRepository) getOne(ctx context.Context, where, arg string) (*domain
 		FROM users
 		WHERE ` + where + ` AND deleted_at IS NULL`
 	var (
-		u           domain.User
-		lastLogin   sql.NullTime
+		u         domain.User
+		lastLogin sql.NullTime
 	)
 	err := r.db.QueryRowContext(ctx, q, arg).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.FullName, &u.EmailVerified, &u.Status,

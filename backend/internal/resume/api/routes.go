@@ -5,7 +5,7 @@ import "net/http"
 // RegisterRoutes mounts resume endpoints behind the auth middleware.
 func RegisterRoutes(mux *http.ServeMux, h *Handler, auth func(http.Handler) http.Handler) {
 	reg := func(pattern string, fn http.HandlerFunc) {
-		mux.Handle(pattern, auth(http.HandlerFunc(fn)))
+		mux.Handle(pattern, auth(fn))
 	}
 
 	reg("POST /api/v1/resumes", h.Upload)
