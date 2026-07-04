@@ -1,0 +1,45 @@
+# docker-compose.override.yml
+#
+# DEVELOPMENT override — Docker Compose merges this file automatically, so:
+#
+#   docker compose up            ->  live hot-reload dev (this file is applied)
+#   docker compose up --build    ->  same, but rebuilds the (tiny) dev images
+#
+# Your source is BIND-MOUNTED into the containers, so the running app ALWAYS
+# reflects your latest code with no image rebuild:
+#   • frontend (Next.js dev server) reloads in the browser on save
+#   • backend  (Go, via `air`) recompiles & restarts on .go save
+#
+# To run the PRODUCTION images instead (ignoring this dev override):
+#
+#   docker compose -f docker-compose.yml up --build
+#
+services:
+  frontend:
+    build:
+      target: dev            # use the `dev` stage in frontend/Dockerfile
+    command: sh -c "npm install && npm run dev -- -H 0.0.0.0"
+    environment:
+      NODE_ENV: development
+      # Next proxies /api/v1 to the backend service on the compose network.
+      API_PROXY_TARGET: http://backend:8080
+      # File-change events don't cross Docker Desktop (Windows/macOS) bind mounts
+      # reliably, so poll for changes — this is what makes hot reload actually fire.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app                       # live source
+      - frontend_node_modules:/app/node_modules  # keep container's linux deps
+
+  backend:
+    build:
+      target: dev            # use the `dev` stage in backend/Dockerfile (runs air)
+    volumes:
+      - ./backend:/src                         # live source
+      - go_pkg:/go/pkg/mod                     # cache Go modules between runs
+      - go_build_cache:/root/.cache/go-build   # cache compiled objects (fast rebuilds)
+
+volumes:
+  frontend_node_modules:
+  go_pkg:
+  go_build_cache:

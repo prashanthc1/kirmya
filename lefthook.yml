@@ -1,0 +1,51 @@
+# lefthook.yml — git hooks for the Kirmya monorepo.
+#
+# Install once (https://github.com/evilmartians/lefthook):
+#   brew install lefthook            # or: go install github.com/evilmartians/lefthook@latest
+#   lefthook install                 # wires .git/hooks -> this file
+#
+# The hooks mirror the CI gates locally so drift is caught before it reaches a
+# PR. They run only on the files you actually staged (glob + {staged_files}) and
+# the backend/frontend command groups run in parallel.
+
+pre-commit:
+  parallel: true
+  commands:
+    # --- backend (Go) ---------------------------------------------------------
+    go-fmt:
+      glob: "backend/**/*.go"
+      # gofmt -l prints files needing formatting but always exits 0, so wrap it:
+      # `test -z` fails when the listing is non-empty.
+      run: test -z "$(gofmt -l {staged_files})"
+      fail_text: "Go files need formatting — run: cd backend && gofmt -w ./..."
+    go-vet:
+      glob: "backend/**/*.go"
+      root: "backend/"
+      run: go vet ./...
+    go-lint:
+      glob: "backend/**/*.go"
+      root: "backend/"
+      run: golangci-lint run ./...
+      skip:
+        - merge
+        - rebase
+
+    # --- frontend (Next.js) ---------------------------------------------------
+    fe-lint:
+      glob: "frontend/**/*.{ts,tsx}"
+      root: "frontend/"
+      run: npx eslint {staged_files}
+    fe-typecheck:
+      glob: "frontend/**/*.{ts,tsx}"
+      root: "frontend/"
+      run: npx tsc --noEmit
+
+pre-push:
+  parallel: true
+  commands:
+    backend-test:
+      root: "backend/"
+      run: go test ./...
+    frontend-test:
+      root: "frontend/"
+      run: npm run test

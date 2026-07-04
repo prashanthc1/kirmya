@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <defs>
+    <clipPath id="c"><circle cx="120" cy="120" r="120"></circle></clipPath>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3E7DC"></stop>
+      <stop offset="1" stop-color="#E7D3C2"></stop>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#c)">
+    <rect width="240" height="240" fill="url(#bg)"></rect>
+    
+    <path d="M40 240 C44 188 78 168 120 168 C162 168 196 188 200 240 Z" fill="#2B2620"></path>
+    <path d="M120 168 C104 176 100 196 100 240 L140 240 C140 196 136 176 120 168 Z" fill="#3C362F"></path>
+    
+    <path d="M108 170 L120 196 L132 170 L120 164 Z" fill="#FBF7F2"></path>
+    
+    <path d="M104 150 C104 168 136 168 136 150 L136 132 L104 132 Z" fill="#D9A57E"></path>
+    
+    <ellipse cx="120" cy="112" rx="40" ry="44" fill="#E8B991"></ellipse>
+    
+    <circle cx="81" cy="114" r="8" fill="#E8B991"></circle>
+    <circle cx="159" cy="114" r="8" fill="#E8B991"></circle>
+    
+    <path d="M80 108 C78 74 100 60 120 60 C140 60 162 74 160 108 C156 96 150 90 150 90 C146 82 132 78 120 78 C108 78 94 82 90 90 C90 90 84 96 80 108 Z" fill="#4A3B30"></path>
+    <path d="M80 108 C80 100 84 92 88 88 C86 98 86 104 88 112 C84 112 81 110 80 108 Z" fill="#4A3B30"></path>
+    
+    <rect x="100" y="104" width="16" height="3.5" rx="1.75" fill="#4A3B30"></rect>
+    <rect x="124" y="104" width="16" height="3.5" rx="1.75" fill="#4A3B30"></rect>
+    
+    <circle cx="108" cy="114" r="3.4" fill="#3A2E26"></circle>
+    <circle cx="132" cy="114" r="3.4" fill="#3A2E26"></circle>
+    
+    <path d="M120 116 L116 128 C118 131 122 131 124 128 Z" fill="#D9A57E"></path>
+    
+    <path d="M108 136 C114 144 126 144 132 136" fill="none" stroke="#B9805A" stroke-width="3" stroke-linecap="round"></path>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+# Binaries
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build output
+*.out
+*.test
+
+# Air live-reload build artifacts (Docker dev)
+/tmp/
+
+# Editor files
+.vscode/
+.DS_Store
+
+# Environment files
+.env
+
+workspace-app
+coverage
+coverage.html

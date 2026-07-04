@@ -1,0 +1,23 @@
+name: API Contract
+
+# Stands up the api-contract-guardian as an automated merge gate
+# (docs/12_AGENTS_AND_SCALING.md §7, item 2): instead of running the agent on
+# demand, this job fails the build whenever the Go routes and
+# docs/06_API_CONTRACTS.md drift apart.
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  api-contract:
+    name: API contract drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Check docs/06_API_CONTRACTS.md vs backend routes
+        run: node scripts/check-api-contract.mjs

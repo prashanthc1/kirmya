@@ -1,0 +1,13 @@
+apiVersion: v2
+name: kirmya
+description: Kirmya — professional networking & career-recovery platform (modular monolith API + Next.js frontend)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - kirmya
+  - go
+  - nextjs
+home: https://github.com/prashanthc1/rescission_site
+maintainers:
+  - name: Prashanth

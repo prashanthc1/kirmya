@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kirmya.componentName" (dict "ctx" . "component" "backend") }}-config
+  labels:
+    {{- include "kirmya.labels" . | nindent 4 }}
+data:
+  PORT: {{ .Values.backend.port | quote }}
+  APP_URL: {{ .Values.config.appUrl | quote }}
+  {{- range $k, $v := .Values.backend.env }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}
+  {{- if .Values.redis.enabled }}
+  REDIS_URL: "redis://{{ include "kirmya.redisHost" . }}:{{ .Values.redis.port }}/0"
+  {{- end }}
+  {{- if .Values.opensearch.enabled }}
+  OPENSEARCH_URL: "http://{{ include "kirmya.opensearchHost" . }}:{{ .Values.opensearch.port }}"
+  {{- end }}
+  {{- if .Values.nats.enabled }}
+  NATS_URL: "nats://{{ include "kirmya.natsHost" . }}:{{ .Values.nats.port }}"
+  {{- end }}
+  {{- if .Values.config.otelEndpoint }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.config.otelEndpoint | quote }}
+  {{- end }}

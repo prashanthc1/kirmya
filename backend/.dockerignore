@@ -1,0 +1,10 @@
+bin/
+-p/
+uploads/
+*.env
+.env
+*.test
+
+# Compiled binaries / local build output
+workspace-app
+workspace-app.exe

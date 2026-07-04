@@ -1,0 +1,23 @@
+# Air live-reload config for the Go backend (used by the Docker dev stage).
+# Watches .go files under ./backend, rebuilds ./cmd/workspace-app, and restarts.
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/server ./cmd/workspace-app"
+  bin = "./tmp/server"
+  # The server reads ./migrations and serves ./web + ./docs relative to /src,
+  # which is bind-mounted — so it runs correctly from the repo root.
+  include_ext = ["go"]
+  exclude_dir = ["tmp", "bin", "web", "docs", "migrations"]
+  # Poll the filesystem: Docker Desktop bind mounts on Windows/macOS don't emit
+  # native fsnotify events, so without this air never sees your .go edits.
+  poll = true
+  poll_interval = 500
+  delay = 1000
+  stop_on_error = true
+  send_interrupt = true
+  kill_delay = "2s"
+
+[misc]
+  clean_on_exit = true

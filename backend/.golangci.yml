@@ -1,0 +1,73 @@
+# golangci-lint configuration for the Kirmya backend (modular monolith, Go 1.26).
+# v2 schema (golangci-lint >= v2). Enabled in CI as a required gate
+# (.github/workflows/ci.yml, job "lint"): any finding fails the build. Keep the
+# linter set pragmatic — high-signal, low-noise — so it stays a gate the team
+# trusts rather than silences.
+#
+# Migrated from the v1 schema (golangci-lint v1.64.8 could not be used: its build
+# Go version is lower than the targeted Go 1.26). To re-derive/validate locally:
+#   cd backend && golangci-lint config verify
+version: "2"
+
+run:
+  tests: true
+  # Integration tests are behind a build tag; lint them too.
+  build-tags:
+    - integration
+
+linters:
+  default: none
+  enable:
+    - errcheck      # unchecked errors
+    - govet         # suspicious constructs
+    - ineffassign   # unused assignments
+    - staticcheck   # the big static-analysis suite (absorbs gosimple/stylecheck in v2)
+    - unused        # unused code
+    - misspell      # common misspellings in comments/strings
+    - bodyclose     # http.Response bodies must be closed
+    - rowserrcheck  # sql.Rows.Err() must be checked
+    - unconvert     # redundant type conversions
+    - revive        # golint successor, light style rules
+  settings:
+    errcheck:
+      # Conventionally-ignored error returns. rows.Close() in a defer is the
+      # canonical case — the meaningful check is rows.Err(), which rowserrcheck
+      # (enabled above) enforces. Encode() into an http.ResponseWriter has no
+      # useful recovery if the client has gone away.
+      exclude-functions:
+        - (*database/sql.Rows).Close
+        - (*encoding/json.Encoder).Encode
+    revive:
+      rules:
+        - name: context-as-argument
+        - name: error-return
+        - name: error-naming
+        - name: errorf
+        - name: unreachable-code
+  exclusions:
+    rules:
+      # Test files may take more liberties (unchecked errors in setup, long funcs).
+      - path: _test\.go
+        linters:
+          - errcheck
+          - bodyclose
+      # The event bus is intentionally best-effort (publish errors are ignored by
+      # design — see CLAUDE.md §3), so errcheck on those Publish calls is noise.
+      - source: "_ = s.events.Publish"
+        linters:
+          - errcheck
+
+# gofmt and goimports are "formatters" in v2 (moved out of the linters section).
+formatters:
+  enable:
+    - gofmt         # formatting (gofmt -s)
+    - goimports     # import grouping/ordering
+  settings:
+    goimports:
+      local-prefixes:
+        - workspace-app
+
+issues:
+  # Surface every finding (no per-linter / per-issue capping) so the gate is honest.
+  max-issues-per-linter: 0
+  max-same-issues: 0

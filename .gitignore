@@ -1,0 +1,22 @@
+# OS / editor files
+.DS_Store
+.vscode/
+
+# Environment files / secrets (never commit real values)
+.env
+*.env
+!*.env.example
+backend/.env
+
+# Uploaded resume files (local filesystem storage)
+backend/uploads/
+
+# Claude Code local artifacts
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Stray build artifacts / accidental paths
+/-p
+/backend/-p
+/backend/workspace-app
+/backend/workspace-app.exe

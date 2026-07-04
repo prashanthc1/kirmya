@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kirmya — Brand Identity Pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ember-1:#FF9D4D; --ember-2:#F0512F;
+    --harbor:#0F2742; --teal:#14B8A6;
+    --cloud:#FBF7F2; --slate:#5C6B7A; --ink:#0B1622; --line:#EAE3D9;
+    --grad:linear-gradient(135deg,var(--ember-1),var(--ember-2));
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--harbor);background:var(--cloud);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:64px 28px}
+  h1,h2,h3,.display{font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.02em;color:var(--harbor)}
+  h1{font-size:clamp(40px,6vw,68px);line-height:1.02}
+  h2{font-size:28px;margin-bottom:6px}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ember-2)}
+  .lead{font-size:18px;color:var(--slate);max-width:62ch}
+  section{padding:44px 0;border-top:1px solid var(--line)}
+  section:first-of-type{border-top:none}
+  .muted{color:var(--slate)}
+  /* logo blocks */
+  .logo-row{display:flex;flex-wrap:wrap;gap:20px;margin-top:24px}
+  .logo-card{flex:1 1 280px;border:1px solid var(--line);border-radius:18px;padding:30px;display:flex;align-items:center;justify-content:center;min-height:140px}
+  .logo-card.dark{background:var(--harbor)}
+  .logo-card.brand{background:var(--grad)}
+  .mark{display:inline-flex;align-items:center;gap:14px}
+  .tile{width:56px;height:56px;border-radius:16px;background:var(--grad);position:relative;flex:none}
+  .tile.mono{background:var(--harbor)}
+  .tile.white{background:#fff}
+  .tile svg{position:absolute;inset:0}
+  .word{font-family:'Fraunces',serif;font-weight:600;font-size:34px;letter-spacing:-.02em;color:var(--harbor)}
+  .word.on-dark{color:#fff}
+  .word.on-brand{color:#fff}
+  /* palette */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;margin-top:24px}
+  .sw{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+  .sw .chip{height:88px}
+  .sw .meta{padding:12px 14px;font-size:13px}
+  .sw .name{font-weight:600}
+  .sw .hex{color:var(--slate);font-variant-numeric:tabular-nums}
+  /* type */
+  .type-spec{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:18px;font-size:14px;color:var(--slate)}
+  .sample{margin-top:14px}
+  /* taglines */
+  .tags{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:22px}
+  .tag{border:1px solid var(--line);border-radius:14px;padding:18px 20px;background:#fff}
+  .tag .t{font-family:'Fraunces',serif;font-size:20px;font-weight:600}
+  .tag .u{font-size:12px;color:var(--slate);margin-top:6px}
+  .tag.primary{background:var(--grad);border:none}
+  .tag.primary .t,.tag.primary .u{color:#fff}
+  .pill{display:inline-block;font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(20,184,166,.14);color:#0c7a6e;font-weight:600;margin-bottom:8px}
+  .do{color:#0c7a6e;font-weight:600}.dont{color:#c23a23;font-weight:600}
+  ul{margin:10px 0 0 18px}li{margin:4px 0;color:var(--slate)}
+  footer{padding:40px 0;color:var(--slate);font-size:13px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header style="padding-bottom:8px">
+    <div class="eyebrow">Brand Identity Pack · v1 · 2026</div>
+    <h1 style="margin-top:14px">Kirmya</h1>
+    <p class="lead" style="margin-top:16px">The career-recovery platform. Warm referrals, real mentors, and an AI coach that knows your story — so the time between jobs is shorter, calmer, and more human.</p>
+  </header>
+
+  <!-- THE NAME -->
+  <section>
+    <div class="eyebrow">01 — The name</div>
+    <h2>Why “Kirmya”</h2>
+    <p class="lead">Kirmya is a coined, ownable name (Kirmya.com) built to feel warm and human rather than corporate. It carries an echo of <em>kindle</em> — to spark something back to life — and reads as short, global, and easy to say. Where job boards sound like machinery, Kirmya sounds like a person on your side. The brand idea behind it: <strong>a setback is not the end of a career — it’s the moment before the rise.</strong></p>
+  </section>
+
+  <!-- LOGO -->
+  <section>
+    <div class="eyebrow">02 — Logo</div>
+    <h2>The mark: “The Rise”</h2>
+    <p class="lead">The icon combines a <strong>bridge arc</strong> (connection, the path back) with a <strong>rising line that lifts into a spark</strong> (momentum, the rekindled career). It works as a full lockup or as a standalone app/favicon tile.</p>
+    <div class="logo-row">
+      <div class="logo-card">
+        <span class="mark"><span class="tile" id="t1"></span><span class="word">Kirmya</span></span>
+      </div>
+      <div class="logo-card dark">
+        <span class="mark"><span class="tile white" id="t2"></span><span class="word on-dark">Kirmya</span></span>
+      </div>
+      <div class="logo-card brand">
+        <span class="mark"><span class="tile" style="background:rgba(255,255,255,.18)" id="t3"></span><span class="word on-brand">Kirmya</span></span>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:18px;font-size:14px"><span class="do">Do</span> keep clear space around the mark equal to the height of the tile’s corner radius. &nbsp; <span class="dont">Don’t</span> stretch, recolor outside the palette, or place the gradient mark on a busy photo without a scrim.</p>
+  </section>
+
+  <!-- COLOR -->
+  <section>
+    <div class="eyebrow">03 — Color palette</div>
+    <h2>Dawn over deep water</h2>
+    <p class="lead">Warm ember for hope and momentum; deep harbor navy for trust and stability; a teal accent for growth and progress — grounded on a warm off-white so the product feels calm, not clinical.</p>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:linear-gradient(135deg,#FF9D4D,#F0512F)"></div><div class="meta"><div class="name">Ember (primary)</div><div class="hex">#FF9D4D → #F0512F</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F0512F"></div><div class="meta"><div class="name">Ember Core</div><div class="hex">#F0512F</div></div></div>
+      <div class="sw"><div class="chip" style="background:#0F2742"></div><div class="meta"><div class="name">Harbor</div><div class="hex">#0F2742</div></div></div>
+      <div class="sw"><div class="chip" style="background:#14B8A6"></div><div class="meta"><div class="name">Teal (accent)</div><div class="hex">#14B8A6</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FBF7F2;border-bottom:1px solid var(--line)"></div><div class="meta"><div class="name">Cloud (bg)</div><div class="hex">#FBF7F2</div></div></div>
+      <div class="sw"><div class="chip" style="background:#5C6B7A"></div><div class="meta"><div class="name">Slate (muted)</div><div class="hex">#5C6B7A</div></div></div>
+      <div class="sw"><div class="chip" style="background:#0B1622"></div><div class="meta"><div class="name">Ink (text)</div><div class="hex">#0B1622</div></div></div>
+      <div class="sw"><div class="chip" style="background:#EAE3D9"></div><div class="meta"><div class="name">Line</div><div class="hex">#EAE3D9</div></div></div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section>
+    <div class="eyebrow">04 — Typography</div>
+    <h2>Fraunces + Inter</h2>
+    <p class="lead"><strong>Fraunces</strong> (a warm, optical serif) carries headlines and the wordmark — it feels human and dignified. <strong>Inter</strong> handles UI and body for clarity at small sizes.</p>
+    <div class="sample">
+      <div class="display" style="font-size:44px">Your comeback starts here.</div>
+      <div class="type-spec"><span>Display · Fraunces 600</span><span>Weights 400–700</span></div>
+    </div>
+    <div class="sample" style="margin-top:22px">
+      <div style="font-size:16px;max-width:60ch">Body copy is set in Inter for readability under stress — short sentences, generous spacing, no jargon. The audience is often anxious and time-poor; clarity is the kindness.</div>
+      <div class="type-spec"><span>Body · Inter 400/500</span><span>Line-height 1.6</span></div>
+    </div>
+  </section>
+
+  <!-- TAGLINES -->
+  <section>
+    <div class="eyebrow">05 — Tagline variations</div>
+    <h2>Voice: honest, warm, momentum</h2>
+    <div class="tags">
+      <div class="tag primary"><div class="t">You lost a job. Not your career.</div><div class="u">Emotional anchor · brand line</div></div>
+      <div class="tag"><div class="t">Your comeback starts here.</div><div class="u">Hero / primary CTA region</div></div>
+      <div class="tag"><div class="t">Rebuild. Reconnect. Rise.</div><div class="u">Three-beat, motion-led</div></div>
+      <div class="tag"><div class="t">The bridge back to work.</div><div class="u">Literal, SEO-friendly</div></div>
+      <div class="tag"><div class="t">From setback to comeback.</div><div class="u">Transformation framing</div></div>
+      <div class="tag"><div class="t">Get referred, not ignored.</div><div class="u">Sharp, conversion-led</div></div>
+      <div class="tag"><div class="t">Careers recover here.</div><div class="u">Category-defining</div></div>
+      <div class="tag"><div class="t">Not the end. The next chapter.</div><div class="u">Reassurance</div></div>
+    </div>
+  </section>
+
+  <!-- VOICE -->
+  <section>
+    <div class="eyebrow">06 — Voice &amp; usage</div>
+    <h2>How Kirmya speaks</h2>
+    <span class="pill">Principles</span>
+    <ul>
+      <li><span class="do">Do</span> lead with the human moment, then the practical step. Name the feeling, offer the plan.</li>
+      <li><span class="do">Do</span> be specific with real numbers once you have them — “14-day average to first interview” beats “faster.”</li>
+      <li><span class="dont">Don’t</span> use fear, false urgency, or fabricated testimonials. Dignity over pressure.</li>
+      <li><span class="dont">Don’t</span> sound like a job board or a hype machine. Calm, capable, on the user’s side.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Kirmya Brand Identity Pack · Logo, palette, type, and voice. Companion files: <strong>kirmya-logo.svg</strong>, <strong>kirmya-landing.html</strong>. Replace bracketed metrics with verified data before publishing.
+  </footer>
+
+</div>
+
+<script>
+  // inject the icon mark into the tiles
+  var icon = function(stroke){return '<svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">'+
+    '<path d="M14 38 Q26 21 38 38" stroke="'+stroke+'" stroke-width="3.6" stroke-linecap="round" fill="none" opacity="0.92"/>'+
+    '<path d="M18 42 L26 34 L34 26" stroke="'+stroke+'" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'+
+    '<circle cx="36" cy="24" r="4" fill="'+stroke+'"/></svg>';};
+  document.getElementById('t1').innerHTML = icon('#FFFFFF');
+  document.getElementById('t2').innerHTML = icon('#FF7A45');
+  document.getElementById('t3').innerHTML = icon('#FFFFFF');
+</script>
+</body>
+</html>

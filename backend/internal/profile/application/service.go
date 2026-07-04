@@ -1,0 +1,175 @@
+// Package application implements the Profile use cases over the domain
+// repository port.
+package application
+
+import (
+	"context"
+	"encoding/json"
+	"time"
+
+	"workspace-app/internal/profile/domain"
+)
+
+// EventPublisher publishes domain events (the platform bus satisfies this).
+type EventPublisher interface {
+	Publish(ctx context.Context, eventType, aggregateID string, payload map[string]any) error
+}
+
+// Cache is the cache-aside port (the platform cache satisfies this). A nil cache
+// disables caching; the platform's no-op cache also makes every call a no-op.
+type Cache interface {
+	Get(ctx context.Context, key string) ([]byte, bool)
+	Set(ctx context.Context, key string, value []byte, ttl time.Duration)
+	Delete(ctx context.Context, keys ...string)
+}
+
+const (
+	eventProfileUpdated = "ProfileUpdated"
+	profileCacheTTL     = 10 * time.Minute
+)
+
+func profileKey(userID string) string { return "profile:" + userID }
+
+type Service struct {
+	repo   domain.Repository
+	events EventPublisher
+	cache  Cache
+}
+
+func NewService(repo domain.Repository, events EventPublisher, cache Cache) *Service {
+	return &Service{repo: repo, events: events, cache: cache}
+}
+
+// Get returns the full profile aggregate (created lazily if missing). Reads are
+// served cache-aside: hit → return cached; miss → load, then populate the cache.
+func (s *Service) Get(ctx context.Context, userID string) (*domain.Profile, error) {
+	if s.cache != nil {
+		if b, ok := s.cache.Get(ctx, profileKey(userID)); ok {
+			var p domain.Profile
+			if json.Unmarshal(b, &p) == nil {
+				return &p, nil
+			}
+		}
+	}
+	p, err := s.repo.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	s.put(ctx, p)
+	return p, nil
+}
+
+// put writes the profile to the cache (best-effort).
+func (s *Service) put(ctx context.Context, p *domain.Profile) {
+	if s.cache == nil || p == nil {
+		return
+	}
+	if b, err := json.Marshal(p); err == nil {
+		s.cache.Set(ctx, profileKey(p.UserID), b, profileCacheTTL)
+	}
+}
+
+func (s *Service) UpdateScalars(ctx context.Context, userID string, sc domain.Scalars) (*domain.Profile, error) {
+	if err := s.repo.UpdateScalars(ctx, userID, sc); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) AddExperience(ctx context.Context, userID string, e *domain.WorkExperience) (*domain.Profile, error) {
+	if err := s.repo.AddExperience(ctx, userID, e); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) UpdateExperience(ctx context.Context, userID string, e domain.WorkExperience) (*domain.Profile, error) {
+	if err := s.repo.UpdateExperience(ctx, userID, e); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) DeleteExperience(ctx context.Context, userID, id string) (*domain.Profile, error) {
+	if err := s.repo.DeleteExperience(ctx, userID, id); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) AddEducation(ctx context.Context, userID string, e *domain.Education) (*domain.Profile, error) {
+	if err := s.repo.AddEducation(ctx, userID, e); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) UpdateEducation(ctx context.Context, userID string, e domain.Education) (*domain.Profile, error) {
+	if err := s.repo.UpdateEducation(ctx, userID, e); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) DeleteEducation(ctx context.Context, userID, id string) (*domain.Profile, error) {
+	if err := s.repo.DeleteEducation(ctx, userID, id); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) AddCertification(ctx context.Context, userID string, c *domain.Certification) (*domain.Profile, error) {
+	if err := s.repo.AddCertification(ctx, userID, c); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) UpdateCertification(ctx context.Context, userID string, c domain.Certification) (*domain.Profile, error) {
+	if err := s.repo.UpdateCertification(ctx, userID, c); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) DeleteCertification(ctx context.Context, userID, id string) (*domain.Profile, error) {
+	if err := s.repo.DeleteCertification(ctx, userID, id); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) SetSkills(ctx context.Context, userID string, skills []string) (*domain.Profile, error) {
+	if err := s.repo.SetSkills(ctx, userID, skills); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) SetLanguages(ctx context.Context, userID string, langs []domain.Language) (*domain.Profile, error) {
+	if err := s.repo.SetLanguages(ctx, userID, langs); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) SetPortfolio(ctx context.Context, userID string, links []domain.PortfolioLink) (*domain.Profile, error) {
+	if err := s.repo.SetPortfolio(ctx, userID, links); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
+// reload re-reads the aggregate after a write, refreshes the cache write-through
+// with the fresh value, and emits ProfileUpdated.
+func (s *Service) reload(ctx context.Context, userID string) (*domain.Profile, error) {
+	p, err := s.repo.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	s.put(ctx, p)
+	if s.events != nil {
+		_ = s.events.Publish(ctx, eventProfileUpdated, userID, nil)
+	}
+	return p, nil
+}

@@ -1,0 +1,23 @@
+# Caddy reverse proxy for the Kirmya production stack.
+# Automatic HTTPS via Let's Encrypt using the DOMAIN / ACME_EMAIL env vars
+# supplied by docker-compose.prod.yml.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Everything (the app shell and the /api/v1 calls it proxies internally to the
+	# backend) is served by the Next.js frontend on the private network.
+	reverse_proxy frontend:3000
+
+	# Basic security headers; tune to taste.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}

@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Kirmya design baseline. */
+
+:root {
+  --kirmya-bg: #fbf7f2;
+  --kirmya-ink: #2b2620;
+  --kirmya-terracotta: #c2683c;
+  --kirmya-green: #4f7c6a;
+  --kirmya-violet: #6a5fa0;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--kirmya-bg);
+  color: var(--kirmya-ink);
+  font-family: var(--font-public-sans), "Public Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+::selection {
+  background: rgba(194, 104, 60, 0.18);
+}

@@ -1,0 +1,64 @@
+# Lean stack for end-to-end tests: PostgreSQL + API + frontend, with demo data
+# seeded. Redis/OpenSearch/NATS/tracing are intentionally omitted — the API
+# degrades gracefully (no-op cache, DB-fallback search, in-process bus), which
+# keeps E2E fast while exercising the real app and seeded content.
+#
+#   docker compose -f docker-compose.e2e.yml up -d --build
+#   (frontend on http://localhost:3000, API on http://localhost:8080)
+#
+# A distinct project name isolates this stack's images/containers/network/volumes
+# from the dev stack (docker-compose.yml), so the two never reuse each other's
+# images. Always pass --build so the E2E images are rebuilt from your latest code.
+
+name: kirmya-e2e
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kirmya
+    volumes:
+      # Persist data across container recreation so registered accounts survive
+      # restarts. Remove this (or run `down -v`) for a clean-slate E2E run.
+      - e2e_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kirmya"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/kirmya?sslmode=disable
+      JWT_SECRET: e2e-test-secret
+      APP_ENV: test
+      APP_URL: http://localhost:3000
+      RESUME_UPLOAD_DIR: /app/uploads
+      SEED_DEMO_DATA: "true"
+      # E2E registers fresh accounts and logs in immediately; allow login before
+      # email verification so the register→login journey works without a mailbox.
+      EMAIL_VERIFICATION_REQUIRED: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_PROXY_TARGET: http://backend:8080
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  e2e_pgdata:

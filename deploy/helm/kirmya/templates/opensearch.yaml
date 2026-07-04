@@ -1,0 +1,55 @@
+{{- if .Values.opensearch.enabled }}
+{{- $name := include "kirmya.componentName" (dict "ctx" . "component" "opensearch") }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "kirmya.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "kirmya.selectorLabels" (dict "ctx" . "component" "opensearch") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kirmya.selectorLabels" (dict "ctx" . "component" "opensearch") | nindent 8 }}
+    spec:
+      containers:
+        - name: opensearch
+          image: {{ .Values.opensearch.image }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.opensearch.port }}
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: DISABLE_SECURITY_PLUGIN
+              value: "true"
+            - name: OPENSEARCH_JAVA_OPTS
+              value: {{ .Values.opensearch.javaOpts | quote }}
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "kirmya.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "kirmya.selectorLabels" (dict "ctx" . "component" "opensearch") | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.opensearch.port }}
+      targetPort: http
+{{- end }}

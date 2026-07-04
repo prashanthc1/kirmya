@@ -1,0 +1,128 @@
+# Kirmya — production stack for a single Docker host (e.g. a Hostinger VPS).
+#
+#   cp .env.prod.example .env        # then fill in real secrets
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Caddy terminates TLS (automatic Let's Encrypt) and reverse-proxies the public
+# domain to the Next.js frontend, which in turn proxies /api/v1 to the backend on
+# the internal network. Only Caddy publishes ports (80/443); the app and database
+# stay on the private compose network.
+#
+# Optional observability (Prometheus/Grafana) is gated behind a profile:
+#   docker compose -f docker-compose.prod.yml --profile observability up -d
+#
+# NOTE: this file does NOT load docker-compose.override.yml. Run it explicitly with
+# -f so the dev override is never merged in.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      MFA_ENC_KEY: ${MFA_ENC_KEY:?set MFA_ENC_KEY in .env}
+      # Secret backend: "env" (default, values above) or "file" to load a bundle
+      # mounted by a secret manager (K8s Secret / Vault Agent / AWS Secrets
+      # Manager CSI / Docker secret). With "file", mount the bundle at
+      # SECRETS_FILE and the app exports its keys at boot. See docs/14_SECRETS.md.
+      SECRETS_BACKEND: ${SECRETS_BACKEND:-env}
+      SECRETS_FILE: ${SECRETS_FILE:-/run/secrets/kirmya.env}
+      APP_ENV: production
+      APP_URL: https://${DOMAIN:?set DOMAIN in .env}
+      TRUST_PROXY: "true"
+      # CSRF defense for cookie-authenticated endpoints (refresh/logout):
+      #  - double-submit token check (X-CSRF-Token must match csrf_token cookie)
+      #  - Origin allowlist pinned to APP_URL (defense in depth)
+      CSRF_DOUBLE_SUBMIT: "true"
+      CSRF_VERIFY_ORIGIN: "true"
+      EMAIL_VERIFICATION_REQUIRED: ${EMAIL_VERIFICATION_REQUIRED:-true}
+      SEED_DEMO_DATA: "false"
+      RESUME_UPLOAD_DIR: /app/uploads
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Kirmya}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    # No published ports: reached only via the frontend/Caddy on the internal network.
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked at build time into the Next route manifest (see frontend/Dockerfile).
+        API_PROXY_TARGET: http://backend:8080
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - backend
+    # No published ports: Caddy proxies to it on the internal network.
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+
+  # ---- Optional observability (start with: --profile observability) ----
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    profiles: ["observability"]
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    profiles: ["observability"]
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:

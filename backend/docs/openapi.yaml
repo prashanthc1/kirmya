@@ -1,0 +1,1579 @@
+openapi: 3.0.3
+info:
+  title: Kirmya API
+  version: "1.0.0"
+  description: |
+    REST/JSON API for **Kirmya** — your career comeback: a professional networking and
+    career-recovery platform. Base path `/api/v1`.
+
+    ## Authentication
+    Most endpoints require a JWT access token: `Authorization: Bearer <access_token>`.
+    Obtain one from `POST /auth/login` (or `/auth/register`). The refresh token is set as
+    an httpOnly cookie; call `POST /auth/refresh` to rotate it and get a new access token.
+
+    ## Response envelope
+    Every response is wrapped:
+    - Success: `{ "success": true, "data": <payload>, "meta": { "timestamp": "..." } }`
+    - Error:   `{ "success": false, "error": { "code": "...", "message": "..." }, "data": null, "meta": {...} }`
+
+    ## Demo data
+    With `SEED_DEMO_DATA=true` (default in docker-compose), log in with any demo email and
+    password `Password123!` — e.g. `admin@demo.kirmya.io` (admin),
+    `rita.shah@demo.kirmya.io` (recruiter), `asha.rao@demo.kirmya.io` (job seeker).
+
+servers:
+  - url: /api/v1
+    description: Same-origin (frontend proxies to the API)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Users
+  - name: Profile
+  - name: Jobs
+  - name: Referrals
+  - name: Resume
+  - name: AI
+  - name: Communities
+  - name: Mentorship
+  - name: Messaging
+  - name: Notifications
+  - name: Search
+  - name: Admin
+  - name: Reports
+  - name: Settings
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness/readiness probe
+      security: []
+      responses:
+        "200":
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, example: healthy }
+                          service: { type: string, example: kirmya }
+
+  # ---------------- Auth ----------------
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new account (auto-logs in; emits UserRegistered)
+      description: >
+        Creates the account and, unless EMAIL_VERIFICATION_REQUIRED is enabled,
+        logs the user in immediately: returns an access token and sets the
+        refresh cookie (same shape as /auth/login). When the verification gate
+        is on, no tokens are issued and the response is `{ user, verification_required: true }`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [full_name, email, password]
+              properties:
+                full_name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 8 }
+                role: { type: string, enum: [job_seeker, referrer, mentor] }
+      responses:
+        "201":
+          description: Account created (auto-logged-in, or pending verification)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data: { $ref: '#/components/schemas/LoginResult' }
+        "400": { $ref: '#/components/responses/Error' }
+        "409": { $ref: '#/components/responses/Error' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in with email + password (returns access token; sets refresh cookie)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                code: { type: string, description: TOTP code when MFA is enabled }
+      responses:
+        "200":
+          description: Authenticated (or MFA challenge)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data: { $ref: '#/components/schemas/LoginResult' }
+        "401": { $ref: '#/components/responses/Error' }
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotate the refresh-token cookie and issue a new access token
+      security: []
+      responses:
+        "200":
+          description: New access token
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          access_token: { type: string }
+                          expires_in: { type: integer }
+        "401": { $ref: '#/components/responses/Error' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current refresh token and clear the cookie
+      security: []
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Verify an email address with a token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties: { token: { type: string } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+  /auth/resend-verification:
+    post:
+      tags: [Auth]
+      summary: Resend the email-verification link
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties: { email: { type: string, format: email } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request a password-reset link
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties: { email: { type: string, format: email } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset a password with a token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string }
+                password: { type: string, format: password, minLength: 8 }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+  /auth/csrf:
+    get:
+      tags: [Auth]
+      summary: Issue a CSRF token
+      security: []
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /auth/oauth/{provider}:
+    get:
+      tags: [Auth]
+      summary: Begin an OAuth flow (google | linkedin) — redirects to the provider
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      responses:
+        "302": { description: Redirect to the OAuth provider }
+        "404": { $ref: '#/components/responses/Error' }
+  /auth/oauth/{provider}/callback:
+    post:
+      tags: [Auth]
+      summary: Complete an OAuth flow and issue tokens
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string }
+                state: { type: string }
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties: { data: { $ref: '#/components/schemas/LoginResult' } }
+  /auth/mfa/setup:
+    post:
+      tags: [Auth]
+      summary: Begin TOTP MFA enrollment (returns secret/otpauth URL)
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /auth/mfa/verify:
+    post:
+      tags: [Auth]
+      summary: Confirm TOTP MFA enrollment with a code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties: { code: { type: string } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+  /auth/mfa/disable:
+    post:
+      tags: [Auth]
+      summary: Disable TOTP MFA (validates a current code)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties: { code: { type: string } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+        "401": { $ref: '#/components/responses/Error' }
+  /auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Change password (authenticated); revokes all refresh tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties:
+                current_password: { type: string, format: password }
+                new_password: { type: string, format: password, minLength: 8 }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+        "401": { $ref: '#/components/responses/Error' }
+  /auth/logout-all:
+    post:
+      tags: [Auth]
+      summary: Revoke all of the caller's refresh tokens (sign out everywhere)
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "401": { $ref: '#/components/responses/Error' }
+
+  # ---------------- Users ----------------
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Current authenticated user
+      responses:
+        "200": { $ref: '#/components/responses/User' }
+        "401": { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Users]
+      summary: Deactivate (soft-close) the caller's account; revokes all sessions
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "401": { $ref: '#/components/responses/Error' }
+  /users/me/roles:
+    put:
+      tags: [Users]
+      summary: Reconcile the caller's self-assignable roles
+      description: >
+        Sets the caller's self-assignable roles (job_seeker, referrer, mentor,
+        recruiter) to the provided set. Roles outside that set are rejected;
+        admin is never self-assignable, and an existing admin role is preserved.
+        Emits UserRolesUpdated. Returns the updated user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [roles]
+              properties:
+                roles:
+                  type: array
+                  items: { type: string, enum: [job_seeker, referrer, mentor, recruiter] }
+      responses:
+        "200": { $ref: '#/components/responses/User' }
+        "400": { $ref: '#/components/responses/Error' }
+        "401": { $ref: '#/components/responses/Error' }
+  /me/dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Per-user dashboard summary (role-segmented counts)
+      description: >
+        Aggregated, read-only counts for the authenticated caller across the
+        jobs, referrals, mentorship and notifications contexts.
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data: { $ref: '#/components/schemas/DashboardSummary' }
+        "401": { $ref: '#/components/responses/Error' }
+  /career/paths:
+    get:
+      tags: [Career]
+      summary: Career ladder, pay bands and skill gap from a starting role
+      description: >
+        Returns the ladder of roles reachable from the given role, each with a
+        pay band, plus the headline target rung and the skills standing between
+        the user and that target. Curated reference data with a generic fallback.
+      parameters:
+        - { name: from, in: query, required: true, description: The user's current role title, schema: { type: string } }
+      responses:
+        "200":
+          description: Career path
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data: { $ref: '#/components/schemas/CareerPath' }
+        "400": { $ref: '#/components/responses/Error' }
+        "401": { $ref: '#/components/responses/Error' }
+  /users/search:
+    get:
+      tags: [Users]
+      summary: Typeahead user directory search
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: name/email fragment }
+      responses:
+        "200":
+          description: Matching users
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          users:
+                            type: array
+                            items: { $ref: '#/components/schemas/DirectoryUser' }
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Public directory entry for a user
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200":
+          description: Directory entry
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties: { data: { $ref: '#/components/schemas/DirectoryUser' } }
+        "404": { $ref: '#/components/responses/Error' }
+
+  # ---------------- Profile ----------------
+  /profiles/me:
+    get:
+      tags: [Profile]
+      summary: Get my full profile (created lazily; cache-aside)
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+    put:
+      tags: [Profile]
+      summary: Update profile scalar fields
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileScalars' }
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+  /profiles/{id}:
+    get:
+      tags: [Profile]
+      summary: Get another user's profile
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+        "404": { $ref: '#/components/responses/Error' }
+  /profiles/me/skills:
+    put:
+      tags: [Profile]
+      summary: Replace my skills
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { skills: { type: array, items: { type: string } } }
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+  /profiles/me/languages:
+    put:
+      tags: [Profile]
+      summary: Replace my languages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                languages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name: { type: string }
+                      proficiency: { type: string, enum: [basic, conversational, professional, fluent, native] }
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+  /profiles/me/portfolio:
+    put:
+      tags: [Profile]
+      summary: Replace my portfolio links
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portfolio:
+                  type: array
+                  items:
+                    type: object
+                    properties: { label: { type: string }, url: { type: string } }
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+  /profiles/me/experiences:
+    post:
+      tags: [Profile]
+      summary: Add a work experience
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Experience' }
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+  /profiles/me/experiences/{id}:
+    put:
+      tags: [Profile]
+      summary: Update a work experience
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Experience' }
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+        "404": { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Profile]
+      summary: Delete a work experience
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+        "404": { $ref: '#/components/responses/Error' }
+  /profiles/me/educations:
+    post:
+      tags: [Profile]
+      summary: Add an education entry
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+  /profiles/me/educations/{id}:
+    put:
+      tags: [Profile]
+      summary: Update an education entry
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+    delete:
+      tags: [Profile]
+      summary: Delete an education entry
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+  /profiles/me/certifications:
+    post:
+      tags: [Profile]
+      summary: Add a certification
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+  /profiles/me/certifications/{id}:
+    put:
+      tags: [Profile]
+      summary: Update a certification
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+    delete:
+      tags: [Profile]
+      summary: Delete a certification
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Profile' }
+
+  # ---------------- Jobs ----------------
+  /jobs:
+    get:
+      tags: [Jobs]
+      summary: Search jobs
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: location, in: query, schema: { type: string } }
+        - { name: type, in: query, schema: { type: string } }
+        - { name: posted_by, in: query, description: "Filter to jobs posted by a user id, or 'me' for the caller (recruiter's own postings).", schema: { type: string } }
+        - { name: mine, in: query, description: "Shortcut for posted_by=me; when 'true', returns only the caller's own postings.", schema: { type: string, enum: ['true'] } }
+      responses:
+        "200":
+          description: Job list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          jobs: { type: array, items: { $ref: '#/components/schemas/Job' } }
+    post:
+      tags: [Jobs]
+      summary: "Post a job. RBAC: recruiter"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/JobInput' }
+      responses:
+        "201":
+          description: Created job
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties: { data: { $ref: '#/components/schemas/Job' } }
+        "400": { $ref: '#/components/responses/Error' }
+  /jobs/matches:
+    get:
+      tags: [Jobs]
+      summary: AI-ranked job recommendations for the current seeker
+      description: Ranks open jobs by fit with the seeker's profile skills using Claude, with a heuristic fallback when AI is unavailable.
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /jobs/saved:
+    get:
+      tags: [Jobs]
+      summary: List my saved jobs
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /jobs/applications:
+    get:
+      tags: [Jobs]
+      summary: List my job applications
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /jobs/{id}:
+    get:
+      tags: [Jobs]
+      summary: Get a job (cache-aside)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200":
+          description: Job
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties: { data: { $ref: '#/components/schemas/Job' } }
+        "404": { $ref: '#/components/responses/Error' }
+    put:
+      tags: [Jobs]
+      summary: "Update a job (owning recruiter). RBAC: recruiter"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/JobInput' }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "403": { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Jobs]
+      summary: "Delete a job (owning recruiter). RBAC: recruiter"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "403": { $ref: '#/components/responses/Error' }
+  /jobs/{id}/apply:
+    post:
+      tags: [Jobs]
+      summary: Apply to a job
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { cover_letter: { type: string, minLength: 10 } }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+        "409": { $ref: '#/components/responses/Error' }
+  /jobs/{id}/save:
+    post:
+      tags: [Jobs]
+      summary: Toggle saving a job
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /jobs/{id}/applicants:
+    get:
+      tags: [Jobs]
+      summary: "List applicants (owning recruiter). RBAC: recruiter"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "403": { $ref: '#/components/responses/Error' }
+  /applications/{id}:
+    patch:
+      tags: [Jobs]
+      summary: "Advance an application status. RBAC: recruiter"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [pending, reviewed, interviewing, offer, hired, rejected, withdrawn] }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "403": { $ref: '#/components/responses/Error' }
+
+  # ---------------- Referrals ----------------
+  /referrals:
+    post:
+      tags: [Referrals]
+      summary: Request a referral (optionally directed at a referrer)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                referrer_id: { type: string, format: uuid }
+                job_id: { type: string, format: uuid }
+                company: { type: string }
+                message: { type: string }
+      responses:
+        "201":
+          description: Created referral
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties: { data: { $ref: '#/components/schemas/Referral' } }
+  /referrals/incoming:
+    get:
+      tags: [Referrals]
+      summary: Referral requests directed at / claimed by me
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /referrals/outgoing:
+    get:
+      tags: [Referrals]
+      summary: My referral requests
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /referrals/{id}/accept:
+    post:
+      tags: [Referrals]
+      summary: Accept a referral request
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "409": { $ref: '#/components/responses/Error' }
+  /referrals/{id}/decline:
+    post:
+      tags: [Referrals]
+      summary: Decline a referral request
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /referrals/{id}/outcome:
+    patch:
+      tags: [Referrals]
+      summary: Track the hiring-pipeline outcome (participant only)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                outcome: { type: string, enum: [application_submitted, interviewing, offer, hired, rejected, withdrawn] }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+
+  # ---------------- Resume ----------------
+  /resumes:
+    get:
+      tags: [Resume]
+      summary: List my resumes
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+    post:
+      tags: [Resume]
+      summary: Upload a resume (multipart PDF/DOCX/TXT ≤10MB) — parses + scores
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+                title: { type: string }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+  /resumes/{id}:
+    get:
+      tags: [Resume]
+      summary: Get a resume (versions + latest score)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "404": { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Resume]
+      summary: Delete a resume
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /resumes/{id}/versions:
+    get:
+      tags: [Resume]
+      summary: List versions of a resume
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+    post:
+      tags: [Resume]
+      summary: Upload a new version (multipart)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties: { file: { type: string, format: binary } }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+  /resumes/{id}/score:
+    get:
+      tags: [Resume]
+      summary: Get the latest heuristic score (formatting/keywords/ATS + suggestions)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /resumes/{id}/review:
+    post:
+      tags: [Resume]
+      summary: Re-score a resume (heuristic; AI enriches via /ai/resume-review)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+
+  # ---------------- AI ----------------
+  /ai/resume-review:
+    post:
+      tags: [AI]
+      summary: AI resume reviewer (formatting/keywords/ATS). 503 if no API key.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { resume_text: { type: string } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "503": { $ref: '#/components/responses/Error' }
+  /ai/skill-gap:
+    post:
+      tags: [AI]
+      summary: AI skill-gap engine → missing skills, suggested roles, learning path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_role: { type: string }
+                target_role: { type: string }
+                current_skills: { type: array, items: { type: string } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "503": { $ref: '#/components/responses/Error' }
+  /ai/coach:
+    post:
+      tags: [AI]
+      summary: AI career coach (threaded chat)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+                thread_id: { type: string, format: uuid }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "503": { $ref: '#/components/responses/Error' }
+  /ai/coach/threads:
+    get:
+      tags: [AI]
+      summary: List my coach threads
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /ai/coach/threads/{id}:
+    get:
+      tags: [AI]
+      summary: Get a coach thread with its messages
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+
+  # ---------------- Communities ----------------
+  /communities:
+    get:
+      tags: [Communities]
+      summary: List communities
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /communities/{slug}:
+    get:
+      tags: [Communities]
+      summary: Get a community by slug
+      parameters: [ { $ref: '#/components/parameters/Slug' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /communities/{slug}/join:
+    post:
+      tags: [Communities]
+      summary: Toggle community membership
+      parameters: [ { $ref: '#/components/parameters/Slug' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /communities/{slug}/posts:
+    get:
+      tags: [Communities]
+      summary: List posts in a community
+      parameters: [ { $ref: '#/components/parameters/Slug' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+    post:
+      tags: [Communities]
+      summary: Create a post
+      parameters: [ { $ref: '#/components/parameters/Slug' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { title: { type: string }, body: { type: string } }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+  /posts/{id}/comments:
+    get:
+      tags: [Communities]
+      summary: List comments on a post
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+    post:
+      tags: [Communities]
+      summary: Comment on a post
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { body: { type: string } }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+  /posts/{id}/reactions:
+    post:
+      tags: [Communities]
+      summary: Toggle a reaction on a post
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+
+  # ---------------- Mentorship ----------------
+  /mentorship/mentors:
+    get:
+      tags: [Mentorship]
+      summary: List mentors
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+    post:
+      tags: [Mentorship]
+      summary: Become a mentor (create mentor profile)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                headline: { type: string }
+                bio: { type: string }
+                expertise: { type: string }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+  /mentorship/mentors/{id}:
+    get:
+      tags: [Mentorship]
+      summary: Get a mentor profile
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /mentorship/sessions:
+    get:
+      tags: [Mentorship]
+      summary: List my sessions (as mentee and as mentor)
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+    post:
+      tags: [Mentorship]
+      summary: Book a mentorship session
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mentor_id: { type: string, format: uuid }
+                topic: { type: string }
+                scheduled_at: { type: string, format: date-time }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+  /mentorship/sessions/{id}:
+    patch:
+      tags: [Mentorship]
+      summary: Update session status (mentor only)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { status: { type: string, enum: [requested, confirmed, completed, cancelled] } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /mentorship/sessions/{id}/review:
+    post:
+      tags: [Mentorship]
+      summary: Review a completed session (mentee only)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                comment: { type: string }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+
+  # ---------------- Messaging ----------------
+  /conversations:
+    get:
+      tags: [Messaging]
+      summary: List my conversations
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+    post:
+      tags: [Messaging]
+      summary: Start a conversation (1:1 reused; emits MessageSent on send)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                participant_ids: { type: array, items: { type: string, format: uuid } }
+                title: { type: string }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+  /conversations/stream:
+    get:
+      tags: [Messaging]
+      summary: Server-Sent Events stream of incoming messages (real time)
+      description: "text/event-stream multiplexing message/typing/read events across the user's conversations. Connect with fetch (Bearer header)."
+      responses:
+        "200":
+          description: An event stream (text/event-stream)
+          content:
+            text/event-stream:
+              schema: { type: string }
+  /conversations/{id}/messages:
+    get:
+      tags: [Messaging]
+      summary: List messages in a conversation
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+    post:
+      tags: [Messaging]
+      summary: Send a message
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { body: { type: string } }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+  /conversations/{id}/read:
+    post:
+      tags: [Messaging]
+      summary: Mark a conversation as read
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+
+  /conversations/{id}/typing:
+    post:
+      tags: [Messaging]
+      summary: Broadcast a typing indicator to the other participants
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "403": { $ref: '#/components/responses/Error' }
+
+  # ---------------- Notifications ----------------
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List my notifications + unread count
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 100 } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /notifications/stream:
+    get:
+      tags: [Notifications]
+      summary: Server-Sent Events stream of the user's notifications (real time)
+      description: "text/event-stream. Connect with fetch so the Bearer token rides the Authorization header; each frame carries a notification JSON payload."
+      responses:
+        "200":
+          description: An event stream (text/event-stream)
+          content:
+            text/event-stream:
+              schema: { type: string }
+  /notifications/{id}/read:
+    post:
+      tags: [Notifications]
+      summary: Mark one notification as read
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+
+  # ---------------- Search ----------------
+  /search:
+    get:
+      tags: [Search]
+      summary: Fuzzy full-text search (OpenSearch; DB ILIKE fallback)
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: type, in: query, schema: { type: string }, description: "user|job|community|skill (repeatable/CSV)" }
+        - { name: limit, in: query, schema: { type: integer, default: 20, maximum: 50 } }
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          results: { type: array, items: { $ref: '#/components/schemas/SearchHit' } }
+                          engine: { type: string, enum: [opensearch, database] }
+  /search/autocomplete:
+    get:
+      tags: [Search]
+      summary: Prefix autocomplete
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 8 } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+
+  # ---------------- Admin (RBAC: admin) ----------------
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: "Platform analytics overview. RBAC: admin"
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties: { data: { $ref: '#/components/schemas/AdminStats' } }
+        "403": { $ref: '#/components/responses/Error' }
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: "List/search/filter users (paginated). RBAC: admin"
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [active, suspended, deactivated] } }
+        - { name: role, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 25, maximum: 100 } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "403": { $ref: '#/components/responses/Error' }
+  /admin/users/{id}:
+    get:
+      tags: [Admin]
+      summary: "User detail. RBAC: admin"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200":
+          description: Admin user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - properties: { data: { $ref: '#/components/schemas/AdminUser' } }
+        "404": { $ref: '#/components/responses/Error' }
+  /admin/users/{id}/status:
+    patch:
+      tags: [Admin]
+      summary: "Set account status. RBAC: admin (cannot change own)"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { status: { type: string, enum: [active, suspended, deactivated] } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+  /admin/users/{id}/roles:
+    post:
+      tags: [Admin]
+      summary: "Grant an RBAC role. RBAC: admin"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { role: { type: string, enum: [job_seeker, referrer, mentor, recruiter, admin] } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /admin/users/{id}/roles/{role}:
+    delete:
+      tags: [Admin]
+      summary: "Revoke an RBAC role. RBAC: admin (cannot revoke own admin)"
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: role, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /admin/posts/{id}:
+    delete:
+      tags: [Admin]
+      summary: "Remove a community post (moderation). RBAC: admin"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "404": { $ref: '#/components/responses/Error' }
+  /admin/comments/{id}:
+    delete:
+      tags: [Admin]
+      summary: "Remove a community comment (moderation). RBAC: admin"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "404": { $ref: '#/components/responses/Error' }
+  /admin/reports:
+    get:
+      tags: [Admin]
+      summary: "Moderation report queue. RBAC: admin"
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [open, reviewing, resolved, dismissed] } }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+  /admin/reports/{id}:
+    patch:
+      tags: [Admin]
+      summary: "Triage a report (resolve/dismiss). RBAC: admin"
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [resolved, dismissed] }
+                action_taken: { type: string }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+
+  # ---------------- Reports (any authenticated user) ----------------
+  /reports:
+    post:
+      tags: [Reports]
+      summary: File a content report for moderation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target_type, target_id, reason]
+              properties:
+                target_type: { type: string, enum: [post, comment, user, message] }
+                target_id: { type: string, format: uuid }
+                reason: { type: string }
+      responses:
+        "201": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+
+  # ---------------- Settings ----------------
+  /settings:
+    get:
+      tags: [Settings]
+      summary: Get the current user's settings (materialises defaults on first access)
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "401": { $ref: '#/components/responses/Error' }
+  /settings/general:
+    patch:
+      tags: [Settings]
+      summary: Update the general settings section
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GeneralSettings' }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+        "409": { $ref: '#/components/responses/Error' }
+  /settings/privacy:
+    patch:
+      tags: [Settings]
+      summary: Update the privacy settings section
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PrivacySettings' }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+        "409": { $ref: '#/components/responses/Error' }
+  /settings/notifications:
+    patch:
+      tags: [Settings]
+      summary: Update the notification toggles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NotificationSettings' }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+        "409": { $ref: '#/components/responses/Error' }
+  /settings/security:
+    patch:
+      tags: [Settings]
+      summary: Update the security preferences (login alerts)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SecuritySettings' }
+      responses:
+        "200": { $ref: '#/components/responses/Success' }
+        "400": { $ref: '#/components/responses/Error' }
+        "409": { $ref: '#/components/responses/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Slug:
+      name: slug
+      in: path
+      required: true
+      schema: { type: string }
+    Provider:
+      name: provider
+      in: path
+      required: true
+      schema: { type: string, enum: [google, linkedin] }
+
+  responses:
+    Success:
+      description: Success
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    User:
+      description: User
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - properties: { data: { $ref: '#/components/schemas/User' } }
+    Profile:
+      description: Profile
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - properties: { data: { $ref: '#/components/schemas/Profile' } }
+
+  schemas:
+    Meta:
+      type: object
+      properties:
+        timestamp: { type: string, format: date-time }
+    GeneralSettings:
+      type: object
+      required: [language, timezone, theme, email_digest]
+      properties:
+        language: { type: string, example: en }
+        timezone: { type: string, example: UTC }
+        theme: { type: string, enum: [light, dark, system] }
+        email_digest: { type: string, enum: [off, daily, weekly] }
+    PrivacySettings:
+      type: object
+      required: [profile_visibility, allow_messages]
+      properties:
+        profile_visibility: { type: string, enum: [public, network, private] }
+        show_email: { type: boolean }
+        discoverable: { type: boolean }
+        allow_messages: { type: string, enum: [everyone, network, none] }
+    NotificationSettings:
+      type: object
+      properties:
+        email_jobs: { type: boolean }
+        email_mentorship: { type: boolean }
+        email_messages: { type: boolean }
+        email_referrals: { type: boolean }
+        inapp_jobs: { type: boolean }
+        inapp_mentorship: { type: boolean }
+        inapp_messages: { type: boolean }
+        inapp_referrals: { type: boolean }
+    SecuritySettings:
+      type: object
+      required: [login_alerts]
+      properties:
+        login_alerts: { type: boolean }
+    DashboardSummary:
+      type: object
+      properties:
+        unread_notifications: { type: integer, example: 3 }
+        job_seeker:
+          type: object
+          properties:
+            applications: { type: integer }
+            saved_jobs: { type: integer }
+            outgoing_referrals: { type: integer }
+        recruiter:
+          type: object
+          properties:
+            posted_jobs: { type: integer }
+            total_applicants: { type: integer }
+            incoming_referrals: { type: integer }
+        mentor:
+          type: object
+          properties:
+            upcoming_sessions: { type: integer }
+            pending_requests: { type: integer }
+            completed_sessions: { type: integer }
+    CareerStep:
+      type: object
+      properties:
+        title: { type: string, example: Director of Operations }
+        pay_band: { type: string, example: "$140k-$190k" }
+        current: { type: boolean }
+    CareerPath:
+      type: object
+      properties:
+        from: { type: string, example: Operations Manager }
+        target: { type: string, example: VP of Operations }
+        gap_skills: { type: array, items: { type: string } }
+        steps: { type: array, items: { $ref: '#/components/schemas/CareerStep' } }
+    SuccessEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data: {}
+        meta: { $ref: '#/components/schemas/Meta' }
+    ErrorEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        data: { nullable: true }
+        meta: { $ref: '#/components/schemas/Meta' }
+        error:
+          type: object
+          properties:
+            code: { type: string, example: validation_failed }
+            message: { type: string }
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        full_name: { type: string }
+        email_verified: { type: boolean }
+        roles: { type: array, items: { type: string } }
+    LoginResult:
+      type: object
+      properties:
+        access_token: { type: string }
+        expires_in: { type: integer }
+        token_type: { type: string, example: Bearer }
+        mfa_required: { type: boolean }
+        verification_required:
+          type: boolean
+          description: Only on /auth/register when the verification gate is on; no tokens issued.
+        user: { $ref: '#/components/schemas/User' }
+    DirectoryUser:
+      type: object
+      # email is intentionally omitted: the public directory/search endpoints
+      # must not expose member emails to any authenticated caller (PII).
+      properties:
+        id: { type: string, format: uuid }
+        full_name: { type: string }
+        headline: { type: string }
+        photo_url: { type: string }
+    ProfileScalars:
+      type: object
+      properties:
+        headline: { type: string }
+        about: { type: string }
+        photo_url: { type: string }
+        bio: { type: string }
+        location: { type: string }
+        website: { type: string }
+    Experience:
+      type: object
+      properties:
+   

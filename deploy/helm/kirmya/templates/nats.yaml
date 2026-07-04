@@ -1,0 +1,51 @@
+{{- if .Values.nats.enabled }}
+{{- $name := include "kirmya.componentName" (dict "ctx" . "component" "nats") }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "kirmya.labels" . | nindent 4 }}
+    app.kubernetes.io/component: nats
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "kirmya.selectorLabels" (dict "ctx" . "component" "nats") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kirmya.selectorLabels" (dict "ctx" . "component" "nats") | nindent 8 }}
+    spec:
+      containers:
+        - name: nats
+          image: {{ .Values.nats.image }}
+          args: ["-js"]
+          ports:
+            - name: client
+              containerPort: {{ .Values.nats.port }}
+            - name: monitor
+              containerPort: 8222
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: monitor
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "kirmya.labels" . | nindent 4 }}
+    app.kubernetes.io/component: nats
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "kirmya.selectorLabels" (dict "ctx" . "component" "nats") | nindent 4 }}
+  ports:
+    - name: client
+      port: {{ .Values.nats.port }}
+      targetPort: client
+{{- end }}

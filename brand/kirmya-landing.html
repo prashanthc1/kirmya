@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kirmya — Your comeback starts here</title>
+<meta name="description" content="Kirmya is the career-recovery platform. Warm referrals, real mentors, and an AI coach that knows your story — so you land your next interview in weeks, not months.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ember-1:#FF9D4D; --ember-2:#F0512F; --harbor:#0F2742; --teal:#14B8A6;
+    --cloud:#FBF7F2; --slate:#5C6B7A; --ink:#0B1622; --line:#EAE3D9;
+    --grad:linear-gradient(135deg,var(--ember-1),var(--ember-2));
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--harbor);background:var(--cloud);line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;letter-spacing:-.02em;font-weight:600}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;padding:13px 22px;border-radius:12px;cursor:pointer;border:none;transition:transform .15s,opacity .15s}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-primary{background:var(--grad);color:#fff;box-shadow:0 10px 24px -10px rgba(240,81,47,.6)}
+  .btn-ghost{background:transparent;color:var(--harbor);border:1px solid var(--line)}
+  .btn-light{background:#fff;color:var(--harbor)}
+  /* nav */
+  header.nav{position:sticky;top:0;z-index:50;background:rgba(251,247,242,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:'Fraunces',serif;font-weight:600;font-size:22px}
+  .tile{width:38px;height:38px;border-radius:11px;background:var(--grad);position:relative;flex:none}
+  .tile svg{position:absolute;inset:0}
+  .nav-links{display:flex;gap:30px;font-size:14px;color:var(--slate)}
+  .nav-links a:hover{color:var(--harbor)}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+  @media(max-width:760px){.nav-links{display:none}}
+  /* hero */
+  .hero{position:relative;overflow:hidden}
+  .hero-bg{position:absolute;inset:0;z-index:-1;background:
+    radial-gradient(1100px 500px at 80% -10%,rgba(255,157,77,.22),transparent 60%),
+    radial-gradient(800px 480px at -5% 20%,rgba(20,184,166,.12),transparent 55%)}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:80px 0 70px}
+  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;padding:54px 0 40px}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ember-2);background:#fff;border:1px solid var(--line);padding:6px 13px;border-radius:999px}
+  h1.hero-h{font-size:clamp(42px,6.4vw,72px);line-height:1.02;margin-top:20px}
+  h1.hero-h span{color:transparent;background:var(--grad);-webkit-background-clip:text;background-clip:text}
+  .hero p.sub{font-size:18px;color:var(--slate);max-width:50ch;margin-top:20px}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+  .reassure{font-size:13px;color:var(--slate);margin-top:18px}
+  /* hero card */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:0 30px 60px -36px rgba(15,39,66,.35)}
+  .score{display:flex;align-items:center;gap:16px}
+  .ring{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--teal) 0 87%,#EFE9E0 87% 100%);flex:none}
+  .ring b{width:56px;height:56px;border-radius:50%;background:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-size:20px}
+  .row{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+  .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;font-size:17px}
+  .row small{color:var(--slate)}
+  /* logos / trust */
+  .trust{display:flex;flex-wrap:wrap;gap:14px 38px;align-items:center;justify-content:center;padding:8px 0 38px;color:var(--slate);font-size:13px;text-align:center}
+  .trust b{color:var(--harbor);font-family:'Fraunces',serif;font-size:22px}
+  /* sections */
+  section.blk{padding:78px 0;border-top:1px solid var(--line)}
+  .sec-head{max-width:640px;margin-bottom:44px}
+  .sec-head .kx{font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+  .sec-head h2{font-size:clamp(30px,4vw,42px);line-height:1.08;margin-top:12px}
+  .sec-head p{color:var(--slate);font-size:17px;margin-top:14px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  @media(max-width:880px){.cards{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;transition:transform .18s,box-shadow .18s}
+  .card:hover{transform:translateY(-3px);box-shadow:0 24px 44px -30px rgba(15,39,66,.4)}
+  .card .badge{width:46px;height:46px;border-radius:13px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:22px;margin-bottom:16px}
+  .card h3{font-size:20px;margin-bottom:8px}
+  .card p{color:var(--slate);font-size:15px}
+  .card .pay{margin-top:12px;font-size:13.5px;font-weight:600;color:var(--teal)}
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:s}
+  @media(max-width:880px){.steps{grid-template-columns:1fr}}
+  .step{position:relative;padding:26px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+  .step .n{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:#fff;width:34px;height:34px;border-radius:50%;background:var(--harbor);display:grid;place-items:center;margin-bottom:14px}
+  .step h3{font-size:18px;margin-bottom:6px}.step p{color:var(--slate);font-size:15px}
+  /* quote */
+  .quote{background:var(--harbor);color:#fff;border-radius:26px;padding:54px;text-align:center}
+  .quote .q{font-family:'Fraunces',serif;font-size:clamp(24px,3.2vw,34px);line-height:1.25;max-width:20ch;margin:0 auto}
+  .quote .by{color:#9fb1c4;margin-top:20px;font-size:14px}
+  /* cta band */
+  .band{background:var(--grad);border-radius:28px;padding:64px 40px;text-align:center;color:#fff}
+  .band h2{font-size:clamp(30px,4.4vw,46px);line-height:1.05}
+  .band p{margin:16px auto 28px;max-width:46ch;font-size:17px;opacity:.95}
+  /* footer */
+  footer.ft{padding:54px 0 70px;border-top:1px solid var(--line);color:var(--slate);font-size:14px}
+  .ft-grid{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:center}
+  .note{max-width:1120px;margin:0 auto;padding:16px 24px;font-size:12px;color:#9aa6b2}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><span class="tile" id="navtile"></span>Kirmya</div>
+    <nav class="nav-links">
+      <a href="#what">What you get</a>
+      <a href="#how">How it works</a>
+      <a href="#story">Stories</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="#">Sign in</a>
+      <a class="btn btn-primary" href="#start">Get started</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">✦ Built for the moment between jobs</span>
+      <h1 class="hero-h">You lost a job.<br><span>Not your career.</span></h1>
+      <p class="sub">Kirmya is the calm, capable space to recover — with <strong>warm referrals</strong>, <strong>real mentors</strong>, and an <strong>AI coach</strong> that actually understands your story. Land your next interview in weeks, not months.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#start">Start your comeback — free →</a>
+        <a class="btn btn-ghost" href="#how">See how it works</a>
+      </div>
+      <p class="reassure">Free to join · No spam · Your data is yours</p>
+    </div>
+    <div class="panel">
+      <div class="score">
+        <div class="ring"><b>87</b></div>
+        <div>
+          <div style="font-weight:600">Resume scored: 87/100</div>
+          <small style="color:var(--slate)">+12 since last week · 3 fixes left</small>
+        </div>
+      </div>
+      <div class="row"><div class="ico" style="background:rgba(240,81,47,.12)">🤝</div><div><div style="font-weight:600">Referral accepted</div><small>Intro to a hiring manager at [Company]</small></div></div>
+      <div class="row"><div class="ico" style="background:rgba(20,184,166,.14)">🎯</div><div><div style="font-weight:600">3 skill gaps identified</div><small>Closeable in a 2-week learning path</small></div></div>
+      <div class="row"><div class="ico" style="background:rgba(15,39,66,.08)">💬</div><div><div style="font-weight:600">Mentor session booked</div><small>With someone who recovered from the same layoff</small></div></div>
+    </div>
+  </div>
+  <div class="wrap trust">
+    <span><b>[X]</b> members rebuilding</span>
+    <span><b>[X]</b> warm referrals made</span>
+    <span><b>[X]</b>-day avg to first interview</span>
+    <span style="font-style:italic">Replace [X] with real metrics before launch</span>
+  </div>
+</section>
+
+<!-- WHAT YOU GET -->
+<section class="blk" id="what">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kx">What you get</div>
+      <h2>Job boards optimize for clicks. Kirmya optimizes for one thing — you, hired.</h2>
+      <p>One focused workflow instead of another endless feed. Every feature exists to shorten the time between roles.</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="badge">📄</div><h3>AI resume scoring</h3><p>See exactly why employers skip your resume — formatting, keywords, and ATS issues, scored and ranked.</p><div class="pay">Stop getting filtered out before a human reads it.</div></div>
+      <div class="card"><div class="badge">🤝</div><h3>Warm referrals</h3><p>Get introduced by someone inside the company instead of vanishing into the application pile.</p><div class="pay">Referred candidates get seen first.</div></div>
+      <div class="card"><div class="badge">💬</div><h3>Real mentors</h3><p>Talk to people who’ve already walked this exact path — free, structured, no awkward cold outreach.</p><div class="pay">Trade 2am spiraling for a clear next step.</div></div>
+      <div class="card"><div class="badge">🎯</div><h3>Skill-gap analysis</h3><p>Know the exact handful of skills standing between you and the role — with a time-boxed plan to close them.</p><div class="pay">Spend effort only where it moves the needle.</div></div>
+      <div class="card"><div class="badge">🧭</div><h3>AI career coach</h3><p>Career-path, salary, and market-demand guidance that adapts to your story and your target roles.</p><div class="pay">A plan, not just hope.</div></div>
+      <div class="card"><div class="badge">🫂</div><h3>Domain communities</h3><p>Find your people in Tech, Logistics, HR, Operations, Construction and more — support, not vanity metrics.</p><div class="pay">You’re not job-hunting alone anymore.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="blk" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kx">How it works</div>
+      <h2>From the worst week of your career to a daily plan</h2>
+      <p>Three steps, starting the day you join.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Bring your story</h3><p>Upload your resume. Kirmya parses and scores it, then maps your skills against the roles you actually want.</p></div>
+      <div class="step"><div class="n">2</div><h3>Get connected</h3><p>Request warm referrals, book a mentor, and join your domain community — real people, not a void.</p></div>
+      <div class="step"><div class="n">3</div><h3>Rise</h3><p>Close skill gaps, apply with referrals attached, and track every outcome from interview to offer.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY / QUOTE -->
+<section class="blk" id="story">
+  <div class="wrap">
+    <div class="quote">
+      <div class="q">“From laid off to hired — without starting from zero.”</div>
+      <div class="by">Replace with a real Kirmya member story before launch · [Name, role, company]</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="blk" id="start">
+  <div class="wrap">
+    <div class="band">
+      <h2>Your comeback starts here.</h2>
+      <p>Free to join, no credit card. Every week without an interview costs more than this ever will.</p>
+      <a class="btn btn-light" href="#">Create your free account →</a>
+    </div>
+  </div>
+</section>
+
+<footer class="ft">
+  <div class="wrap ft-grid">
+    <div class="brand"><span class="tile" id="fttile"></span>Kirmya</div>
+    <div>© 2026 Kirmya · Careers recover here.</div>
+    <div style="display:flex;gap:22px"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a></div>
+  </div>
+</footer>
+<div class="note">Prototype landing page for the Kirmya brand pack. Bracketed [X] values are placeholders — replace with verified metrics and a real testimonial before publishing.</div>
+
+<script>
+  var icon = function(stroke){return '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">'+
+    '<path d="M10 27 Q19 15 28 27" stroke="'+stroke+'" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.92"/>'+
+    '<path d="M13 30 L19 24 L25 18" stroke="'+stroke+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'+
+    '<circle cx="26" cy="17" r="2.9" fill="'+stroke+'"/></svg>';};
+  document.getElementById('navtile').innerHTML = icon('#fff');
+  document.getElementById('fttile').innerHTML = icon('#fff');
+</script>
+</body>
+</html>

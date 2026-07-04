@@ -1,0 +1,26 @@
+Kirmya has been deployed as release "{{ .Release.Name }}".
+
+Components:
+  - backend  ({{ .Values.backend.replicas }} replicas{{ if .Values.backend.autoscaling.enabled }}, HPA {{ .Values.backend.autoscaling.minReplicas }}–{{ .Values.backend.autoscaling.maxReplicas }}{{ end }})
+  - frontend ({{ .Values.frontend.replicas }} replicas)
+  - postgres: {{ if .Values.postgres.enabled }}in-cluster{{ else }}external ({{ .Values.secrets.databaseUrl }}){{ end }}
+  - redis:    {{ if .Values.redis.enabled }}in-cluster{{ else }}disabled (no-op cache){{ end }}
+  - opensearch: {{ if .Values.opensearch.enabled }}in-cluster{{ else }}disabled (DB-fallback search){{ end }}
+
+{{- if .Values.ingress.enabled }}
+
+Open the app at: http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}
+(Add an /etc/hosts entry pointing {{ .Values.ingress.host }} at your ingress controller's IP.)
+{{- else }}
+
+Ingress is disabled. Port-forward to reach the frontend:
+  kubectl port-forward svc/{{ include "kirmya.componentName" (dict "ctx" . "component" "frontend") }} 3000:{{ .Values.frontend.port }}
+{{- end }}
+
+The backend runs database migrations automatically on startup.
+{{- if not .Values.postgres.enabled }}
+Make sure secrets.databaseUrl points at your managed PostgreSQL.
+{{- end }}
+
+IMPORTANT: override secrets.jwtSecret (and any API keys) for real deployments:
+  helm upgrade --install {{ .Release.Name }} . --set secrets.jwtSecret=$(openssl rand -hex 32)
