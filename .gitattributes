@@ -1,0 +1,19 @@
+# Normalize line endings. Prevents CRLF from sneaking into files committed
+# from Windows, which breaks shell scripts run in CI (e.g. `set -o pipefail`
+# reading `pipefail\r` as an invalid option name).
+* text=auto eol=lf
+
+# Shell scripts must always be LF, regardless of platform.
+*.sh text eol=lf
+
+# Windows-only files keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files: never touch.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
