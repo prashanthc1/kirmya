@@ -218,6 +218,9 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                 {/* Profile Trigger */}
                 <Button
                   onClick={handleOpenProfile}
+                  aria-controls={Boolean(profileAnchor) ? "account-menu" : undefined}
+                  aria-haspopup="menu"
+                  aria-expanded={Boolean(profileAnchor) ? "true" : undefined}
                   sx={{
                     px: 1.5,
                     py: 0.75,
@@ -290,6 +293,24 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
             )}
             <Divider sx={{ my: 1 }} />
 
+            {/* Menu Links with role="link" for E2E backward compatibility */}
+            {MENU_LINKS.map((link) => (
+              <MenuItem
+                key={link.href}
+                component={Link}
+                href={link.href}
+                role="link"
+                sx={{ borderRadius: 2, py: 1.0 }}
+              >
+                <ListItemIcon>
+                  <Typography variant="body1">{link.icon}</Typography>
+                </ListItemIcon>
+                <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: 500 }} />
+              </MenuItem>
+            ))}
+
+            <Divider sx={{ my: 1 }} />
+
             <MenuItem component={Link} href="/profile" sx={{ borderRadius: 2, py: 1.2 }}>
               <ListItemIcon>
                 <PersonIcon fontSize="small" />
@@ -305,11 +326,16 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
             </MenuItem>
 
             {user?.roles?.includes("admin") && (
-              <MenuItem component={Link} href="/admin" sx={{ borderRadius: 2, py: 1.2, color: "secondary.main" }}>
+              <MenuItem
+                component={Link}
+                href="/admin"
+                role="link"
+                sx={{ borderRadius: 2, py: 1.2, color: "secondary.main" }}
+              >
                 <ListItemIcon sx={{ color: "secondary.main" }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 800, ml: 0.5 }}>◆</Typography>
                 </ListItemIcon>
-                <ListItemText primary="Admin Portal" primaryTypographyProps={{ fontWeight: 700 }} />
+                <ListItemText primary="Admin" primaryTypographyProps={{ fontWeight: 700 }} />
               </MenuItem>
             )}
 

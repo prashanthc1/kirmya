@@ -74,7 +74,7 @@ describe("SiteNav", () => {
     fireEvent.click(screen.getByRole("button", { name: /Ada L\./ }));
 
     expect(screen.getByRole("menuitem", { name: /Sign out/ })).toBeInTheDocument();
-    expect(screen.getByText("Jobs").closest("a")).toHaveAttribute(
+    expect(screen.getAllByText("Jobs")[0].closest("a")).toHaveAttribute(
       "href",
       "/jobs",
     );
@@ -96,7 +96,7 @@ describe("SiteNav", () => {
       />,
     );
     expect(screen.getByLabelText(/breadcrumb/i)).toBeInTheDocument();
-    expect(screen.getByText("Jobs").closest("a")).toHaveAttribute("href", "/jobs");
+    expect(screen.getAllByText("Jobs")[0].closest("a")).toHaveAttribute("href", "/jobs");
     expect(screen.getByText("Frontend Engineer")).toHaveAttribute("aria-current", "page");
   });
 });
