@@ -1,9 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { login, openAccountMenu, DEMO } from "./helpers";
+import { login, DEMO } from "./helpers";
 
 test("seeker sees their seeded referral request", async ({ page }) => {
   await login(page, DEMO.asha);
-  await openAccountMenu(page);
   await page.getByRole("link", { name: "Referrals", exact: true }).click();
   await expect(page).toHaveURL(/\/referrals/);
 

@@ -30,37 +30,37 @@ const theme = createTheme({
   typography: {
     fontFamily: "var(--font-public-sans), sans-serif",
     h1: {
-      fontFamily: "var(--font-bricolage), sans-serif",
+      fontFamily: "var(--font-public-sans), sans-serif",
       fontWeight: 800,
       letterSpacing: "-0.03em",
       lineHeight: 1.05,
     },
     h2: {
-      fontFamily: "var(--font-bricolage), sans-serif",
+      fontFamily: "var(--font-public-sans), sans-serif",
       fontWeight: 800,
       letterSpacing: "-0.02em",
       lineHeight: 1.1,
     },
     h3: {
-      fontFamily: "var(--font-bricolage), sans-serif",
+      fontFamily: "var(--font-public-sans), sans-serif",
       fontWeight: 800,
       letterSpacing: "-0.02em",
       lineHeight: 1.15,
     },
     h4: {
-      fontFamily: "var(--font-bricolage), sans-serif",
+      fontFamily: "var(--font-public-sans), sans-serif",
       fontWeight: 700,
       letterSpacing: "-0.01em",
       lineHeight: 1.2,
     },
     h5: {
-      fontFamily: "var(--font-bricolage), sans-serif",
+      fontFamily: "var(--font-public-sans), sans-serif",
       fontWeight: 700,
       letterSpacing: "-0.01em",
       lineHeight: 1.25,
     },
     h6: {
-      fontFamily: "var(--font-bricolage), sans-serif",
+      fontFamily: "var(--font-public-sans), sans-serif",
       fontWeight: 700,
       lineHeight: 1.3,
     },

@@ -58,7 +58,7 @@ export default function SiteFooter({ groups = DEFAULT_GROUPS }: SiteFooterProps)
         <div style={{ minWidth: "220px" }}>
           <div
             style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               fontSize: "24px",
               fontWeight: 800,
               color: "#fff",

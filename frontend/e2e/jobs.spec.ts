@@ -1,9 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { login, openAccountMenu, DEMO } from "./helpers";
+import { login, DEMO } from "./helpers";
 
 test("seeded jobs are listed and searchable", async ({ page }) => {
   await login(page, DEMO.asha);
-  await openAccountMenu(page);
   await page.getByRole("link", { name: "Jobs", exact: true }).click();
   await expect(page).toHaveURL(/\/jobs/);
 

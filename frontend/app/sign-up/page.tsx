@@ -105,7 +105,7 @@ export default function SignUpPage() {
         <div style={{ marginBottom: "8px" }}>
           <div
             style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               fontSize: "22px",
               fontWeight: 800,
               letterSpacing: "-0.02em",
@@ -227,7 +227,7 @@ const cardStyle: React.CSSProperties = {
 };
 
 const headingStyle: React.CSSProperties = {
-  fontFamily: "'Bricolage Grotesque',sans-serif",
+  fontFamily: "'Public Sans',sans-serif",
   fontWeight: 800,
   fontSize: "28px",
   letterSpacing: "-0.02em",

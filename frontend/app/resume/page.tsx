@@ -42,7 +42,7 @@ export default function ResumePage() {
         </div>
         <h1
           style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
+            fontFamily: "'Public Sans',sans-serif",
             fontWeight: 800,
             fontSize: "clamp(32px,4.5vw,52px)",
             lineHeight: 1.02,
@@ -145,7 +145,7 @@ export default function ResumePage() {
             </div>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 700,
                 fontSize: "22px",
                 marginBottom: "8px",
@@ -202,7 +202,7 @@ export default function ResumePage() {
           >
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 700,
                 fontSize: "18px",
                 marginBottom: "18px",

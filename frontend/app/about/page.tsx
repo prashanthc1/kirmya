@@ -44,7 +44,7 @@ export default function AboutPage() {
         </div>
         <h1
           style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
+            fontFamily: "'Public Sans',sans-serif",
             fontWeight: 800,
             fontSize: "clamp(38px,6vw,68px)",
             lineHeight: 1.02,
@@ -91,7 +91,7 @@ export default function AboutPage() {
           <div>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(34px,4.5vw,48px)",
                 color: "#E7A57E",
@@ -108,7 +108,7 @@ export default function AboutPage() {
           <div>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(34px,4.5vw,48px)",
                 color: "#fff",
@@ -125,7 +125,7 @@ export default function AboutPage() {
           <div>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(34px,4.5vw,48px)",
                 color: "#fff",
@@ -142,7 +142,7 @@ export default function AboutPage() {
           <div>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(34px,4.5vw,48px)",
                 color: "#A9C7B8",
@@ -190,7 +190,7 @@ export default function AboutPage() {
             </div>
             <h2
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(28px,3.6vw,40px)",
                 lineHeight: 1.08,
@@ -360,7 +360,7 @@ export default function AboutPage() {
           >
             <h2
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(30px,4vw,44px)",
                 letterSpacing: "-0.02em",
@@ -387,7 +387,7 @@ export default function AboutPage() {
             >
               <div
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 800,
                   fontSize: "28px",
                   color: "#C2683C",
@@ -398,7 +398,7 @@ export default function AboutPage() {
               </div>
               <h3
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 700,
                   fontSize: "19px",
                   margin: "0 0 8px",
@@ -428,7 +428,7 @@ export default function AboutPage() {
             >
               <div
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 800,
                   fontSize: "28px",
                   color: "#4F7C6A",
@@ -439,7 +439,7 @@ export default function AboutPage() {
               </div>
               <h3
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 700,
                   fontSize: "19px",
                   margin: "0 0 8px",
@@ -468,7 +468,7 @@ export default function AboutPage() {
             >
               <div
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 800,
                   fontSize: "28px",
                   color: "#2B2620",
@@ -479,7 +479,7 @@ export default function AboutPage() {
               </div>
               <h3
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 700,
                   fontSize: "19px",
                   margin: "0 0 8px",
@@ -531,7 +531,7 @@ export default function AboutPage() {
           </div>
           <h2
             style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               fontWeight: 800,
               fontSize: "clamp(28px,3.6vw,40px)",
               letterSpacing: "-0.02em",
@@ -629,7 +629,7 @@ export default function AboutPage() {
         >
           <h2
             style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               fontWeight: 800,
               color: "#fff",
               fontSize: "clamp(28px,4vw,44px)",

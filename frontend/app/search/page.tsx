@@ -167,7 +167,7 @@ function SearchResults() {
                         sx={{
                           fontWeight: 700,
                           color: "text.primary",
-                          fontFamily: "var(--font-bricolage)",
+                          fontFamily: "var(--font-public-sans)",
                         }}
                       >
                         {hit.title}

@@ -99,7 +99,7 @@ const cardStyle: React.CSSProperties = {
 };
 
 const headingStyle: React.CSSProperties = {
-  fontFamily: "'Bricolage Grotesque',sans-serif",
+  fontFamily: "'Public Sans',sans-serif",
   fontWeight: 800,
   fontSize: "28px",
   letterSpacing: "-0.02em",

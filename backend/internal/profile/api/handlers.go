@@ -44,7 +44,7 @@ func (h *Handler) writeErr(w http.ResponseWriter, err error) {
 		common.WriteNotFoundError(w, "not found")
 		return
 	}
-	common.WriteInternalError(w, "something went wrong")
+	common.WriteValidationError(w, err.Error())
 }
 
 // GetMe handles GET /profiles/me.
@@ -58,16 +58,71 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	targetID := r.PathValue("id")
 	viewerID := common.UserIDFromContext(r.Context())
-	// A user can always see their own profile; for others, a "private" visibility
-	// setting hides the profile (404 rather than 403 to avoid confirming it exists).
-	if h.visibility != nil && targetID != viewerID {
-		if vis, err := h.visibility.ProfileVisibility(r.Context(), targetID); err == nil && vis == "private" {
-			common.WriteNotFoundError(w, "profile not found")
-			return
+	viewerRole := common.UserRoleFromContext(r.Context())
+
+	p, err := h.svc.Get(r.Context(), targetID)
+	if err != nil {
+		h.writeErr(w, err)
+		return
+	}
+
+	isOwner := targetID == viewerID
+
+	// Profile level visibility check
+	if !isOwner && !hasAccess(p.VisibilityProfile, viewerRole, false) {
+		common.WriteNotFoundError(w, "profile not found")
+		return
+	}
+
+	// Apply privacy settings/visibility checks for public views
+	if !isOwner {
+		if !hasAccess(p.VisibilitySalary, viewerRole, false) {
+			p.SalaryMin = 0
+			p.SalaryMax = 0
+			p.SalaryCurrency = ""
+		}
+		if !hasAccess(p.VisibilityTransitionReason, viewerRole, false) {
+			p.TransitionReason = ""
+		}
+		if !hasAccess(p.VisibilityExperience, viewerRole, false) {
+			p.Experiences = nil
+		}
+		if !hasAccess(p.VisibilityEducation, viewerRole, false) {
+			p.Educations = nil
+		}
+		if !hasAccess(p.VisibilityCertifications, viewerRole, false) {
+			p.Certifications = nil
+		}
+		if !hasAccess(p.VisibilitySkills, viewerRole, false) {
+			p.Skills = nil
+		}
+		if !hasAccess(p.VisibilityPortfolio, viewerRole, false) {
+			p.Portfolio = nil
+		}
+		if !hasAccess(p.VisibilityReferences, viewerRole, false) {
+			p.References = nil
 		}
 	}
-	p, err := h.svc.Get(r.Context(), targetID)
-	h.write(w, p, err)
+
+	h.write(w, p, nil)
+}
+
+func hasAccess(vis string, viewerRole string, isOwner bool) bool {
+	if isOwner {
+		return true
+	}
+	switch vis {
+	case "public", "":
+		return true
+	case "recruiters_only":
+		return viewerRole == "recruiter" || viewerRole == "admin"
+	case "mentors_only":
+		return viewerRole == "mentor" || viewerRole == "admin"
+	case "private":
+		return false
+	default:
+		return false
+	}
 }
 
 // UpdateMe handles PUT /profiles/me.
@@ -78,7 +133,7 @@ func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		common.WriteValidationError(w, "invalid request payload")
 		return
 	}
-	p, err := h.svc.UpdateScalars(r.Context(), uid, domain.Scalars(req))
+	p, err := h.svc.UpdateScalars(r.Context(), uid, toScalars(req))
 	h.write(w, p, err)
 }
 
@@ -187,7 +242,11 @@ func (h *Handler) SetSkills(w http.ResponseWriter, r *http.Request) {
 		common.WriteValidationError(w, "invalid request payload")
 		return
 	}
-	p, err := h.svc.SetSkills(r.Context(), uid, req.Skills)
+	skills := make([]domain.ProfileSkill, 0, len(req.Skills))
+	for _, sk := range req.Skills {
+		skills = append(skills, sk.toDomain())
+	}
+	p, err := h.svc.SetSkills(r.Context(), uid, skills)
 	h.write(w, p, err)
 }
 
@@ -218,5 +277,75 @@ func (h *Handler) SetPortfolio(w http.ResponseWriter, r *http.Request) {
 		links = append(links, domain.PortfolioLink(l))
 	}
 	p, err := h.svc.SetPortfolio(r.Context(), uid, links)
+	h.write(w, p, err)
+}
+
+// --- new endpoints handlers ---
+
+func (h *Handler) AddConsentLog(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	var req consentDTO
+	if !decode(r, &req) || req.ConsentType == "" {
+		common.WriteValidationError(w, "consent_type is required")
+		return
+	}
+	cl := req.toDomain()
+	cl.UserID = uid
+	if cl.IPAddress == "" {
+		cl.IPAddress = r.RemoteAddr
+	}
+	if cl.UserAgent == "" {
+		cl.UserAgent = r.Header.Get("User-Agent")
+	}
+
+	err := h.svc.AddConsentLog(r.Context(), &cl)
+	if err != nil {
+		h.writeErr(w, err)
+		return
+	}
+	common.WriteSuccess(w, http.StatusCreated, map[string]string{"status": "consent registered"})
+}
+
+func (h *Handler) AddEndorsement(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	var req endorsementDTO
+	if !decode(r, &req) || req.ToUserID == "" || req.Text == "" {
+		common.WriteValidationError(w, "to_user_id and text are required")
+		return
+	}
+	e := req.toDomain()
+	e.FromUserID = uid
+
+	p, err := h.svc.AddEndorsement(r.Context(), req.ToUserID, &e)
+	h.write(w, p, err)
+}
+
+func (h *Handler) AddReference(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	var req referenceDTO
+	if !decode(r, &req) || req.Name == "" || req.Relationship == "" || req.ContactInfo == "" {
+		common.WriteValidationError(w, "name, relationship, and contact_info are required")
+		return
+	}
+	rf := req.toDomain()
+	p, err := h.svc.AddReference(r.Context(), uid, &rf)
+	h.write(w, p, err)
+}
+
+func (h *Handler) UpdateReference(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	var req referenceDTO
+	if !decode(r, &req) {
+		common.WriteValidationError(w, "invalid request payload")
+		return
+	}
+	req.ID = r.PathValue("id")
+	p, err := h.svc.UpdateReference(r.Context(), uid, req.toDomain())
+	h.write(w, p, err)
+}
+
+func (h *Handler) DeleteReference(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	p, err := h.svc.DeleteReference(r.Context(), uid, r.PathValue("id"))
 	h.write(w, p, err)
 }

@@ -27,7 +27,7 @@ export default function MentorsPage() {
       >
         <h1
           style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
+            fontFamily: "'Public Sans',sans-serif",
             fontWeight: 800,
             fontSize: "clamp(34px,5vw,56px)",
             lineHeight: 1.02,
@@ -551,7 +551,7 @@ export default function MentorsPage() {
           <div style={{ maxWidth: "560px" }}>
             <h2
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(24px,3vw,34px)",
                 lineHeight: 1.08,

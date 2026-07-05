@@ -96,7 +96,7 @@ func TestWriteRefreshesCache(t *testing.T) {
 		t.Fatalf("prime: %v", err)
 	}
 	// A write through the service refreshes the cache write-through.
-	if _, err := svc.SetSkills(ctx, "u1", []string{"Leadership", "Budgeting"}); err != nil {
+	if _, err := svc.SetSkills(ctx, "u1", []domain.ProfileSkill{{Name: "Leadership"}, {Name: "Budgeting"}}); err != nil {
 		t.Fatalf("set skills: %v", err)
 	}
 
@@ -105,7 +105,7 @@ func TestWriteRefreshesCache(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get: %v", err)
 	}
-	if len(p.Skills) != 2 || p.Skills[0] != "Leadership" {
+	if len(p.Skills) != 2 || p.Skills[0].Name != "Leadership" {
 		t.Fatalf("expected refreshed skills in cache, got %v", p.Skills)
 	}
 }

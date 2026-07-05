@@ -97,7 +97,7 @@ export default function SignInPage() {
         <Link
           href="/"
           style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
+            fontFamily: "'Public Sans',sans-serif",
             fontSize: "26px",
             fontWeight: 800,
             letterSpacing: "-0.02em",
@@ -113,7 +113,7 @@ export default function SignInPage() {
               fontSize: "46px",
               lineHeight: 1,
               color: "#E7A57E",
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               marginBottom: "12px",
             }}
           >
@@ -121,7 +121,7 @@ export default function SignInPage() {
           </div>
           <p
             style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               fontWeight: 500,
               fontSize: "clamp(20px,2.2vw,28px)",
               lineHeight: 1.35,
@@ -165,7 +165,7 @@ export default function SignInPage() {
             <strong
               style={{
                 color: "#fff",
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontSize: "18px",
               }}
             >
@@ -177,7 +177,7 @@ export default function SignInPage() {
             <strong
               style={{
                 color: "#fff",
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontSize: "18px",
               }}
             >
@@ -189,7 +189,7 @@ export default function SignInPage() {
             <strong
               style={{
                 color: "#fff",
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontSize: "18px",
               }}
             >
@@ -215,7 +215,7 @@ export default function SignInPage() {
         <div style={{ width: "100%", maxWidth: "440px" }}>
           <h1
             style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               fontWeight: 800,
               fontSize: "clamp(28px,3.4vw,38px)",
               lineHeight: 1.05,

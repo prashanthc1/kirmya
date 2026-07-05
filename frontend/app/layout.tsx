@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Public_Sans } from "next/font/google";
+import { Public_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import ThemeProvider from "@/components/shared/ThemeProvider";
-
-const bricolageGrotesque = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: "--font-bricolage",
-  display: "swap",
-});
 
 const publicSans = Public_Sans({
   subsets: ["latin"],
@@ -28,7 +22,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolageGrotesque.variable} ${publicSans.variable}`}
+      className={`${publicSans.variable}`}
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>

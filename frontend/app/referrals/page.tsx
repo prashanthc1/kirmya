@@ -130,7 +130,7 @@ const eyebrowStyle: React.CSSProperties = {
 };
 
 const headingStyle: React.CSSProperties = {
-  fontFamily: "'Bricolage Grotesque',sans-serif",
+  fontFamily: "'Public Sans',sans-serif",
   fontWeight: 800,
   fontSize: "clamp(30px,5vw,46px)",
   lineHeight: 1.03,
@@ -157,7 +157,7 @@ const cardStyle: React.CSSProperties = {
 };
 
 const companyStyle: React.CSSProperties = {
-  fontFamily: "'Bricolage Grotesque',sans-serif",
+  fontFamily: "'Public Sans',sans-serif",
   fontWeight: 700,
   fontSize: "19px",
   margin: 0,

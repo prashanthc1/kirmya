@@ -27,6 +27,13 @@ func RegisterRoutes(mux *http.ServeMux, h *Handler, auth func(http.Handler) http
 	reg("PUT /api/v1/profiles/me/certifications/{id}", h.UpdateCertification)
 	reg("DELETE /api/v1/profiles/me/certifications/{id}", h.DeleteCertification)
 
+	// New endpoints
+	reg("POST /api/v1/profiles/me/consent", h.AddConsentLog)
+	reg("POST /api/v1/profiles/me/endorsements", h.AddEndorsement)
+	reg("POST /api/v1/profiles/me/references", h.AddReference)
+	reg("PUT /api/v1/profiles/me/references/{id}", h.UpdateReference)
+	reg("DELETE /api/v1/profiles/me/references/{id}", h.DeleteReference)
+
 	// Public view of another user's profile (most-specific "me" routes win).
 	reg("GET /api/v1/profiles/{id}", h.GetByID)
 }

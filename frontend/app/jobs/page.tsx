@@ -246,7 +246,7 @@ export default function JobsPage() {
                               component="h3"
                               sx={{
                                 fontWeight: 800,
-                                fontFamily: "var(--font-bricolage)",
+                                fontFamily: "var(--font-public-sans)",
                                 mb: 0.5,
                                 color: "text.primary",
                               }}

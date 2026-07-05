@@ -43,7 +43,7 @@ export default function FaqPage() {
         </div>
         <h1
           style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
+            fontFamily: "'Public Sans',sans-serif",
             fontWeight: 800,
             fontSize: "clamp(38px,5.5vw,64px)",
             lineHeight: 1.02,
@@ -135,7 +135,7 @@ export default function FaqPage() {
           <div id="candidates">
             <h2
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "24px",
                 letterSpacing: "-0.01em",
@@ -238,7 +238,7 @@ export default function FaqPage() {
           <div id="recruiters">
             <h2
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "24px",
                 letterSpacing: "-0.01em",
@@ -312,7 +312,7 @@ export default function FaqPage() {
           <div id="account">
             <h2
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "24px",
                 letterSpacing: "-0.01em",
@@ -386,7 +386,7 @@ export default function FaqPage() {
           <div id="pricing">
             <h2
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "24px",
                 letterSpacing: "-0.01em",
@@ -451,7 +451,7 @@ export default function FaqPage() {
         >
           <h2
             style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               fontWeight: 800,
               fontSize: "clamp(24px,3vw,32px)",
               letterSpacing: "-0.02em",

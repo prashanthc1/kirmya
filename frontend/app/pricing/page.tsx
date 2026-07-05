@@ -43,7 +43,7 @@ export default function PricingPage() {
         </div>
         <h1
           style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
+            fontFamily: "'Public Sans',sans-serif",
             fontWeight: 800,
             fontSize: "clamp(38px,5.5vw,64px)",
             lineHeight: 1.02,
@@ -96,7 +96,7 @@ export default function PricingPage() {
           >
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 700,
                 fontSize: "20px",
                 marginBottom: "6px",
@@ -124,7 +124,7 @@ export default function PricingPage() {
             >
               <span
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 800,
                   fontSize: "46px",
                   letterSpacing: "-0.02em",
@@ -208,7 +208,7 @@ export default function PricingPage() {
             </span>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 700,
                 fontSize: "20px",
                 marginBottom: "6px",
@@ -236,7 +236,7 @@ export default function PricingPage() {
             >
               <span
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 800,
                   fontSize: "46px",
                   letterSpacing: "-0.02em",
@@ -306,7 +306,7 @@ export default function PricingPage() {
           >
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 700,
                 fontSize: "20px",
                 marginBottom: "6px",
@@ -334,7 +334,7 @@ export default function PricingPage() {
             >
               <span
                 style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
+                  fontFamily: "'Public Sans',sans-serif",
                   fontWeight: 800,
                   fontSize: "46px",
                   letterSpacing: "-0.02em",
@@ -422,7 +422,7 @@ export default function PricingPage() {
           <div>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(32px,4vw,44px)",
                 color: "#C2683C",
@@ -440,7 +440,7 @@ export default function PricingPage() {
           <div>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(32px,4vw,44px)",
                 color: "#4F7C6A",
@@ -458,7 +458,7 @@ export default function PricingPage() {
           <div>
             <div
               style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
+                fontFamily: "'Public Sans',sans-serif",
                 fontWeight: 800,
                 fontSize: "clamp(32px,4vw,44px)",
                 color: "#2B2620",
@@ -486,7 +486,7 @@ export default function PricingPage() {
       >
         <h2
           style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
+            fontFamily: "'Public Sans',sans-serif",
             fontWeight: 800,
             fontSize: "clamp(26px,3.4vw,38px)",
             letterSpacing: "-0.02em",
@@ -607,7 +607,7 @@ export default function PricingPage() {
         >
           <h2
             style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontFamily: "'Public Sans',sans-serif",
               fontWeight: 800,
               color: "#fff",
               fontSize: "clamp(28px,4vw,44px)",

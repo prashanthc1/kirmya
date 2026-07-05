@@ -118,7 +118,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
             component={Link}
             href="/"
             sx={{
-              fontFamily: "var(--font-bricolage), sans-serif",
+              fontFamily: "var(--font-public-sans), sans-serif",
               fontWeight: 800,
               color: "text.primary",
               textDecoration: "none",
@@ -246,7 +246,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                       height: 32,
                       bgcolor: "secondary.main",
                       color: "primary.contrastText",
-                      fontFamily: "var(--font-bricolage), sans-serif",
+                      fontFamily: "var(--font-public-sans), sans-serif",
                       fontWeight: 700,
                       fontSize: "0.85rem",
                     }}
@@ -283,7 +283,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
             {/* Header info */}
             {user && (
               <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 0.5 }}>
-                <Typography variant="body1" sx={{ fontWeight: 800, fontFamily: "var(--font-bricolage)" }}>
+                <Typography variant="body1" sx={{ fontWeight: 800, fontFamily: "var(--font-public-sans)" }}>
                   {user.full_name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>

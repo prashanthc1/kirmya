@@ -76,7 +76,7 @@ export default function MuiModal({
         <Typography
           variant="h5"
           sx={{
-            fontFamily: "var(--font-bricolage), sans-serif",
+            fontFamily: "var(--font-public-sans), sans-serif",
             fontWeight: 800,
             color: "text.primary",
             letterSpacing: "-0.01em",

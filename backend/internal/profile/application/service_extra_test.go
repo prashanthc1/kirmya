@@ -93,7 +93,7 @@ func TestSetLanguagesAndPortfolioReplace(t *testing.T) {
 		t.Fatalf("languages should be replaced, got %+v", p.Languages)
 	}
 
-	p, err = svc.SetPortfolio(ctx, "u1", []domain.PortfolioLink{{Label: "Site", URL: "https://example.com"}})
+	p, err = svc.SetPortfolio(ctx, "u1", []domain.PortfolioLink{{Platform: "Site", URL: "https://example.com"}})
 	if err != nil {
 		t.Fatalf("set portfolio: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestWritesEmitProfileUpdated(t *testing.T) {
 	if _, err := svc.UpdateScalars(ctx, "u1", domain.Scalars{Headline: "Engineer"}); err != nil {
 		t.Fatalf("update: %v", err)
 	}
-	if _, err := svc.SetSkills(ctx, "u1", []string{"Go"}); err != nil {
+	if _, err := svc.SetSkills(ctx, "u1", []domain.ProfileSkill{{Name: "Go"}}); err != nil {
 		t.Fatalf("skills: %v", err)
 	}
 	if len(ev.types) != 2 {
