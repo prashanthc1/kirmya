@@ -122,7 +122,10 @@ func sectionLabel(name string) string {
 	case "summary":
 		return "Summary/Objective"
 	default:
-		return strings.Title(name) //nolint:staticcheck // simple capitalization is fine here
+		if len(name) == 0 {
+			return ""
+		}
+		return strings.ToUpper(name[:1]) + name[1:]
 	}
 }
 

@@ -134,6 +134,10 @@ func (r *Relay) processBatch() {
 	}
 	_ = rows.Close()
 
+	if err := rows.Err(); err != nil {
+		return
+	}
+
 	if len(entries) == 0 {
 		return
 	}
