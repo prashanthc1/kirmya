@@ -305,9 +305,8 @@ export default function SignInPage() {
             </div>
 
             <div style={{ textAlign: "right", marginBottom: "20px" }}>
-              {/* TODO: build /forgot-password flow (backend endpoint exists). */}
-              <a
-                href="#"
+              <Link
+                href="/forgot-password"
                 style={{
                   fontSize: "14px",
                   color: "#C2683C",
@@ -316,7 +315,7 @@ export default function SignInPage() {
                 }}
               >
                 Forgot password ?
-              </a>
+              </Link>
             </div>
 
             <button
