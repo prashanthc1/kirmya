@@ -17,6 +17,7 @@ import (
 	"workspace-app/internal/mentorship"
 	"workspace-app/internal/messaging"
 	"workspace-app/internal/notifications"
+	"workspace-app/internal/network"
 	platformcache "workspace-app/internal/platform/cache"
 	"workspace-app/internal/platform/eventbus"
 	"workspace-app/internal/platform/observability"
@@ -88,6 +89,7 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 	search.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, searchEngine)
 	dashboard.RegisterRoutes(mux, db, identityMod.AuthMiddleware)
 	career.RegisterRoutes(mux, identityMod.AuthMiddleware)
+	network.RegisterRoutes(mux, db, identityMod.AuthMiddleware)
 
 	mux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("web/swagger-ui"))))
 	mux.Handle("/openapi.yaml", http.FileServer(http.Dir("docs")))

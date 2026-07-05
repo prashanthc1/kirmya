@@ -1,24 +1,555 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Chip,
+  Avatar,
+  CircularProgress,
+  Alert,
+  Divider,
+} from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import MessageIcon from "@mui/icons-material/Message";
+import GroupIcon from "@mui/icons-material/Group";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
+import { api } from "@/lib/api/client";
+import { profileClient, Profile } from "@/lib/api/profile";
+import { networkClient, Connection } from "@/lib/api/network";
 
-const CONTENT = "\n  \n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:clamp(36px,4vw,52px) 40px clamp(18px,2.4vw,26px);\">\n    <div style=\"font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#C2683C; margin-bottom:12px;\">Welcome back</div>\n    <h1 style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(30px,4.5vw,46px); line-height:1.02; letter-spacing:-0.025em; margin:0 0 8px;\">Good morning, Marcus.</h1>\n    <p style=\"font-size:clamp(16px,2vw,18px); color:#5B554C; margin:0;\">Your profile is strong. Here’s what’s moving today.</p>\n    <div style=\"margin-top:22px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;\">\n      <span style=\"font-size:13px; font-weight:600; color:#8A8175;\">Dashboard for</span>\n      <div style=\"display:flex; background:#F3ECE2; border-radius:100px; padding:4px; gap:2px;\">\n        <button style=\"border:none; background:#fff; color:#2B2620; font-family:'Public Sans',sans-serif; font-size:13px; font-weight:600; padding:8px 18px; border-radius:100px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.10);\">Job Seeker</button>\n        <button style=\"border:none; background:transparent; color:#8A8175; font-family:'Public Sans',sans-serif; font-size:13px; font-weight:500; padding:8px 18px; border-radius:100px; cursor:pointer;\">Recruiter</button>\n        <button style=\"border:none; background:transparent; color:#8A8175; font-family:'Public Sans',sans-serif; font-size:13px; font-weight:500; padding:8px 18px; border-radius:100px; cursor:pointer;\">Mentor</button>\n      </div>\n    </div>\n  </section>\n\n  \n  \n    <div>\n      <section style=\"max-width:1240px; margin:0 auto; padding:0 40px clamp(24px,3vw,32px);\">\n        <div style=\"display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px;\">\n          <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:18px; padding:24px;\"><div style=\"font-size:14px; color:#8A8175; margin-bottom:8px;\">Profile views</div><div style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:36px; letter-spacing:-0.02em;\">48</div><div style=\"font-size:13px; color:#4F7C6A; margin-top:4px; font-weight:600;\">↑ 12 this week</div></div>\n          <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:18px; padding:24px;\"><div style=\"font-size:14px; color:#8A8175; margin-bottom:8px;\">Recruiter messages</div><div style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:36px; letter-spacing:-0.02em; color:#C2683C;\">5</div><div style=\"font-size:13px; color:#C2683C; margin-top:4px; font-weight:600;\">2 unread</div></div>\n          <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:18px; padding:24px;\"><div style=\"font-size:14px; color:#8A8175; margin-bottom:8px;\">Active applications</div><div style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:36px; letter-spacing:-0.02em;\">7</div><div style=\"font-size:13px; color:#8A8175; margin-top:4px;\">3 in progress</div></div>\n          <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:18px; padding:24px;\"><div style=\"font-size:14px; color:#8A8175; margin-bottom:8px;\">Profile strength</div><div style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:36px; letter-spacing:-0.02em; color:#4F7C6A;\">92%</div><div style=\"font-size:13px; color:#8A8175; margin-top:4px;\">Add 1 reference →</div></div>\n        </div>\n      </section>\n      <section style=\"max-width:1240px; margin:0 auto; padding:0 40px clamp(56px,6vw,90px); display:grid; grid-template-columns:1fr 340px; gap:32px; align-items:start;\">\n        <div style=\"display:flex; flex-direction:column; gap:24px;\">\n          <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:clamp(22px,3vw,28px);\">\n            <div style=\"display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap;\">\n              <img src=\"/assets/avatar-marcus.svg\" alt=\"Marcus Hale\" style=\"flex:none; width:76px; height:76px; border-radius:16px; object-fit:cover; background:#F3E7DC;\"/>\n              <div style=\"flex:1; min-width:220px;\">\n                <div style=\"display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px;\">\n                  <h2 style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:22px; margin:0; letter-spacing:-0.01em;\">Marcus Hale</h2>\n                  <span style=\"font-size:12px; color:#4F7C6A; font-weight:600; background:rgba(79,124,106,0.12); padding:4px 10px; border-radius:100px;\">● Open to work</span>\n                </div>\n                <div style=\"font-size:15px; color:#5B554C; margin-bottom:10px;\">Operations Director · Supply Chain &amp; Logistics</div>\n                <div style=\"display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;\">\n                  <span style=\"font-size:12px; color:#8A8175; background:#F3ECE2; padding:5px 11px; border-radius:100px;\">📍 Denver, CO</span>\n                  <span style=\"font-size:12px; color:#8A8175; background:#F3ECE2; padding:5px 11px; border-radius:100px;\">⏳ 22 yrs exp.</span>\n                  <span style=\"font-size:12px; color:#8A8175; background:#F3ECE2; padding:5px 11px; border-radius:100px;\">✓ References verified</span>\n                </div>\n                <div style=\"display:flex; gap:10px; flex-wrap:wrap;\">\n                  <a href=\"/profile/edit\" style=\"border:none; background:#C2683C; color:#fff; font-size:14px; font-weight:600; padding:11px 22px; border-radius:100px;\">✏ Edit profile</a>\n                  <a href=\"/profile\" style=\"border:1px solid #D8CFC2; background:#fff; color:#2B2620; font-size:14px; font-weight:600; padding:11px 20px; border-radius:100px;\">Public view →</a>\n                </div>\n              </div>\n              <div style=\"flex:none; text-align:center;\">\n                <div style=\"width:72px; height:72px; border-radius:50%; background:conic-gradient(#4F7C6A 331deg, #F3ECE2 331deg); display:flex; align-items:center; justify-content:center; margin-bottom:6px;\">\n                  <div style=\"width:54px; height:54px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-family:'Public Sans',sans-serif; font-weight:800; font-size:15px; color:#2B2620;\">92%</div>\n                </div>\n                <div style=\"font-size:12px; color:#8A8175; line-height:1.3;\">Profile<br/>strength</div>\n              </div>\n            </div>\n          </div>\n          <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:clamp(24px,3vw,32px);\">\n            <h2 style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:22px; margin:0 0 20px;\">Your applications</h2>\n            <div style=\"display:flex; flex-direction:column; gap:12px;\">\n              <div style=\"display:flex; align-items:center; gap:16px; padding:16px; border:1px solid #EFE7DC; border-radius:14px; flex-wrap:wrap;\">\n                <span style=\"flex:none; width:44px; height:44px; border-radius:10px; background:#EAF0EC; display:flex; align-items:center; justify-content:center; font-family:'Public Sans',sans-serif; font-weight:700; color:#4F7C6A;\">N</span>\n                <div style=\"flex:1; min-width:160px;\"><div style=\"font-weight:600; font-size:16px;\">VP of Operations</div><div style=\"font-size:14px; color:#8A8175;\">Northwind Logistics</div></div>\n                <span style=\"font-size:13px; font-weight:600; color:#4F7C6A; background:rgba(79,124,106,0.12); padding:6px 14px; border-radius:100px;\">Interview scheduled</span>\n              </div>\n              <div style=\"display:flex; align-items:center; gap:16px; padding:16px; border:1px solid #EFE7DC; border-radius:14px; flex-wrap:wrap;\">\n                <span style=\"flex:none; width:44px; height:44px; border-radius:10px; background:#F6E7DD; display:flex; align-items:center; justify-content:center; font-family:'Public Sans',sans-serif; font-weight:700; color:#C2683C;\">A</span>\n                <div style=\"flex:1; min-width:160px;\"><div style=\"font-weight:600; font-size:16px;\">Director of Logistics</div><div style=\"font-size:14px; color:#8A8175;\">Atlas Co</div></div>\n                <span style=\"font-size:13px; font-weight:600; color:#B0852E; background:rgba(176,133,46,0.14); padding:6px 14px; border-radius:100px;\">Under review</span>\n              </div>\n              <div style=\"display:flex; align-items:center; gap:16px; padding:16px; border:1px solid #EFE7DC; border-radius:14px; flex-wrap:wrap;\">\n                <span style=\"flex:none; width:44px; height:44px; border-radius:10px; background:#DCE9EF; display:flex; align-items:center; justify-content:center; font-family:'Public Sans',sans-serif; font-weight:700; color:#3E7C99;\">V</span>\n                <div style=\"flex:1; min-width:160px;\"><div style=\"font-weight:600; font-size:16px;\">Head of Supply Chain</div><div style=\"font-size:14px; color:#8A8175;\">Vertex</div></div>\n                <span style=\"font-size:13px; font-weight:600; color:#8A8175; background:#F3ECE2; padding:6px 14px; border-radius:100px;\">Applied</span>\n              </div>\n            </div>\n          </div>\n        </div>\n        <aside style=\"display:flex; flex-direction:column; gap:18px; position:sticky; top:140px;\">\n          <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:18px; padding:26px;\">\n            <div style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:17px; margin-bottom:16px;\">Profile strength</div>\n            <div style=\"height:10px; background:#F3ECE2; border-radius:100px; overflow:hidden; margin-bottom:8px;\"><div style=\"width:92%; height:100%; background:#4F7C6A; border-radius:100px;\"></div></div>\n            <div style=\"font-size:13px; color:#8A8175; margin-bottom:18px;\">92% complete</div>\n            <div style=\"display:flex; flex-direction:column; gap:11px; font-size:14px;\">\n              <div style=\"display:flex; align-items:center; gap:10px; color:#5B554C;\"><span style=\"color:#4F7C6A;\">✓</span> Summary &amp; headline</div>\n              <div style=\"display:flex; align-items:center; gap:10px; color:#5B554C;\"><span style=\"color:#4F7C6A;\">✓</span> Experience added</div>\n              <div style=\"display:flex; align-items:center; gap:10px; color:#5B554C;\"><span style=\"color:#4F7C6A;\">✓</span> Skills tagged</div>\n              <div style=\"display:flex; align-items:center; gap:10px; color:#8A8175;\"><span style=\"width:14px; height:14px; border-radius:50%; border:1.5px solid #D8CFC2; display:inline-block;\"></span> Add a 3rd reference</div>\n            </div>\n          </div>\n          <div style=\"background:#2B2620; color:#fff; border-radius:18px; padding:26px;\">\n            <div style=\"display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;\"><div style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:17px;\">Recruiter messages</div><span style=\"font-size:12px; background:#C2683C; color:#fff; font-weight:600; padding:3px 9px; border-radius:100px;\">2 new</span></div>\n            <div style=\"display:flex; flex-direction:column; gap:14px;\">\n              <div style=\"display:flex; gap:12px;\"><span style=\"flex:none; width:36px; height:36px; border-radius:50%; background:#4F7C6A; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; font-family:'Public Sans',sans-serif;\">EP</span><div><div style=\"font-size:14px; font-weight:600;\">Elena Park · Northwind</div><div style=\"font-size:13px; color:#9C958A; line-height:1.4;\">Loved your network consolidation story —</div></div></div>\n              <div style=\"display:flex; gap:12px;\"><span style=\"flex:none; width:36px; height:36px; border-radius:50%; background:#C2683C; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; font-family:'Public Sans',sans-serif;\">JR</span><div><div style=\"font-size:14px; font-weight:600;\">Jon Reed · Atlas Co</div><div style=\"font-size:13px; color:#9C958A; line-height:1.4;\">Do you have time Thursday to chat?</div></div></div>\n            </div>\n            <a href=\"/inbox\" style=\"display:block; text-align:center; width:100%; margin-top:18px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; font-size:14px; font-weight:600; padding:11px; border-radius:100px; box-sizing:border-box;\">Open inbox</a>\n          </div>\n          <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:18px; padding:26px;\">\n            <div style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:17px; margin-bottom:16px;\">Recommended for you</div>\n            <a href=\"/jobs/detail\" style=\"display:block; padding-bottom:14px; margin-bottom:14px; border-bottom:1px solid #EFE7DC;\"><div style=\"font-weight:600; font-size:15px;\">VP, Distribution</div><div style=\"font-size:13px; color:#8A8175;\">Meridian · $190k–230k</div></a>\n            <a href=\"/jobs/detail\" style=\"display:block;\"><div style=\"font-weight:600; font-size:15px;\">Head of People</div><div style=\"font-size:13px; color:#8A8175;\">Atlas Co · $155k–185k</div></a>\n          </div>\n        </aside>\n      </section>\n    </div>\n  \n\n  \n  \n\n  \n  \n\n  \n  \n";
+interface DashboardSummary {
+  unread_notifications: number;
+  job_seeker: {
+    applications: number;
+    saved_jobs: number;
+    outgoing_referrals: number;
+  };
+  recruiter: {
+    posted_jobs: number;
+    total_applicants: number;
+    incoming_referrals: number;
+  };
+  mentor: {
+    upcoming_sessions: number;
+    pending_requests: number;
+    completed_sessions: number;
+  };
+}
 
 export default function DashboardPage() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [incomingRequests, setIncomingRequests] = useState<Connection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    try {
+      const p = await profileClient.getMe();
+      setProfile(p);
+
+      const s = await api.get<DashboardSummary>("/me/dashboard");
+      setSummary(s);
+
+      const conns = await networkClient.getConnections();
+      setConnections(conns);
+
+      const reqs = await networkClient.getIncomingRequests();
+      setIncomingRequests(reqs);
+    } catch (err) {
+      setError("Failed to load dashboard data.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleAccept = async (id: string) => {
+    if (actionLoading) return;
+    setActionLoading(true);
+    try {
+      await networkClient.acceptRequest(id);
+      await loadData();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    if (actionLoading) return;
+    setActionLoading(true);
+    try {
+      await networkClient.rejectRequest(id);
+      await loadData();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#FBF7F2" }}>
+        <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Dashboard" }]} />
+        <Box sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", py: 8 }}>
+          <CircularProgress color="primary" />
+        </Box>
+        <SiteFooter />
+      </Box>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#FBF7F2" }}>
+        <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Dashboard" }]} />
+        <Container maxWidth="lg" sx={{ flex: 1, py: 8 }}>
+          <Alert severity="error" sx={{ borderRadius: 3 }}>
+            {error || "Could not load dashboard."}
+          </Alert>
+        </Container>
+        <SiteFooter />
+      </Box>
+    );
+  }
+
+  // Determine the display name
+  const displayName = profile.headline || "Professional";
+  const firstName = displayName.split(" ")[0];
+
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         background: "#FBF7F2",
-        fontFamily: "'Public Sans',sans-serif",
+        fontFamily: "var(--font-public-sans), sans-serif",
         color: "#2B2620",
         minHeight: "100vh",
-        overflowX: "hidden",
         display: "flex",
         flexDirection: "column",
       }}
     >
       <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Dashboard" }]} />
-      <div style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: CONTENT }} />
+
+      {/* Header section */}
+      <Box sx={{ maxWidth: 1240, width: "100%", mx: "auto", px: 5, pt: 6, pb: 4 }}>
+        <Typography
+          sx={{
+            fontSize: "0.8rem",
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "#C2683C",
+            mb: 1.5,
+          }}
+        >
+          Welcome back
+        </Typography>
+        <Typography
+          variant="h2"
+          sx={{
+            fontFamily: "var(--font-bricolage)",
+            fontWeight: 800,
+            fontSize: { xs: "2rem", md: "2.8rem" },
+            lineHeight: 1.05,
+            letterSpacing: "-0.025em",
+            mb: 1,
+          }}
+        >
+          Good morning, {firstName}.
+        </Typography>
+        <Typography variant="body1" sx={{ color: "#5B554C", fontSize: "1.1rem" }}>
+          Here’s what’s moving today in your professional recovery network.
+        </Typography>
+      </Box>
+
+      {/* Stats Summary cards */}
+      <Container maxWidth="lg" sx={{ px: { xs: 3, md: 5 }, mb: 4 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ borderRadius: 5, border: "1px solid #EFE7DC", boxShadow: "none", p: 3, background: "#fff" }}>
+              <Typography variant="body2" sx={{ color: "#8A8175", mb: 1, fontWeight: 500 }}>
+                Active applications
+              </Typography>
+              <Typography variant="h3" sx={{ fontFamily: "var(--font-bricolage)", fontWeight: 800 }}>
+                {summary?.job_seeker.applications ?? 0}
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ borderRadius: 5, border: "1px solid #EFE7DC", boxShadow: "none", p: 3, background: "#fff" }}>
+              <Typography variant="body2" sx={{ color: "#8A8175", mb: 1, fontWeight: 500 }}>
+                Saved Jobs
+              </Typography>
+              <Typography variant="h3" sx={{ fontFamily: "var(--font-bricolage)", fontWeight: 800 }}>
+                {summary?.job_seeker.saved_jobs ?? 0}
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ borderRadius: 5, border: "1px solid #EFE7DC", boxShadow: "none", p: 3, background: "#fff" }}>
+              <Typography variant="body2" sx={{ color: "#8A8175", mb: 1, fontWeight: 500 }}>
+                Connections
+              </Typography>
+              <Typography variant="h3" sx={{ fontFamily: "var(--font-bricolage)", fontWeight: 800, color: "#C2683C" }}>
+                {connections.length}
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ borderRadius: 5, border: "1px solid #EFE7DC", boxShadow: "none", p: 3, background: "#fff" }}>
+              <Typography variant="body2" sx={{ color: "#8A8175", mb: 1, fontWeight: 500 }}>
+                Profile strength
+              </Typography>
+              <Typography variant="h3" sx={{ fontFamily: "var(--font-bricolage)", fontWeight: 800, color: "#4F7C6A" }}>
+                {profile.profile_completeness_score}%
+              </Typography>
+            </Card>
+          </Grid>
+        </Grid>
+      </Container>
+
+      {/* Main dashboard content */}
+      <Container maxWidth="lg" sx={{ px: { xs: 3, md: 5 }, pb: 8 }}>
+        <Grid container spacing={4} alignItems="start">
+          <Grid item xs={12} md={8}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {/* Profile Snapshot card */}
+              <Card sx={{ borderRadius: 6, border: "1px solid #EFE7DC", boxShadow: "none", p: 4, background: "#fff" }}>
+                <Grid container spacing={3} alignItems="center">
+                  <Grid item xs={12} sm="auto">
+                    <Avatar
+                      src={profile.photo_url || "/assets/avatar-marcus.svg"}
+                      alt={profile.headline}
+                      sx={{ width: 76, height: 76, borderRadius: 4, backgroundColor: "#F3E7DC" }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm sx={{ flex: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap", mb: 0.5 }}>
+                      <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: "var(--font-bricolage)" }}>
+                        {profile.headline || "Add a headline"}
+                      </Typography>
+                      {profile.career_status && (
+                        <Chip
+                          label={profile.career_status.replace("_", " ")}
+                          size="small"
+                          sx={{
+                            backgroundColor: "rgba(79, 124, 106, 0.12)",
+                            color: "#4F7C6A",
+                            fontWeight: 700,
+                            fontSize: "0.75rem",
+                          }}
+                        />
+                      )}
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      📍 {profile.location || "Add your location"} &bull; {profile.open_to_remote ? "Open to Remote" : ""}
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+                      <Button
+                        component={Link}
+                        href="/profile/edit"
+                        variant="contained"
+                        size="small"
+                        startIcon={<EditIcon />}
+                        sx={{
+                          borderRadius: "100px",
+                          textTransform: "none",
+                          fontWeight: 600,
+                          backgroundColor: "#C2683C",
+                          "&:hover": { backgroundColor: "#a8562f" },
+                        }}
+                      >
+                        Edit profile
+                      </Button>
+                      <Button
+                        component={Link}
+                        href="/profile"
+                        variant="outlined"
+                        size="small"
+                        startIcon={<VisibilityIcon />}
+                        sx={{
+                          borderRadius: "100px",
+                          textTransform: "none",
+                          fontWeight: 600,
+                          borderColor: "#D8CFC2",
+                          color: "#2B2620",
+                          "&:hover": { borderColor: "#2B2620" },
+                        }}
+                      >
+                        Public view
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Card>
+
+              {/* Incoming Connection Requests Panel */}
+              {incomingRequests.length > 0 && (
+                <Card sx={{ borderRadius: 6, border: "1px solid #EFE7DC", boxShadow: "none", p: 4, background: "#fff" }}>
+                  <Typography
+                    variant="h5"
+                    sx={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, mb: 3, color: "#2B2620" }}
+                  >
+                    Pending Connection Requests ({incomingRequests.length})
+                  </Typography>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    {incomingRequests.map((req) => {
+                      const requesterName = req.requester_name || "Professional";
+                      const requesterHeadline = req.requester_headline || "Kirmya Member";
+                      return (
+                        <Box
+                          key={req.id}
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            p: 2.5,
+                            border: "1px solid #EFE7DC",
+                            borderRadius: 4,
+                            flexWrap: "wrap",
+                            gap: 2,
+                          }}
+                        >
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            <Avatar
+                              src={req.requester_photo_url || "/assets/avatar-marcus.svg"}
+                              sx={{ borderRadius: 3, width: 48, height: 48 }}
+                            />
+                            <Box>
+                              <Typography
+                                component={Link}
+                                href={`/profile/${req.requester_id}`}
+                                variant="subtitle1"
+                                sx={{
+                                  fontWeight: 700,
+                                  color: "#2B2620",
+                                  textDecoration: "none",
+                                  "&:hover": { color: "#C2683C" },
+                                }}
+                              >
+                                {requesterName}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {requesterHeadline}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Box sx={{ display: "flex", gap: 1 }}>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              disabled={actionLoading}
+                              onClick={() => handleAccept(req.id)}
+                              startIcon={<CheckIcon />}
+                              sx={{
+                                borderRadius: "100px",
+                                textTransform: "none",
+                                fontWeight: 600,
+                                px: 3,
+                              }}
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="inherit"
+                              disabled={actionLoading}
+                              onClick={() => handleReject(req.id)}
+                              startIcon={<CloseIcon />}
+                              sx={{
+                                borderRadius: "100px",
+                                textTransform: "none",
+                                fontWeight: 600,
+                              }}
+                            >
+                              Ignore
+                            </Button>
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Card>
+              )}
+
+              {/* Connections List Card */}
+              <Card sx={{ borderRadius: 6, border: "1px solid #EFE7DC", boxShadow: "none", p: 4, background: "#fff" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                  <GroupIcon color="primary" />
+                  <Typography
+                    variant="h5"
+                    sx={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, color: "#2B2620", m: 0 }}
+                  >
+                    Your Connections ({connections.length})
+                  </Typography>
+                </Box>
+
+                {connections.length === 0 ? (
+                  <Box sx={{ py: 4, textAlign: "center" }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                      You haven’t connected with anyone yet.
+                    </Typography>
+                    <Button
+                      component={Link}
+                      href="/search?type=user"
+                      variant="outlined"
+                      sx={{ borderRadius: "100px", textTransform: "none", color: "#C2683C", borderColor: "#C2683C" }}
+                    >
+                      Search professionals to connect
+                    </Button>
+                  </Box>
+                ) : (
+                  <Grid container spacing={2.5}>
+                    {connections.map((c) => {
+                      const isRequester = c.requester_id === profile.user_id;
+                      const connName = isRequester ? c.receiver_name : c.requester_name;
+                      const connHeadline = isRequester ? c.receiver_headline : c.requester_headline;
+                      const connPhoto = isRequester ? c.receiver_photo_url : c.requester_photo_url;
+                      const connID = isRequester ? c.receiver_id : c.requester_id;
+
+                      return (
+                        <Grid item xs={12} sm={6} key={c.id}>
+                          <Box
+                            sx={{
+                              p: 2.5,
+                              border: "1px solid #EFE7DC",
+                              borderRadius: 4,
+                              height: "100%",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 2 }}>
+                              <Avatar src={connPhoto || "/assets/avatar-marcus.svg"} sx={{ borderRadius: 3, width: 44, height: 44 }} />
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography
+                                  component={Link}
+                                  href={`/profile/${connID}`}
+                                  variant="subtitle1"
+                                  sx={{
+                                    fontWeight: 700,
+                                    color: "#2B2620",
+                                    textDecoration: "none",
+                                    "&:hover": { color: "#C2683C" },
+                                    display: "block",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {connName || "Kirmya Member"}
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {connHeadline || "Professional"}
+                                </Typography>
+                              </Box>
+                            </Box>
+
+                            <Button
+                              component={Link}
+                              href="/inbox"
+                              variant="outlined"
+                              color="inherit"
+                              fullWidth
+                              startIcon={<MessageIcon sx={{ fontSize: 16 }} />}
+                              sx={{
+                                borderRadius: "100px",
+                                textTransform: "none",
+                                fontWeight: 600,
+                                fontSize: "0.85rem",
+                                borderColor: "#D8CFC2",
+                                color: "#5B554C",
+                                "&:hover": { borderColor: "#2B2620", color: "#2B2620" },
+                              }}
+                            >
+                              Message
+                            </Button>
+                          </Box>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                )}
+              </Card>
+            </Box>
+          </Grid>
+
+          {/* Right sidebar */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              {/* Profile Strength Card */}
+              <Card sx={{ borderRadius: 6, border: "1px solid #EFE7DC", boxShadow: "none", p: 4, background: "#fff" }}>
+                <Typography variant="subtitle1" sx={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, mb: 1.5 }}>
+                  Profile completeness
+                </Typography>
+                <Box sx={{ height: 10, background: "#F3ECE2", borderRadius: 100, overflow: "hidden", mb: 1 }}>
+                  <Box sx={{ width: `${profile.profile_completeness_score}%`, height: "100%", background: "#4F7C6A" }} />
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {profile.profile_completeness_score}% complete. Keep adding experiences to showcase your career comeback story.
+                </Typography>
+              </Card>
+
+              {/* Recommended Jobs */}
+              <Card sx={{ borderRadius: 6, border: "1px solid #EFE7DC", boxShadow: "none", p: 4, background: "#fff" }}>
+                <Typography variant="subtitle1" sx={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, mb: 2 }}>
+                  Recommended roles
+                </Typography>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Box component={Link} href="/jobs" sx={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, "&:hover": { color: "#C2683C" } }}>
+                      VP, Supply Chain Operations
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Atlas Co &bull; Bangalore / Remote
+                    </Typography>
+                  </Box>
+                  <Divider />
+                  <Box component={Link} href="/jobs" sx={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, "&:hover": { color: "#C2683C" } }}>
+                      Director of Logistics & Operations
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Vertex &bull; Mumbai / Hybrid
+                    </Typography>
+                  </Box>
+                </Box>
+              </Card>
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
+
       <SiteFooter />
-    </div>
+    </Box>
   );
 }

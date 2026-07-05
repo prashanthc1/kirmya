@@ -141,7 +141,7 @@ func userDoc(u UserRow) search.Doc {
 	}
 	return search.Doc{
 		Type: "user", RefID: u.ID, Title: title, Subtitle: u.Headline,
-		Body: u.Email + " " + u.Headline, URL: "",
+		Body: u.Email + " " + u.Headline, URL: "/profile/" + u.ID,
 	}
 }
 
