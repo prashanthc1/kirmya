@@ -23,13 +23,12 @@ const (
 )
 
 // SelfAssignableRoles are the roles a user may grant or remove for themselves
-// via PUT /users/me/roles. Admin is intentionally excluded — privilege
+// via PUT /users/me/roles. Admin and recruiter are intentionally excluded — privilege
 // elevation remains an admin-only action.
 var SelfAssignableRoles = map[string]bool{
 	RoleJobSeeker: true,
 	RoleReferrer:  true,
 	RoleMentor:    true,
-	RoleRecruiter: true,
 }
 
 // OAuth provider names.

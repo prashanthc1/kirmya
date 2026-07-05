@@ -7,12 +7,13 @@ import (
 	"errors"
 
 	"workspace-app/internal/identity/domain"
+	"workspace-app/internal/platform/tx"
 )
 
 // OAuthRepository implements domain.OAuthRepository.
-type OAuthRepository struct{ db *sql.DB }
+type OAuthRepository struct{ db tx.DBTX }
 
-func NewOAuthRepository(db *sql.DB) *OAuthRepository { return &OAuthRepository{db: db} }
+func NewOAuthRepository(db *sql.DB) *OAuthRepository { return &OAuthRepository{db: tx.NewTxDB(db)} }
 
 func (r *OAuthRepository) FindUserIDByProvider(ctx context.Context, provider, providerUID string) (string, bool, error) {
 	const q = `SELECT user_id FROM oauth_accounts WHERE provider = $1 AND provider_uid = $2`
@@ -37,9 +38,9 @@ func (r *OAuthRepository) Link(ctx context.Context, userID, provider, providerUI
 }
 
 // MFARepository implements domain.MFARepository.
-type MFARepository struct{ db *sql.DB }
+type MFARepository struct{ db tx.DBTX }
 
-func NewMFARepository(db *sql.DB) *MFARepository { return &MFARepository{db: db} }
+func NewMFARepository(db *sql.DB) *MFARepository { return &MFARepository{db: tx.NewTxDB(db)} }
 
 func (r *MFARepository) Upsert(ctx context.Context, c *domain.MFACredential) error {
 	const q = `
@@ -77,9 +78,9 @@ func (r *MFARepository) Confirm(ctx context.Context, userID string) error {
 }
 
 // AuditRepository implements domain.AuditRepository.
-type AuditRepository struct{ db *sql.DB }
+type AuditRepository struct{ db tx.DBTX }
 
-func NewAuditRepository(db *sql.DB) *AuditRepository { return &AuditRepository{db: db} }
+func NewAuditRepository(db *sql.DB) *AuditRepository { return &AuditRepository{db: tx.NewTxDB(db)} }
 
 func (r *AuditRepository) Record(ctx context.Context, actorID, action, targetType, targetID string, metadata map[string]any, ip string) error {
 	meta, err := json.Marshal(metadata)

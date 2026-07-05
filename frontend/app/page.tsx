@@ -1,1085 +1,455 @@
+"use client";
+
+import React from "react";
 import Link from "next/link";
+import {
+  Box,
+  Container,
+  Grid,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Avatar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 
+const FEATURES = [
+  {
+    href: "/resume",
+    icon: "◈",
+    iconBg: "rgba(214, 104, 56, 0.12)",
+    iconColor: "#D66838",
+    title: "AI Resume Coach",
+    desc: "Upload your resume and immediately get an ATS score, missing keyword metrics, and phrasing improvements that capture recruiters' attention.",
+  },
+  {
+    href: "/referrals",
+    icon: "↳",
+    iconBg: "rgba(55, 97, 77, 0.12)",
+    iconColor: "#37614D",
+    title: "Real Referrals",
+    desc: "Skip the automated hiring system filters. Secure warm introductions directly from employees working inside companies you want to join.",
+  },
+  {
+    href: "/mentorship",
+    icon: "✳",
+    iconBg: "rgba(43, 38, 32, 0.08)",
+    iconColor: "#2B2620",
+    title: "Supportive Mentorship",
+    desc: "Book free, structured sessions with experienced professionals who have sat in the exact seat you are aiming for.",
+  },
+  {
+    href: "/communities",
+    icon: "▦",
+    iconBg: "rgba(106, 95, 160, 0.12)",
+    iconColor: "#6A5FA0",
+    title: "Quiet Communities",
+    desc: "Industry-focused micro-circles for tech, operations, logistics, HR, and facilities management where members share real leads, not selfies.",
+  },
+  {
+    href: "/career-paths",
+    icon: "↗",
+    iconBg: "rgba(55, 97, 77, 0.12)",
+    iconColor: "#37614D",
+    title: "Interactive Career Paths",
+    desc: "Visually trace transition opportunities, compare market demand salary expectations, and isolate specific skill gaps holding you back.",
+  },
+  {
+    href: "/coach",
+    icon: "✦",
+    iconBg: "rgba(214, 104, 56, 0.12)",
+    iconColor: "#D66838",
+    title: "AI Coach & Interview Prep",
+    desc: "Practice roleplay interview scenarios, refine salary negotiation scripts, and plan your weekly outreach goals with an on-demand virtual partner.",
+  },
+];
+
+const FAQS = [
+  {
+    q: "Is Kirmya really free to use?",
+    a: "Yes. During career transitions, the last thing you need is another bill. The core tools—resume parsing, AI coaching suggestions, community access, and mentorship sessions—are free. We may introduce premium sponsor features later, but job recovery tools remain accessible to all.",
+  },
+  {
+    q: "How does the referral system prevent spam?",
+    a: "We do not allow cold, automated messaging. Referral requests require structured introductions, target specific open roles, and are matched based on mutual interest, protecting referrers from spam while keeping candidate signal high.",
+  },
+  {
+    q: "What makes Kirmya different from LinkedIn?",
+    a: "LinkedIn optimizes for screen time, influencers, and vanity metrics. Kirmya is a recovery workspace. There is no public content feed. We focus on one metric: the speed at which you land your next interview.",
+  },
+];
+
 export default function HomePage() {
   return (
-    <div
-      style={{
-        background: "#FBF7F2",
-        fontFamily: "'Public Sans',sans-serif",
-        color: "#2B2620",
-        minHeight: "100vh",
-        overflowX: "hidden",
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <SiteNav />
 
-      {/* HERO */}
-      <section
-        style={{
-          maxWidth: "1240px",
-          margin: "0 auto",
-          padding: "clamp(56px,8vw,104px) 40px clamp(44px,5vw,64px)",
+      {/* Hero Section */}
+      <Box
+        component="section"
+        sx={{
+          py: { xs: 8, md: 14 },
           textAlign: "center",
+          background: "radial-gradient(circle at top, rgba(214, 104, 56, 0.04) 0%, rgba(252, 250, 247, 0) 60%)",
         }}
       >
-        <div
-          style={{
-            display: "inline-block",
-            fontSize: "13px",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "#4F7C6A",
-            background: "rgba(79,124,106,0.12)",
-            padding: "8px 16px",
-            borderRadius: "100px",
-            marginBottom: "28px",
-          }}
-        >
-          Built for the moment between jobs
-        </div>
-        <h1
-          style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
-            fontWeight: 800,
-            fontSize: "clamp(40px,7vw,76px)",
-            lineHeight: 1.02,
-            letterSpacing: "-0.025em",
-            margin: "0 auto 24px",
-            maxWidth: "900px",
-          }}
-        >
-          You didn&apos;t lose your career.
-          <br />
-          <span style={{ color: "#C2683C" }}>You just lost that one job.</span>
-        </h1>
-        <p
-          style={{
-            fontSize: "clamp(17px,2vw,20px)",
-            lineHeight: 1.6,
-            color: "#5B554C",
-            maxWidth: "640px",
-            margin: "0 auto 36px",
-          }}
-        >
-          The gap on your resume isn&apos;t a red flag — it&apos;s a chapter.
-          Kirmya is where professionals like you come to breathe, regroup, and
-          come back stronger. Real referrals. Real mentors. An AI coach that
-          gets what you&apos;ve been through.
-        </p>
-        <div
-          style={{
-            display: "flex",
-            gap: "14px",
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <Link
-            href="/sign-in"
-            style={{
-              background: "#C2683C",
-              color: "#fff",
-              fontSize: "16px",
-              fontWeight: 600,
-              padding: "16px 32px",
-              borderRadius: "100px",
-              textDecoration: "none",
+        <Container maxWidth="md" className="animate-fade-in-up">
+          <Typography
+            component="span"
+            sx={{
               display: "inline-block",
-            }}
-          >
-            Start your comeback
-          </Link>
-          <Link
-            href="/#how"
-            style={{
-              background: "#fff",
-              color: "#2B2620",
-              border: "1px solid #E2D8CB",
-              fontSize: "16px",
-              fontWeight: 600,
-              padding: "16px 32px",
-              borderRadius: "100px",
-              textDecoration: "none",
-              display: "inline-block",
-            }}
-          >
-            See how it works
-          </Link>
-        </div>
-        <div
-          style={{
-            marginTop: "24px",
-            fontSize: "14px",
-            color: "#8A8175",
-          }}
-        >
-          Free to join · No spam · Your data stays yours
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section
-        style={{
-          maxWidth: "1240px",
-          margin: "0 auto",
-          padding: "0 40px clamp(48px,6vw,80px)",
-        }}
-      >
-        <div
-          style={{
-            textAlign: "center",
-            maxWidth: "640px",
-            margin: "0 auto clamp(36px,4vw,52px)",
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontSize: "0.85rem",
               fontWeight: 800,
-              fontSize: "clamp(30px,4.4vw,46px)",
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
-              margin: "0 0 16px",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "primary.main",
+              backgroundColor: "rgba(214, 104, 56, 0.08)",
+              px: 2.5,
+              py: 1,
+              borderRadius: 100,
+              mb: 4,
+            }}
+          >
+            Built for the moment between jobs
+          </Typography>
+
+          <Typography
+            variant="h1"
+            sx={{
+              fontSize: { xs: "2.75rem", sm: "4rem", md: "4.75rem" },
+              color: "text.primary",
+              mb: 3,
+            }}
+          >
+            You didn&apos;t lose your career.
+            <br />
+            <Box component="span" sx={{ color: "primary.main" }}>
+              You just lost that one job.
+            </Box>
+          </Typography>
+
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{
+              fontSize: { xs: "1.1rem", md: "1.25rem" },
+              maxWidth: 680,
+              mx: "auto",
+              mb: 5,
+            }}
+          >
+            The gap on your resume isn&apos;t a red flag—it&apos;s a chapter. Kirmya is where
+            professionals regroup, refine their materials, coordinate referrals, and come back
+            stronger.
+          </Typography>
+
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              justifyContent: "center",
+              flexWrap: "wrap",
+              mb: 3,
+            }}
+          >
+            <Button
+              component={Link}
+              href="/sign-in"
+              variant="contained"
+              color="primary"
+              size="large"
+              sx={{
+                py: 2,
+                px: 4.5,
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                boxShadow: "0 10px 25px -5px rgba(214, 104, 56, 0.3)",
+              }}
+            >
+              Start your comeback
+            </Button>
+            <Button
+              component={Link}
+              href="#how"
+              variant="outlined"
+              color="primary"
+              size="large"
+              sx={{
+                py: 2,
+                px: 4.5,
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                backgroundColor: "background.paper",
+              }}
+            >
+              See how it works
+            </Button>
+          </Box>
+
+          <Typography variant="body2" color="text.secondary">
+            Free to join · No spam · Your data stays yours
+          </Typography>
+        </Container>
+      </Box>
+
+      {/* Features Grid */}
+      <Container component="section" sx={{ pb: { xs: 8, md: 12 } }}>
+        <Box sx={{ textAlign: "center", maxWidth: 600, mx: "auto", mb: { xs: 6, md: 8 } }}>
+          <Typography
+            variant="h2"
+            sx={{
+              fontSize: { xs: "2.25rem", md: "2.75rem" },
+              mb: 2,
             }}
           >
             Everything the job hunt actually needs.
-          </h2>
-          <p
-            style={{
-              fontSize: "clamp(16px,2vw,18px)",
-              lineHeight: 1.6,
-              color: "#5B554C",
-              margin: 0,
-            }}
-          >
-            Not a feed to perform on. Not another platform to game. Just the
-            tools, people, and guidance that get you hired.
-          </p>
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
-            gap: "20px",
-          }}
-        >
-          <Link
-            href="/resume"
-            style={{
-              background: "#fff",
-              border: "1px solid #EFE7DC",
-              borderRadius: "18px",
-              padding: "32px",
-              display: "block",
-              textDecoration: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
-                background: "rgba(194,104,60,0.14)",
-                marginBottom: "18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "22px",
-                color: "#C2683C",
-              }}
-            >
-              ◈
-            </div>
-            <h3
-              style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
-                fontWeight: 700,
-                fontSize: "20px",
-                margin: "0 0 8px",
-              }}
-            >
-              AI Resume Coach
-            </h3>
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.55,
-                color: "#6B6357",
-                margin: 0,
-              }}
-            >
-              Upload your resume. Walk away with an ATS score, missing keywords,
-              and edits that make recruiters stop scrolling.
-            </p>
-          </Link>
-          <Link
-            href="/referrals"
-            style={{
-              background: "#fff",
-              border: "1px solid #EFE7DC",
-              borderRadius: "18px",
-              padding: "32px",
-              display: "block",
-              textDecoration: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
-                background: "rgba(79,124,106,0.14)",
-                marginBottom: "18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "22px",
-                color: "#4F7C6A",
-              }}
-            >
-              ⇄
-            </div>
-            <h3
-              style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
-                fontWeight: 700,
-                fontSize: "20px",
-                margin: "0 0 8px",
-              }}
-            >
-              Real Referrals
-            </h3>
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.55,
-                color: "#6B6357",
-                margin: 0,
-              }}
-            >
-              Skip the cold-apply black hole. Request warm intros from people
-              already inside the companies you want.
-            </p>
-          </Link>
-          <Link
-            href="/mentorship"
-            style={{
-              background: "#fff",
-              border: "1px solid #EFE7DC",
-              borderRadius: "18px",
-              padding: "32px",
-              display: "block",
-              textDecoration: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
-                background: "rgba(43,38,32,0.1)",
-                marginBottom: "18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "22px",
-                color: "#2B2620",
-              }}
-            >
-              ◍
-            </div>
-            <h3
-              style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
-                fontWeight: 700,
-                fontSize: "20px",
-                margin: "0 0 8px",
-              }}
-            >
-              Mentorship
-            </h3>
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.55,
-                color: "#6B6357",
-                margin: 0,
-              }}
-            >
-              Talk to someone who&apos;s sat in the seat you are aiming for.
-              Book sessions. Get honest advice. Move faster.
-            </p>
-          </Link>
-          <Link
-            href="/communities"
-            style={{
-              background: "#fff",
-              border: "1px solid #EFE7DC",
-              borderRadius: "18px",
-              padding: "32px",
-              display: "block",
-              textDecoration: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
-                background: "rgba(106,95,160,0.14)",
-                marginBottom: "18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "22px",
-                color: "#6A5FA0",
-              }}
-            >
-              ❖
-            </div>
-            <h3
-              style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
-                fontWeight: 700,
-                fontSize: "20px",
-                margin: "0 0 8px",
-              }}
-            >
-              Quiet Communities
-            </h3>
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.55,
-                color: "#6B6357",
-                margin: 0,
-              }}
-            >
-              Industry circles for ops, tech, HR, logistics, and more — where
-              people share leads, not selfies.
-            </p>
-          </Link>
-          <Link
-            href="/career-paths"
-            style={{
-              background: "#fff",
-              border: "1px solid #EFE7DC",
-              borderRadius: "18px",
-              padding: "32px",
-              display: "block",
-              textDecoration: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
-                background: "rgba(79,124,106,0.14)",
-                marginBottom: "18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "22px",
-                color: "#4F7C6A",
-              }}
-            >
-              ↗
-            </div>
-            <h3
-              style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
-                fontWeight: 700,
-                fontSize: "20px",
-                margin: "0 0 8px",
-              }}
-            >
-              Career Paths
-            </h3>
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.55,
-                color: "#6B6357",
-                margin: 0,
-              }}
-            >
-              See where you can realistically go next, what it pays, and the
-              exact skills standing between you and the offer.
-            </p>
-          </Link>
-          <Link
-            href="/coach"
-            style={{
-              background: "#fff",
-              border: "1px solid #EFE7DC",
-              borderRadius: "18px",
-              padding: "32px",
-              display: "block",
-              textDecoration: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
-                background: "rgba(194,104,60,0.14)",
-                marginBottom: "18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "22px",
-                color: "#C2683C",
-              }}
-            >
-              ✦
-            </div>
-            <h3
-              style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
-                fontWeight: 700,
-                fontSize: "20px",
-                margin: "0 0 8px",
-              }}
-            >
-              AI Career Coach
-            </h3>
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.55,
-                color: "#6B6357",
-                margin: 0,
-              }}
-            >
-              Interview prep, salary negotiation, &ldquo;what do I do this
-              week?&rdquo; — your coach is always on, never judges, never gets
-              tired.
-            </p>
-          </Link>
-        </div>
-      </section>
-      {/* HOW IT WORKS */}
-      <section
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            No social feeds to perform on. No metrics to game. Just targeted tools and warm connections
+            designed to get you hired.
+          </Typography>
+        </Box>
+
+        <Grid container spacing={3}>
+          {FEATURES.map((feature, i) => (
+            <Grid item xs={12} sm={6} md={4} key={i}>
+              <Card
+                className="glass-card"
+                component={Link}
+                href={feature.href}
+                sx={{
+                  display: "block",
+                  textDecoration: "none",
+                  height: "100%",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 12px 30px rgba(43, 38, 32, 0.08)",
+                    borderColor: "primary.light",
+                  },
+                }}
+              >
+                <CardContent sx={{ p: 4, height: "100%" }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: feature.iconBg,
+                      color: feature.iconColor,
+                      fontSize: "1.5rem",
+                      fontWeight: 700,
+                      borderRadius: 3,
+                      width: 48,
+                      height: 48,
+                      mb: 3,
+                    }}
+                  >
+                    {feature.icon}
+                  </Avatar>
+                  <Typography
+                    variant="h5"
+                    component="h3"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "1.25rem",
+                      mb: 1.5,
+                      color: "text.primary",
+                    }}
+                  >
+                    {feature.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {feature.desc}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+
+      {/* How it Works Section */}
+      <Box
         id="how"
-        style={{
-          background: "#F3ECE2",
-          borderTop: "1px solid #EFE7DC",
-          borderBottom: "1px solid #EFE7DC",
+        component="section"
+        sx={{
+          py: { xs: 8, md: 12 },
+          backgroundColor: "#F3ECE2",
+          borderTop: "1px solid rgba(43, 38, 32, 0.08)",
+          borderBottom: "1px solid rgba(43, 38, 32, 0.08)",
         }}
       >
-        <div
-          style={{
-            maxWidth: "1240px",
-            margin: "0 auto",
-            padding: "clamp(56px,6vw,84px) 40px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "center",
-              maxWidth: "660px",
-              margin: "0 auto clamp(40px,5vw,56px)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "13px",
-                fontWeight: 700,
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: "center", maxWidth: 600, mx: "auto", mb: { xs: 6, md: 8 } }}>
+            <Typography
+              component="span"
+              sx={{
+                fontSize: "0.8rem",
+                fontWeight: 800,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                color: "#C2683C",
-                marginBottom: "14px",
+                color: "primary.main",
+                mb: 1.5,
+                display: "block",
               }}
             >
               How Kirmya works
-            </div>
-            <h2
-              style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
-                fontWeight: 800,
-                fontSize: "clamp(30px,4vw,46px)",
-                lineHeight: 1.05,
-                letterSpacing: "-0.02em",
-                margin: 0,
-              }}
-            >
-              From lost to landed — here&apos;s the path.
-            </h2>
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-              gap: "20px",
-            }}
-          >
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #EFE7DC",
-                borderRadius: "20px",
-                padding: "32px",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 800,
-                  fontSize: "15px",
-                  letterSpacing: "0.08em",
-                  color: "#4F7C6A",
-                  marginBottom: "18px",
-                }}
-              >
-                01
-              </div>
-              <h3
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  margin: "0 0 10px",
-                }}
-              >
-                Tell us where you are
-              </h3>
-              <p
-                style={{
-                  fontSize: "15px",
-                  lineHeight: 1.55,
-                  color: "#6B6357",
-                  margin: 0,
-                }}
-              >
-                One short profile, your resume, and what happened. No judgment
-                here.
-              </p>
-            </div>
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #EFE7DC",
-                borderRadius: "20px",
-                padding: "32px",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 800,
-                  fontSize: "15px",
-                  letterSpacing: "0.08em",
-                  color: "#4F7C6A",
-                  marginBottom: "18px",
-                }}
-              >
-                02
-              </div>
-              <h3
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  margin: "0 0 10px",
-                }}
-              >
-                Get your personal playbook
-              </h3>
-              <p
-                style={{
-                  fontSize: "15px",
-                  lineHeight: 1.55,
-                  color: "#6B6357",
-                  margin: 0,
-                }}
-              >
-                Your AI playbook: resume score, skill gaps, target roles, and
-                the three things to do <em>this week</em>.
-              </p>
-            </div>
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #EFE7DC",
-                borderRadius: "20px",
-                padding: "32px",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 800,
-                  fontSize: "15px",
-                  letterSpacing: "0.08em",
-                  color: "#4F7C6A",
-                  marginBottom: "18px",
-                }}
-              >
-                03
-              </div>
-              <h3
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  margin: "0 0 10px",
-                }}
-              >
-                Activate your network
-              </h3>
-              <p
-                style={{
-                  fontSize: "15px",
-                  lineHeight: 1.55,
-                  color: "#6B6357",
-                  margin: 0,
-                }}
-              >
-                Request referrals. Message mentors. Join the communities where
-                real conversations are happening.
-              </p>
-            </div>
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #EFE7DC",
-                borderRadius: "20px",
-                padding: "32px",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 800,
-                  fontSize: "15px",
-                  letterSpacing: "0.08em",
-                  color: "#4F7C6A",
-                  marginBottom: "18px",
-                }}
-              >
-                04
-              </div>
-              <h3
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  margin: "0 0 10px",
-                }}
-              >
-                Track everything, stress less
-              </h3>
-              <p
-                style={{
-                  fontSize: "15px",
-                  lineHeight: 1.55,
-                  color: "#6B6357",
-                  margin: 0,
-                }}
-              >
-                Applications, referrals, sessions, and callbacks — all in one
-                calm, clear dashboard. No chaos.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+            </Typography>
+            <Typography variant="h2" sx={{ fontSize: { xs: "2.25rem", md: "2.75rem" } }}>
+              The 4 Steps to Recovery
+            </Typography>
+          </Box>
 
-      {/* ONE ACCOUNT, EVERY ROLE */}
-      <section
-        style={{
-          maxWidth: "1240px",
-          margin: "0 auto",
-          padding: "clamp(8px,2vw,16px) 40px clamp(48px,6vw,80px)",
-        }}
-      >
-        <div
-          style={{
-            background: "#2B2620",
-            borderRadius: "24px",
-            padding: "clamp(40px,5vw,64px) clamp(32px,4vw,56px)",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: "-120px",
-              right: "-100px",
-              width: "380px",
-              height: "380px",
-              borderRadius: "50%",
-              background:
-                "radial-gradient(circle, rgba(79,124,106,0.32), transparent 70%)",
-              pointerEvents: "none",
-            }}
-          />
-          <div
-            style={{
-              position: "relative",
-              textAlign: "center",
-              maxWidth: "700px",
-              margin: "0 auto clamp(32px,4vw,44px)",
-            }}
-          >
-            <div
-              style={{
-                display: "inline-block",
-                fontSize: "13px",
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "#E7A57E",
-                background: "rgba(231,165,126,0.14)",
-                padding: "8px 16px",
-                borderRadius: "100px",
-                marginBottom: "22px",
-              }}
-            >
-              One account, every role
-            </div>
-            <h2
-              style={{
-                fontFamily: "'Bricolage Grotesque',sans-serif",
-                fontWeight: 800,
-                color: "#fff",
-                fontSize: "clamp(28px,4.2vw,46px)",
-                lineHeight: 1.05,
-                letterSpacing: "-0.02em",
-                margin: "0 0 16px",
-              }}
-            >
-              You&apos;re not just one thing.
-              <br />
-              Neither is Kirmya.
-            </h2>
-            <p
-              style={{
-                fontSize: "clamp(16px,2vw,18px)",
-                lineHeight: 1.6,
-                color: "rgba(255,255,255,0.78)",
-                margin: 0,
-              }}
-            >
-              The same free login lets you look for work, hire for your team,
-              and mentor someone behind you — switch roles anytime, no second
-              account.
-            </p>
-          </div>
-          <div
-            style={{
-              position: "relative",
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
-              gap: "16px",
-            }}
-          >
-            <div
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "18px",
-                padding: "28px",
-              }}
-            >
-              <div
-                style={{
-                  width: "46px",
-                  height: "46px",
-                  borderRadius: "12px",
-                  background: "rgba(79,124,106,0.22)",
-                  color: "#9FC7B5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "22px",
-                  marginBottom: "16px",
-                }}
-              >
-                ◍
-              </div>
-              <h3
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 700,
-                  fontSize: "19px",
-                  color: "#fff",
-                  margin: "0 0 8px",
-                }}
-              >
-                Job Seeker
-              </h3>
-              <p
-                style={{
-                  fontSize: "14px",
-                  lineHeight: 1.55,
-                  color: "rgba(255,255,255,0.7)",
-                  margin: 0,
-                }}
-              >
-                Get matched, request referrals, and track every application in
-                one calm place.
-              </p>
-            </div>
-            <div
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "18px",
-                padding: "28px",
-              }}
-            >
-              <div
-                style={{
-                  width: "46px",
-                  height: "46px",
-                  borderRadius: "12px",
-                  background: "rgba(194,104,60,0.22)",
-                  color: "#E7A57E",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "22px",
-                  marginBottom: "16px",
-                }}
-              >
-                ✦
-              </div>
-              <h3
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 700,
-                  fontSize: "19px",
-                  color: "#fff",
-                  margin: "0 0 8px",
-                }}
-              >
-                Recruiter
-              </h3>
-              <p
-                style={{
-                  fontSize: "14px",
-                  lineHeight: 1.55,
-                  color: "rgba(255,255,255,0.7)",
-                  margin: 0,
-                }}
-              >
-                Post roles and search reference-checked talent who are ready to
-                start now.
-              </p>
-            </div>
-            <div
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "18px",
-                padding: "28px",
-              }}
-            >
-              <div
-                style={{
-                  width: "46px",
-                  height: "46px",
-                  borderRadius: "12px",
-                  background: "rgba(255,255,255,0.12)",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "22px",
-                  marginBottom: "16px",
-                }}
-              >
-                ❋
-              </div>
-              <h3
-                style={{
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 700,
-                  fontSize: "19px",
-                  color: "#fff",
-                  margin: "0 0 8px",
-                }}
-              >
-                Mentor
-              </h3>
-              <p
-                style={{
-                  fontSize: "14px",
-                  lineHeight: 1.55,
-                  color: "rgba(255,255,255,0.7)",
-                  margin: 0,
-                }}
-              >
-                Guide someone through the comeback you&apos;ve already made.
-                Share what you know.
-              </p>
-            </div>
-          </div>
-          <div
-            style={{
-              position: "relative",
-              textAlign: "center",
-              marginTop: "clamp(28px,4vw,40px)",
-            }}
-          >
-            <Link
-                        href="/sign-in"
-                        style={{
-                          display: "inline-block",
-                          background: "#fff",
-                          color: "#2B2620",
-                          fontSize: "16px",
-                          fontWeight: 600,
-                          padding: "17px 34px",
-                          borderRadius: "100px",
-                          textDecoration: "none",
-                        }}
-                      >
-                        Create your free account →
-                      </Link>
-            <div
-              style={{
-                marginTop: "14px",
-                fontSize: "14px",
-                color: "rgba(255,255,255,0.55)",
-              }}
-            >
-              Pick your roles during sign-up · change them anytime in Settings
-            </div>
-          </div>
-        </div>
-      </section>
+          <Grid container spacing={4}>
+            {[
+              {
+                num: "01",
+                title: "Assess & Score",
+                desc: "Import your materials. AI evaluates your ATS index, identifies skill gaps, and recommends high-demand roles matching your skill set.",
+              },
+              {
+                num: "02",
+                title: "Build the Path",
+                desc: "Follow a time-boxed strategy to address skill deficiencies using free learning resources, guided by your AI Career Coach.",
+              },
+              {
+                num: "03",
+                title: "Request Warm Intros",
+                desc: "Identify target companies. Skip generic forms and request direct referrals from verified employees inside those organizations.",
+              },
+              {
+                num: "04",
+                title: "Nail the Interview",
+                desc: "Utilize on-demand AI mock sessions and seek feedback from volunteer mentors to secure your next role.",
+              },
+            ].map((step, i) => (
+              <Grid item xs={12} sm={6} md={3} key={i}>
+                <Box
+                  sx={{
+                    p: 3,
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                  }}
+                >
+                  <Typography
+                    variant="h2"
+                    sx={{
+                      color: "primary.main",
+                      opacity: 0.35,
+                      fontSize: "3.5rem",
+                      fontWeight: 800,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {step.num}
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    component="h3"
+                    sx={{ fontWeight: 800, color: "text.primary" }}
+                  >
+                    {step.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {step.desc}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
 
-      {/* TESTIMONIAL */}
-      <section
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          padding: "clamp(56px,6vw,84px) 40px",
+      {/* FAQ Section */}
+      <Container component="section" sx={{ py: { xs: 8, md: 12 }, maxWidth: "md" }}>
+        <Box sx={{ textAlign: "center", mb: { xs: 6, md: 8 } }}>
+          <Typography
+            variant="h2"
+            sx={{
+              fontSize: { xs: "2.25rem", md: "2.75rem" },
+              mb: 2,
+            }}
+          >
+            Frequently Asked Questions
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Everything you need to know about starting your comeback.
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+          {FAQS.map((faq, i) => (
+            <Accordion
+              key={i}
+              elevation={0}
+              sx={{
+                borderRadius: "16px !important",
+                border: "1px solid rgba(43, 38, 32, 0.06)",
+                background: "rgba(255, 255, 255, 0.5)",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon sx={{ color: "primary.main" }} />}
+                sx={{ px: 3, py: 1 }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "text.primary" }}>
+                  {faq.q}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 3, pb: 3, pt: 0 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {faq.a}
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Box>
+      </Container>
+
+      {/* CTA Footer */}
+      <Box
+        component="section"
+        sx={{
+          py: { xs: 8, md: 10 },
           textAlign: "center",
+          background: "radial-gradient(circle, rgba(214, 104, 56, 0.05) 0%, rgba(252, 250, 247, 0) 100%)",
+          borderTop: "1px solid rgba(43, 38, 32, 0.06)",
         }}
       >
-        <div
-          style={{
-            fontSize: "46px",
-            lineHeight: 1,
-            color: "#C2683C",
-            fontFamily: "'Bricolage Grotesque',sans-serif",
-            marginBottom: "14px",
-          }}
-        >
-          &ldquo;
-        </div>
-        <p
-          style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
-            fontWeight: 500,
-            fontSize: "clamp(22px,3vw,32px)",
-            lineHeight: 1.3,
-            letterSpacing: "-0.01em",
-            margin: "0 0 26px",
-          }}
-        >
-          Twenty-two years in supply chain, gone in one email. Kirmya had me in
-          front of three hiring managers in a week — and they were excited about
-          exactly the experience I thought made me too expensive.
-        </p>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "14px",
-          }}
-        >
-          <span
-            style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "50%",
-              background: "#C2683C",
-              display: "inline-block",
-            }}
-          />
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontWeight: 600, fontSize: "16px" }}>Marcus Hale</div>
-            <div style={{ fontSize: "14px", color: "#8A8175" }}>
-              Operations Director · placed in 11 days
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CLOSING CTA */}
-      <section
-        style={{
-          maxWidth: "1240px",
-          margin: "0 auto",
-          padding: "0 40px clamp(56px,6vw,90px)",
-        }}
-      >
-        <div
-          style={{
-            background: "#4F7C6A",
-            borderRadius: "24px",
-            padding: "clamp(44px,6vw,72px) clamp(40px,5vw,64px)",
-            textAlign: "center",
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif",
-              fontWeight: 800,
-              color: "#fff",
-              fontSize: "clamp(28px,4.4vw,46px)",
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
-              margin: "0 auto 18px",
-              maxWidth: "760px",
-            }}
-          >
-            The hardest part is starting. We made that easy.
-          </h2>
-          <p
-            style={{
-              fontSize: "clamp(16px,2vw,18px)",
-              lineHeight: 1.6,
-              color: "rgba(255,255,255,0.9)",
-              margin: "0 auto 32px",
-              maxWidth: "620px",
-            }}
-          >
-            Thousands of professionals have used Kirmya to move from uncertainty
-            to an offer letter. Some came back stronger than before. The job you
-            want is still out there — and your next step is just one quiet
-            click.
-          </p>
-          <a
+        <Container maxWidth="sm">
+          <Typography variant="h2" sx={{ mb: 2, fontSize: { xs: "2.25rem", md: "2.75rem" } }}>
+            Ready to rewrite your story?
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+            Join thousands of professionals who refused to let job loss define their trajectory.
+          </Typography>
+          <Button
+            component={Link}
             href="/sign-in"
-            style={{
-              display: "inline-block",
-              background: "#fff",
-              color: "#2B2620",
-              fontSize: "16px",
-              fontWeight: 600,
-              padding: "17px 34px",
-              borderRadius: "100px",
-              textDecoration: "none",
+            variant="contained"
+            color="primary"
+            size="large"
+            endIcon={<ArrowForwardIcon />}
+            sx={{
+              py: 2,
+              px: 4.5,
+              fontWeight: 700,
+              boxShadow: "0 10px 25px -5px rgba(214, 104, 56, 0.3)",
             }}
           >
-            Create your free account →
-          </a>
-        </div>
-      </section>
+            Join Kirmya today
+          </Button>
+        </Container>
+      </Box>
 
       <SiteFooter />
-    </div>
+    </Box>
   );
 }

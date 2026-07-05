@@ -52,15 +52,15 @@ func TestSetMyRoles(t *testing.T) {
 	if err := f.AssignRole(ctx, u.ID, domain.RoleAdmin); err != nil {
 		t.Fatalf("assign admin: %v", err)
 	}
-	pu, err = svc.SetMyRoles(ctx, u.ID, []string{domain.RoleRecruiter})
+	pu, err = svc.SetMyRoles(ctx, u.ID, []string{domain.RoleReferrer})
 	if err != nil {
 		t.Fatalf("set roles: %v", err)
 	}
 	if !rolePresent(pu.Roles, domain.RoleAdmin) {
 		t.Fatalf("admin role must be preserved, got %v", pu.Roles)
 	}
-	if !rolePresent(pu.Roles, domain.RoleRecruiter) || rolePresent(pu.Roles, domain.RoleMentor) {
-		t.Fatalf("expected recruiter with mentor removed (plus admin), got %v", pu.Roles)
+	if !rolePresent(pu.Roles, domain.RoleReferrer) || rolePresent(pu.Roles, domain.RoleMentor) {
+		t.Fatalf("expected referrer with mentor removed (plus admin), got %v", pu.Roles)
 	}
 }
 
@@ -76,6 +76,9 @@ func TestSetMyRolesValidation(t *testing.T) {
 
 	if _, err := svc.SetMyRoles(ctx, u.ID, []string{domain.RoleAdmin}); !errors.Is(err, ErrInvalidRole) {
 		t.Fatalf("expected ErrInvalidRole for admin, got %v", err)
+	}
+	if _, err := svc.SetMyRoles(ctx, u.ID, []string{domain.RoleRecruiter}); !errors.Is(err, ErrInvalidRole) {
+		t.Fatalf("expected ErrInvalidRole for recruiter, got %v", err)
 	}
 	if _, err := svc.SetMyRoles(ctx, u.ID, []string{"wizard"}); !errors.Is(err, ErrInvalidRole) {
 		t.Fatalf("expected ErrInvalidRole for unknown role, got %v", err)

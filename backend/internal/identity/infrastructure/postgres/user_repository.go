@@ -9,13 +9,14 @@ import (
 	"strings"
 
 	"workspace-app/internal/identity/domain"
+	"workspace-app/internal/platform/tx"
 )
 
 type UserRepository struct {
-	db *sql.DB
+	db tx.DBTX
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository { return &UserRepository{db: db} }
+func NewUserRepository(db *sql.DB) *UserRepository { return &UserRepository{db: tx.NewTxDB(db)} }
 
 func (r *UserRepository) Create(ctx context.Context, u *domain.User) error {
 	const q = `

@@ -58,6 +58,11 @@ type AuthResult struct {
 	MFARequired  bool
 }
 
+// TxManager coordinates database transactions.
+type TxManager interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 // Service is the identity use-case service.
 type Service struct {
 	users      domain.UserRepository
@@ -72,6 +77,7 @@ type Service struct {
 	mailer     domain.Mailer
 	events     domain.EventPublisher
 	providers  map[string]OAuthProvider
+	tx         TxManager
 	refreshTTL time.Duration
 
 	// requireVerify, when true, blocks login for password accounts whose email
@@ -99,6 +105,7 @@ type Deps struct {
 	Mailer    domain.Mailer
 	Events    domain.EventPublisher
 	Providers map[string]OAuthProvider
+	Tx        TxManager
 }
 
 func NewService(d Deps) *Service {
@@ -106,6 +113,7 @@ func NewService(d Deps) *Service {
 		users: d.Users, refresh: d.Refresh, verif: d.Verif, oauth: d.OAuth,
 		mfa: d.MFA, audit: d.Audit, hasher: d.Hasher, tokens: d.Tokens,
 		totp: d.TOTP, mailer: d.Mailer, events: d.Events, providers: d.Providers,
+		tx:            d.Tx,
 		refreshTTL:    refreshTTL(),
 		requireVerify: emailVerificationRequired(),
 		mfaThrottle:   newAttemptLimiter(5, 15*time.Minute),
@@ -147,40 +155,54 @@ type RegisterInput struct {
 // true the AuthResult carries only the User (no tokens) so the caller routes
 // them to verify first.
 func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, error) {
-	email := strings.TrimSpace(strings.ToLower(in.Email))
-	hash, err := s.hasher.Hash(in.Password)
-	if err != nil {
-		return AuthResult{}, err
-	}
-	u := &domain.User{Email: email, PasswordHash: hash, FullName: strings.TrimSpace(in.FullName), Status: domain.StatusActive}
-	if err := s.users.Create(ctx, u); err != nil {
-		return AuthResult{}, err
-	}
-	role := in.Role
-	if role == "" {
-		role = domain.RoleJobSeeker
-	}
-	if err := s.users.AssignRole(ctx, u.ID, role); err != nil {
-		return AuthResult{}, err
-	}
-	u.Roles = []string{role}
+	var res AuthResult
+	err := s.runInTx(ctx, func(ctx context.Context) error {
+		email := strings.TrimSpace(strings.ToLower(in.Email))
+		hash, err := s.hasher.Hash(in.Password)
+		if err != nil {
+			return err
+		}
+		u := &domain.User{Email: email, PasswordHash: hash, FullName: strings.TrimSpace(in.FullName), Status: domain.StatusActive}
+		if err := s.users.Create(ctx, u); err != nil {
+			return err
+		}
+		role := in.Role
+		if role == "" {
+			role = domain.RoleJobSeeker
+		}
+		if err := s.users.AssignRole(ctx, u.ID, role); err != nil {
+			return err
+		}
+		u.Roles = []string{role}
 
-	// Email delivery is best-effort: a missing/failed mailer must not block
-	// account creation. The user can re-request verification later
-	// (ResendVerification). Login enforcement is governed separately by
-	// EMAIL_VERIFICATION_REQUIRED.
-	if err := s.sendVerification(ctx, u); err != nil {
-		log.Printf("register: verification email not sent for user %s: %v", u.ID, err)
-	}
-	s.record(ctx, u.ID, "user.register", "user", u.ID, in.IP)
-	_ = s.events.Publish(ctx, domain.EventUserRegistered, u.ID, map[string]any{"email": u.Email})
+		// Email delivery is best-effort: a missing/failed mailer must not block
+		// account creation. The user can re-request verification later
+		// (ResendVerification). Login enforcement is governed separately by
+		// EMAIL_VERIFICATION_REQUIRED.
+		if err := s.sendVerification(ctx, u); err != nil {
+			log.Printf("register: verification email not sent for user %s: %v", u.ID, err)
+		}
+		s.record(ctx, u.ID, "user.register", "user", u.ID, in.IP)
+		_ = s.events.Publish(ctx, domain.EventUserRegistered, u.ID, map[string]any{"email": u.Email})
 
-	// Auto-login: issue a session unless the verification gate is active, in
-	// which case the account exists but cannot log in until verified.
-	if s.requireVerify && !u.EmailVerified {
-		return AuthResult{User: toPublic(u)}, nil
+		// Auto-login: issue a session unless the verification gate is active, in
+		// which case the account exists but cannot log in until verified.
+		if s.requireVerify && !u.EmailVerified {
+			res = AuthResult{User: toPublic(u)}
+			return nil
+		}
+		var errSess error
+		res, errSess = s.issueSession(ctx, u)
+		return errSess
+	})
+	return res, err
+}
+
+func (s *Service) runInTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	if s.tx == nil {
+		return fn(ctx)
 	}
-	return s.issueSession(ctx, u)
+	return s.tx.RunInTx(ctx, fn)
 }
 
 // LoginInput is the login command. A non-empty Code completes an MFA challenge.

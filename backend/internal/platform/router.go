@@ -3,6 +3,7 @@ package platform
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
 	"workspace-app/internal/admin"
 	"workspace-app/internal/ai"
@@ -19,6 +20,7 @@ import (
 	platformcache "workspace-app/internal/platform/cache"
 	"workspace-app/internal/platform/eventbus"
 	"workspace-app/internal/platform/observability"
+	"workspace-app/internal/platform/outbox"
 	platformsearch "workspace-app/internal/platform/search"
 	"workspace-app/internal/profile"
 	"workspace-app/internal/referrals"
@@ -47,6 +49,14 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 	// Event bus (in-process; NATS-ready). Modules publish/subscribe here.
 	bus := eventbus.New()
 
+	// Outbox publisher handles transactional event writing to event_outbox table.
+	pub := outbox.NewPublisher(db)
+	outboxBus := outbox.NewBus(bus, pub)
+
+	// Outbox relay polls the event_outbox table and processes/publishes them onto NATS/EventBus.
+	relay := outbox.NewRelay(db, bus)
+	relay.Start(250 * time.Millisecond)
+
 	// Cache-aside layer (Redis when REDIS_URL is set; no-op otherwise).
 	cache := platformcache.New()
 
@@ -56,24 +66,24 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 
 	// Stateless settings read-service shared by other modules to enforce a user's
 	// privacy and notification preferences.
-	settingsReader := settingsapp.NewService(settingspg.NewRepository(db), bus)
+	settingsReader := settingsapp.NewService(settingspg.NewRepository(db), outboxBus)
 
 	// Identity is the composition root for auth. It replaces the former auth +
 	// user modules and provides the shared JWT auth middleware.
-	identityMod := identity.NewModule(db, bus)
+	identityMod := identity.NewModule(db, outboxBus)
 	identityMod.RegisterRoutes(mux)
 
 	// Feature modules — all on Postgres/DDD, sharing identity's auth middleware.
-	profile.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, cache, settingsReader)
-	jobs.RegisterRoutes(mux, db, identityMod.AuthMiddleware, identityMod.RoleMiddleware(identitydomain.RoleRecruiter), bus, cache)
-	referrals.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus)
-	resume.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus)
+	profile.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus, cache, settingsReader)
+	jobs.RegisterRoutes(mux, db, identityMod.AuthMiddleware, identityMod.RoleMiddleware(identitydomain.RoleRecruiter), outboxBus, cache)
+	referrals.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
+	resume.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	ai.RegisterRoutes(mux, db, identityMod.AuthMiddleware)
-	messaging.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, settingsReader)
-	mentorship.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus)
-	community.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus)
+	messaging.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus, settingsReader)
+	mentorship.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
+	community.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	notifications.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, settingsReader)
-	settings.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus)
+	settings.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	admin.RegisterRoutes(mux, db, identityMod.AuthMiddleware, identityMod.AdminMiddleware)
 	search.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, searchEngine)
 	dashboard.RegisterRoutes(mux, db, identityMod.AuthMiddleware)

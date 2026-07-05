@@ -95,8 +95,9 @@ func TestVerifyOrigin(t *testing.T) {
 	}
 }
 
-func TestVerifyOriginDisabledByDefault(t *testing.T) {
-	os.Unsetenv("CSRF_VERIFY_ORIGIN")
+func TestVerifyOriginExplicitlyDisabled(t *testing.T) {
+	os.Setenv("CSRF_VERIFY_ORIGIN", "false")
+	defer os.Unsetenv("CSRF_VERIFY_ORIGIN")
 	h := VerifyOrigin(okHandler())
 	r := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
 	r.Header.Set("Origin", "https://evil.example.com")
@@ -104,5 +105,72 @@ func TestVerifyOriginDisabledByDefault(t *testing.T) {
 	h.ServeHTTP(rec, r)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("disabled check must pass everything, got %d", rec.Code)
+	}
+}
+
+func TestVerifyOriginDefaultBehavior(t *testing.T) {
+	os.Unsetenv("CSRF_VERIFY_ORIGIN")
+	os.Unsetenv("APP_URL")
+	h := VerifyOrigin(okHandler())
+
+	send := func(origin string) int {
+		r := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
+		r.Header.Set("Origin", origin)
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, r)
+		return rec.Code
+	}
+
+	if code := send("https://evil.example.com"); code != http.StatusForbidden {
+		t.Fatalf("expected forbidden for evil origin by default, got %d", code)
+	}
+	if code := send("http://localhost:3000"); code != http.StatusOK {
+		t.Fatalf("expected OK for default developer origin, got %d", code)
+	}
+}
+
+func TestCORS(t *testing.T) {
+	os.Setenv("APP_URL", "https://prod.kirmya.app")
+	defer os.Unsetenv("APP_URL")
+
+	h := CORS(okHandler())
+
+	// Preflight request
+	req := httptest.NewRequest(http.MethodOptions, "/api/v1/jobs", nil)
+	req.Header.Set("Origin", "https://prod.kirmya.app")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 NoContent for preflight OPTIONS request, got %d", rec.Code)
+	}
+	if origin := rec.Header().Get("Access-Control-Allow-Origin"); origin != "https://prod.kirmya.app" {
+		t.Fatalf("expected Access-Control-Allow-Origin header to match trusted origin, got %s", origin)
+	}
+
+	// Normal request with trusted origin
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/jobs", nil)
+	req.Header.Set("Origin", "http://localhost:3000")
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", rec.Code)
+	}
+	if origin := rec.Header().Get("Access-Control-Allow-Origin"); origin != "http://localhost:3000" {
+		t.Fatalf("expected Access-Control-Allow-Origin header to match dev server origin, got %s", origin)
+	}
+
+	// Normal request with untrusted origin
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/jobs", nil)
+	req.Header.Set("Origin", "https://evil.attacker.com")
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK (CORS does not block requests by itself, only headers), got %d", rec.Code)
+	}
+	if origin := rec.Header().Get("Access-Control-Allow-Origin"); origin != "" {
+		t.Fatalf("untrusted origin should not receive Access-Control-Allow-Origin, got %s", origin)
 	}
 }

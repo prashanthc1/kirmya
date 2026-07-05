@@ -18,6 +18,7 @@ import (
 	"workspace-app/internal/identity/infrastructure/mailer"
 	"workspace-app/internal/identity/infrastructure/oauth"
 	"workspace-app/internal/identity/infrastructure/postgres"
+	"workspace-app/internal/platform/tx"
 )
 
 // Module is the assembled identity context.
@@ -45,6 +46,7 @@ func NewModule(db *sql.DB, events domain.EventPublisher) *Module {
 		Mailer:    buildMailer(),
 		Events:    events,
 		Providers: buildProviders(),
+		Tx:        tx.NewTxManager(db),
 	}
 
 	svc := application.NewService(deps)

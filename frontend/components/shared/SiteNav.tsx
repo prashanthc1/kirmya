@@ -1,12 +1,34 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  Box,
+  Container,
+  Breadcrumbs,
+  Link as MuiLink,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import SettingsIcon from "@mui/icons-material/Settings";
+import LogoutIcon from "@mui/icons-material/Logout";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import PersonIcon from "@mui/icons-material/Person";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
-/** Links shown in the avatar dropdown, matching the Kirmya design. */
-const MENU_LINKS: { label: string; href: string; icon: string }[] = [
+const MENU_LINKS = [
   { label: "Jobs", href: "/jobs", icon: "◎" },
   { label: "Referrals", href: "/referrals", icon: "↳" },
   { label: "Mentorship", href: "/mentorship", icon: "✳" },
@@ -26,398 +48,362 @@ interface SiteNavProps {
 }
 
 export default function SiteNav({ breadcrumb }: SiteNavProps) {
-  return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        background: "rgba(251,247,242,0.86)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid #EFE7DC",
-      }}
-    >
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "24px",
-          padding: "18px 40px",
-          maxWidth: "1240px",
-          margin: "0 auto",
-        }}
-      >
-        <Link
-          href="/"
-          style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif",
-            fontSize: "24px",
-            fontWeight: 800,
-            letterSpacing: "-0.02em",
-            color: "#2B2620",
-          }}
-        >
-          Kirmya
-        </Link>
-        <NavAuthArea />
-      </nav>
-      {breadcrumb && breadcrumb.length > 0 && (
-        <div
-          style={{
-            borderTop: "1px solid #EFE7DC",
-            background: "rgba(251,247,242,0.6)",
-          }}
-        >
-          <nav
-            aria-label="Breadcrumb"
-            style={{
-              maxWidth: "1240px",
-              margin: "0 auto",
-              padding: "12px 40px",
-            }}
-          >
-            <ol
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                flexWrap: "wrap",
-                listStyle: "none",
-                margin: 0,
-                padding: 0,
-              }}
-            >
-              {breadcrumb.map((item, i) => {
-                const isLast = i === breadcrumb.length - 1;
-                return (
-                  <React.Fragment key={i}>
-                    {i > 0 && (
-                      <li
-                        aria-hidden="true"
-                        style={{ color: "#C9BEAD", fontSize: "15px" }}
-                      >
-                        {"›"}
-                      </li>
-                    )}
-                    <li
-                      aria-current={isLast ? "page" : undefined}
-                      style={{
-                        fontSize: "14px",
-                        color: isLast ? "#2B2620" : "#8A8175",
-                        fontWeight: isLast ? 600 : 500,
-                      }}
-                    >
-                      {item.href ? (
-                        <Link
-                          href={item.href}
-                          style={{ color: "#8A8175", fontWeight: 500 }}
-                        >
-                          {item.label}
-                        </Link>
-                      ) : (
-                        item.label
-                      )}
-                    </li>
-                  </React.Fragment>
-                );
-              })}
-            </ol>
-          </nav>
-        </div>
-      )}
-    </header>
-  );
-}
-
-/** Two-letter initials from a full name, for the avatar fallback. */
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-}
-
-/**
- * Right-hand nav slot: marketing CTAs when logged out (or while the session is
- * still being restored), and the user's avatar dropdown menu when logged in.
- */
-function NavAuthArea() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
-  if (loading || !user) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        <Link
-          href="/sign-in"
-          style={{ fontSize: "15px", color: "#2B2620", fontWeight: 500 }}
-        >
-          Sign in
-        </Link>
-        <Link
-          href="/sign-up"
-          style={{
-            background: "#C2683C",
-            color: "#fff",
-            fontSize: "14px",
-            fontWeight: 600,
-            padding: "11px 22px",
-            borderRadius: "100px",
-          }}
-        >
-          Start your comeback
-        </Link>
-      </div>
-    );
-  }
+  // Mobile menu control
+  const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
+  // Profile menu control
+  const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
 
-  return <ProfileMenu user={user} signOut={signOut} router={router} />;
-}
+  const handleOpenMobile = (event: React.MouseEvent<HTMLElement>) => {
+    setMobileAnchor(event.currentTarget);
+  };
+  const handleCloseMobile = () => {
+    setMobileAnchor(null);
+  };
 
-/** A short label for the dropdown subtitle, derived from the user's role. */
-function roleLabel(roles: string[]): string {
-  const r = roles?.[0];
-  if (!r) return "Member";
-  return r.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
+  const handleOpenProfile = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileAnchor(event.currentTarget);
+  };
+  const handleCloseProfile = () => {
+    setProfileAnchor(null);
+  };
 
-/**
- * Avatar button that opens the account dropdown menu (matches the Kirmya
- * design): profile header, primary navigation links, then Settings + Sign out.
- * Closes on outside-click and Escape.
- */
-function ProfileMenu({
-  user,
-  signOut,
-  router,
-}: {
-  user: { full_name: string; roles?: string[] };
-  signOut: () => Promise<void>;
-  router: ReturnType<typeof useRouter>;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  const firstName = user.full_name.trim().split(/\s+/)[0] || "there";
-  const lastInitial =
-    user.full_name.trim().split(/\s+/).slice(1).join(" ").charAt(0) || "";
-
-  useEffect(() => {
-    if (!open) return;
-    function onPointer(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  async function handleSignOut() {
-    setOpen(false);
+  const handleSignOut = async () => {
+    handleCloseProfile();
     await signOut();
     router.push("/");
-  }
+  };
 
-  const avatar = (size: number, font: number) => (
-    <span
-      aria-hidden="true"
-      style={{
-        flex: "none",
-        width: size + "px",
-        height: size + "px",
-        borderRadius: "50%",
-        background: "#4F7C6A",
-        color: "#fff",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Bricolage Grotesque',sans-serif",
-        fontWeight: 700,
-        fontSize: font + "px",
-      }}
-    >
-      {initials(user.full_name)}
-    </span>
-  );
+  // Get initials for Avatar fallback
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  const firstName = user?.full_name?.trim().split(/\s+/)[0] || "User";
+  const lastInitial =
+    user?.full_name?.trim().split(/\s+/).slice(1).join(" ").charAt(0) || "";
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        title={user.full_name}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          border: "none",
-          background: "transparent",
-          cursor: "pointer",
-          padding: "4px",
-          borderRadius: "100px",
-        }}
-      >
-        <span style={{ fontSize: "15px", color: "#2B2620", fontWeight: 600 }}>
-          {firstName}
-          {lastInitial ? " " + lastInitial + "." : ""}
-        </span>
-        {avatar(36, 14)}
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          style={{
-            position: "absolute",
-            top: "calc(100% + 12px)",
-            right: 0,
-            width: "288px",
-            background: "#fff",
-            border: "1px solid #EFE7DC",
-            borderRadius: "18px",
-            boxShadow: "0 18px 50px rgba(43,38,32,0.16)",
-            padding: "10px",
-            zIndex: 60,
+    <AppBar
+      position="sticky"
+      elevation={0}
+      className="glass-nav"
+      sx={{
+        background: "rgba(252, 250, 247, 0.8)",
+        backdropFilter: "blur(20px) saturate(180%)",
+        borderBottom: "1px solid rgba(43, 38, 32, 0.06)",
+        top: 0,
+        zIndex: 1100,
+      }}
+    >
+      <Container maxWidth="lg">
+        <Toolbar
+          disableGutters
+          sx={{
+            height: 72,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          <Link
-            href="/profile"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            style={{
+          {/* Brand Logo */}
+          <Typography
+            variant="h5"
+            component={Link}
+            href="/"
+            sx={{
+              fontFamily: "var(--font-bricolage), sans-serif",
+              fontWeight: 800,
+              color: "text.primary",
+              textDecoration: "none",
+              letterSpacing: "-0.02em",
               display: "flex",
               alignItems: "center",
-              gap: "12px",
-              padding: "12px 12px 14px",
-              textDecoration: "none",
+              mr: 2,
             }}
           >
-            {avatar(44, 16)}
-            <span style={{ minWidth: 0 }}>
-              <span
-                style={{
-                  display: "block",
-                  fontFamily: "'Bricolage Grotesque',sans-serif",
-                  fontWeight: 800,
-                  fontSize: "16px",
-                  color: "#2B2620",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {user.full_name}
-              </span>
-              <span style={{ display: "block", fontSize: "13px", color: "#8A8175" }}>
-                {roleLabel(user.roles ?? [])}
-              </span>
-            </span>
-          </Link>
+            Kirmya
+          </Typography>
 
-          <div style={{ height: "1px", background: "#EFE7DC", margin: "4px 6px 8px" }} />
-
-          {MENU_LINKS.map((item) => (
-            <MenuRow
-              key={item.href}
-              href={item.href}
-              icon={item.icon}
-              label={item.label}
-              onSelect={() => setOpen(false)}
-            />
-          ))}
-
-          {user.roles?.includes("admin") && (
-            <MenuRow
-              href="/admin"
-              icon={"◆"}
-              label="Admin"
-              onSelect={() => setOpen(false)}
-            />
+          {/* Navigation Links for Logged-In Users on Desktop */}
+          {user && (
+            <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
+              {MENU_LINKS.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Button
+                    key={link.href}
+                    component={Link}
+                    href={link.href}
+                    sx={{
+                      color: isActive ? "primary.main" : "text.secondary",
+                      fontWeight: isActive ? 700 : 500,
+                      fontSize: "0.95rem",
+                      px: 2,
+                      py: 1,
+                      borderRadius: 100,
+                      backgroundColor: isActive ? "rgba(214, 104, 56, 0.06)" : "transparent",
+                      "&:hover": {
+                        backgroundColor: isActive
+                          ? "rgba(214, 104, 56, 0.1)"
+                          : "rgba(43, 38, 32, 0.04)",
+                        color: isActive ? "primary.main" : "text.primary",
+                      },
+                    }}
+                  >
+                    {link.label}
+                  </Button>
+                );
+              })}
+            </Box>
           )}
 
-          <div style={{ height: "1px", background: "#EFE7DC", margin: "8px 6px" }} />
+          {/* Right Action Area */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            {loading ? (
+              // Loading state placeholder
+              <Box sx={{ width: 100, height: 36, borderRadius: 100, bgcolor: "rgba(43, 38, 32, 0.05)" }} />
+            ) : !user ? (
+              // Logged out area
+              <>
+                <Button
+                  component={Link}
+                  href="/sign-in"
+                  variant="text"
+                  sx={{
+                    color: "text.primary",
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1,
+                  }}
+                >
+                  Sign in
+                </Button>
+                <Button
+                  component={Link}
+                  href="/sign-up"
+                  variant="contained"
+                  color="primary"
+                  endIcon={<ArrowForwardIcon />}
+                  sx={{
+                    fontWeight: 600,
+                    boxShadow: "0 4px 14px rgba(214, 104, 56, 0.2)",
+                    px: 3.5,
+                    py: 1.2,
+                  }}
+                >
+                  Start comeback
+                </Button>
+              </>
+            ) : (
+              // Logged in user profile menu
+              <>
+                {/* Mobile Burger Menu button */}
+                <IconButton
+                  color="inherit"
+                  aria-label="open mobile navigation"
+                  edge="start"
+                  onClick={handleOpenMobile}
+                  sx={{ display: { xs: "flex", md: "none" }, color: "text.primary" }}
+                >
+                  <MenuIcon />
+                </IconButton>
 
-          <MenuRow
-            href="/settings"
-            icon={"⚙"}
-            label="Settings"
-            onSelect={() => setOpen(false)}
-          />
-          <button
-            type="button"
-            role="menuitem"
-            onClick={handleSignOut}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              width: "100%",
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-              padding: "10px 12px",
-              borderRadius: "12px",
-              fontSize: "15px",
-              fontWeight: 600,
-              color: "#C2683C",
-              textAlign: "left",
+                {/* Profile Trigger */}
+                <Button
+                  onClick={handleOpenProfile}
+                  sx={{
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: 100,
+                    border: "1px solid rgba(43, 38, 32, 0.08)",
+                    color: "text.primary",
+                    textTransform: "none",
+                    gap: 1.5,
+                    backgroundColor: Boolean(profileAnchor) ? "rgba(43, 38, 32, 0.04)" : "transparent",
+                    "&:hover": {
+                      backgroundColor: "rgba(43, 38, 32, 0.04)",
+                      borderColor: "rgba(43, 38, 32, 0.15)",
+                    },
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, display: { xs: "none", sm: "block" } }}>
+                    {firstName}
+                    {lastInitial ? ` ${lastInitial}.` : ""}
+                  </Typography>
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: "secondary.main",
+                      color: "primary.contrastText",
+                      fontFamily: "var(--font-bricolage), sans-serif",
+                      fontWeight: 700,
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    {getInitials(user.full_name)}
+                  </Avatar>
+                </Button>
+              </>
+            )}
+          </Box>
+
+          {/* Desktop/Mobile Profile Dropdown Menu */}
+          <Menu
+            anchorEl={profileAnchor}
+            id="account-menu"
+            open={Boolean(profileAnchor)}
+            onClose={handleCloseProfile}
+            onClick={handleCloseProfile}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+            PaperProps={{
+              elevation: 0,
+              sx: {
+                overflow: "visible",
+                filter: "drop-shadow(0px 8px 30px rgba(43, 38, 32, 0.1))",
+                mt: 1.5,
+                borderRadius: 4,
+                width: 280,
+                border: "1px solid rgba(43, 38, 32, 0.06)",
+                padding: "8px",
+              },
             }}
           >
-            <span aria-hidden="true" style={{ width: "20px", fontSize: "15px" }}>
-              {"⏻"}
-            </span>
-            Sign out
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+            {/* Header info */}
+            {user && (
+              <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                <Typography variant="body1" sx={{ fontWeight: 800, fontFamily: "var(--font-bricolage)" }}>
+                  {user.full_name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>
+                  {user.roles?.[0]?.replace(/[_-]+/g, " ") || "Member"}
+                </Typography>
+              </Box>
+            )}
+            <Divider sx={{ my: 1 }} />
 
-/** A single hoverable row in the account dropdown. */
-function MenuRow({
-  href,
-  icon,
-  label,
-  onSelect,
-}: {
-  href: string;
-  icon: string;
-  label: string;
-  onSelect: () => void;
-}) {
-  const [hover, setHover] = useState(false);
-  return (
-    <Link
-      href={href}
-      role="menuitem"
-      onClick={onSelect}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "10px 12px",
-        borderRadius: "12px",
-        fontSize: "15px",
-        fontWeight: 500,
-        color: "#2B2620",
-        textDecoration: "none",
-        background: hover ? "#F3ECE2" : "transparent",
-      }}
-    >
-      <span aria-hidden="true" style={{ width: "20px", color: "#8A8175", fontSize: "15px" }}>
-        {icon}
-      </span>
-      {label}
-    </Link>
+            <MenuItem component={Link} href="/profile" sx={{ borderRadius: 2, py: 1.2 }}>
+              <ListItemIcon>
+                <PersonIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="My Profile" primaryTypographyProps={{ fontWeight: 600 }} />
+            </MenuItem>
+
+            <MenuItem component={Link} href="/settings" sx={{ borderRadius: 2, py: 1.2 }}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Settings" primaryTypographyProps={{ fontWeight: 600 }} />
+            </MenuItem>
+
+            {user?.roles?.includes("admin") && (
+              <MenuItem component={Link} href="/admin" sx={{ borderRadius: 2, py: 1.2, color: "secondary.main" }}>
+                <ListItemIcon sx={{ color: "secondary.main" }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 800, ml: 0.5 }}>◆</Typography>
+                </ListItemIcon>
+                <ListItemText primary="Admin Portal" primaryTypographyProps={{ fontWeight: 700 }} />
+              </MenuItem>
+            )}
+
+            <Divider sx={{ my: 1 }} />
+
+            <MenuItem onClick={handleSignOut} sx={{ borderRadius: 2, py: 1.2, color: "error.main" }}>
+              <ListItemIcon sx={{ color: "error.main" }}>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Sign out" primaryTypographyProps={{ fontWeight: 600 }} />
+            </MenuItem>
+          </Menu>
+
+          {/* Mobile Navigation Dropdown Menu */}
+          <Menu
+            anchorEl={mobileAnchor}
+            id="mobile-nav-menu"
+            open={Boolean(mobileAnchor)}
+            onClose={handleCloseMobile}
+            onClick={handleCloseMobile}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+            PaperProps={{
+              elevation: 0,
+              sx: {
+                overflow: "visible",
+                filter: "drop-shadow(0px 8px 30px rgba(43, 38, 32, 0.1))",
+                mt: 1.5,
+                borderRadius: 4,
+                width: 240,
+                border: "1px solid rgba(43, 38, 32, 0.06)",
+                padding: "8px",
+              },
+            }}
+          >
+            {MENU_LINKS.map((link) => (
+              <MenuItem
+                key={link.href}
+                component={Link}
+                href={link.href}
+                onClick={handleCloseMobile}
+                sx={{ borderRadius: 2, py: 1.2 }}
+              >
+                <ListItemIcon>
+                  <Typography variant="body1">{link.icon}</Typography>
+                </ListItemIcon>
+                <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: 600 }} />
+              </MenuItem>
+            ))}
+          </Menu>
+        </Toolbar>
+      </Container>
+
+      {/* Breadcrumb Navigation Bar */}
+      {breadcrumb && breadcrumb.length > 0 && (
+        <Box
+          sx={{
+            borderTop: "1px solid rgba(43, 38, 32, 0.06)",
+            background: "rgba(252, 250, 247, 0.5)",
+            py: 1.5,
+          }}
+        >
+          <Container maxWidth="lg">
+            <Breadcrumbs
+              separator={<KeyboardArrowRightIcon sx={{ fontSize: 16, color: "text.disabled" }} />}
+              aria-label="breadcrumb"
+            >
+              {breadcrumb.map((item, index) => {
+                const isLast = index === breadcrumb.length - 1;
+                return isLast ? (
+                  <Typography
+                    key={index}
+                    variant="body2"
+                    sx={{ color: "text.primary", fontWeight: 700 }}
+                  >
+                    {item.label}
+                  </Typography>
+                ) : (
+                  <MuiLink
+                    key={index}
+                    component={Link}
+                    href={item.href || "#"}
+                    underline="hover"
+                    variant="body2"
+                    sx={{ color: "text.secondary", fontWeight: 500 }}
+                  >
+                    {item.label}
+                  </MuiLink>
+                );
+              })}
+            </Breadcrumbs>
+          </Container>
+        </Box>
+      )}
+    </AppBar>
   );
 }

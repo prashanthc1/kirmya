@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"workspace-app/internal/identity/domain"
+	"workspace-app/internal/platform/tx"
 )
 
 // RefreshTokenRepository implements domain.RefreshTokenRepository.
-type RefreshTokenRepository struct{ db *sql.DB }
+type RefreshTokenRepository struct{ db tx.DBTX }
 
 func NewRefreshTokenRepository(db *sql.DB) *RefreshTokenRepository {
-	return &RefreshTokenRepository{db: db}
+	return &RefreshTokenRepository{db: tx.NewTxDB(db)}
 }
 
 func (r *RefreshTokenRepository) Store(ctx context.Context, t *domain.RefreshToken) error {

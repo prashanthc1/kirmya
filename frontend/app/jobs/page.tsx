@@ -1,7 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Chip,
+  Button,
+  TextField,
+  CircularProgress,
+  Alert,
+  InputAdornment,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 import { api, ApiError } from "@/lib/api/client";
@@ -16,23 +32,30 @@ interface Job {
   description: string;
 }
 
+const JOB_TYPES = ["All Types", "Full-time", "Contract", "Remote", "Part-time"];
+
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Filter & Search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("All Types");
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
         const data = await api.get<{ jobs: Job[] }>("/jobs");
-        if (active) setJobs(data?.jobs ?? []);
+        if (active) {
+          const list = data?.jobs ?? [];
+          setJobs(list);
+        }
       } catch (err) {
         if (active) {
           setError(
-            err instanceof ApiError
-              ? err.message
-              : "Could not load jobs. Please try again.",
+            err instanceof ApiError ? err.message : "Could not load jobs. Please try again."
           );
         }
       } finally {
@@ -44,167 +67,276 @@ export default function JobsPage() {
     };
   }, []);
 
+  // Filter Handler (Computed value during render)
+  const filteredJobs = React.useMemo(() => {
+    let result = jobs;
+
+    // Apply search filter
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (job) =>
+          job.title.toLowerCase().includes(q) ||
+          job.company.toLowerCase().includes(q) ||
+          job.description?.toLowerCase().includes(q) ||
+          job.location?.toLowerCase().includes(q)
+      );
+    }
+
+    // Apply job type filter
+    if (selectedType !== "All Types") {
+      result = result.filter(
+        (job) => job.job_type?.toLowerCase() === selectedType.toLowerCase()
+      );
+    }
+
+    return result;
+  }, [searchQuery, selectedType, jobs]);
+
   return (
-    <div style={pageStyle}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Jobs" }]} />
 
-      <main
-        style={{
+      <Container
+        component="main"
+        maxWidth="lg"
+        sx={{
           flex: 1,
-          width: "100%",
-          maxWidth: "1000px",
-          margin: "0 auto",
-          padding: "clamp(32px,4vw,52px) 24px 72px",
+          py: { xs: 6, md: 8 },
         }}
       >
-        <div style={eyebrowStyle}>
-          {loading ? "Loading roles…" : `${jobs.length} open roles`}
-        </div>
-        <h1 style={headingStyle}>Roles that want your experience</h1>
-        <p style={leadStyle}>
-          Hand-vetted openings from recruiters who hire for proven track records.
-        </p>
+        {/* Page Header */}
+        <Box sx={{ mb: 6 }}>
+          <Typography
+            component="span"
+            sx={{
+              fontSize: "0.8rem",
+              fontWeight: 800,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "primary.main",
+              display: "block",
+              mb: 1.5,
+            }}
+          >
+            {loading ? "Discovering Opportunities..." : `${filteredJobs.length} active openings`}
+          </Typography>
+          <Typography
+            variant="h2"
+            sx={{
+              fontSize: { xs: "2.25rem", md: "3rem" },
+              mb: 2,
+            }}
+          >
+            Roles that value your experience
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600 }}>
+            Hand-vetted career opportunities from recruiters actively looking for proven skills,
+            resilience, and transition readiness.
+          </Typography>
+        </Box>
+
+        {/* Search & Filter bar */}
+        <Box
+          className="glass-card"
+          sx={{
+            p: 3,
+            borderRadius: 4,
+            mb: 5,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2.5,
+            boxShadow: "0 10px 30px -5px rgba(43, 38, 32, 0.04)",
+          }}
+        >
+          {/* Search bar */}
+          <TextField
+            fullWidth
+            placeholder="Search by title, company, skills, or location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: "text.disabled" }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {/* Tag filter row */}
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
+            <Typography variant="body2" sx={{ fontWeight: 700, mr: 1, color: "text.secondary" }}>
+              Filter Type:
+            </Typography>
+            {JOB_TYPES.map((type) => (
+              <Chip
+                key={type}
+                label={type}
+                clickable
+                onClick={() => setSelectedType(type)}
+                color={selectedType === type ? "primary" : "default"}
+                variant={selectedType === type ? "filled" : "outlined"}
+                sx={{
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: "100px",
+                  borderColor: "rgba(43, 38, 32, 0.12)",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                  },
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+
+        {/* Loading & Error States */}
+        {loading && (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
+            <CircularProgress color="primary" />
+          </Box>
+        )}
 
         {error && (
-          <div role="alert" style={alertStyle}>
+          <Alert severity="error" sx={{ mb: 4, borderRadius: 3 }}>
             {error}
-          </div>
+          </Alert>
         )}
 
-        {!loading && !error && jobs.length === 0 && (
-          <p style={{ color: "#5B554C" }}>No open roles right now. Check back soon.</p>
-        )}
+        {/* Job Listings Grid */}
+        {!loading && !error && (
+          <>
+            {filteredJobs.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 8 }}>
+                <Typography variant="h6" color="text.secondary">
+                  No matching roles found. Try adjusting your search query or filters.
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={3}>
+                {filteredJobs.map((job) => (
+                  <Grid item xs={12} key={job.id}>
+                    <Card
+                      sx={{
+                        "&:hover": {
+                          transform: "translateY(-2px)",
+                          boxShadow: "0 10px 30px rgba(43, 38, 32, 0.06)",
+                          borderColor: "primary.light",
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ p: 4 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: 2,
+                            flexWrap: "wrap",
+                            mb: 2,
+                          }}
+                        >
+                          <Box>
+                            <Typography
+                              variant="h5"
+                              component="h3"
+                              sx={{
+                                fontWeight: 800,
+                                fontFamily: "var(--font-bricolage)",
+                                mb: 0.5,
+                                color: "text.primary",
+                              }}
+                            >
+                              {job.title}
+                            </Typography>
+                            <Typography
+                              variant="subtitle1"
+                              color="text.secondary"
+                              sx={{ fontWeight: 500 }}
+                            >
+                              {job.company} {job.location ? `· ${job.location}` : ""}
+                            </Typography>
+                          </Box>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "28px" }}>
-          {jobs.map((job) => (
-            <article key={job.id} style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
-                <div style={{ minWidth: 0 }}>
-                  <h2 style={jobTitleStyle}>{job.title}</h2>
-                  <div style={companyStyle}>
-                    {job.company}
-                    {job.location ? ` · ${job.location}` : ""}
-                  </div>
-                </div>
-                {job.job_type && <span style={pillStyle}>{job.job_type}</span>}
-              </div>
-              {job.description && <p style={descStyle}>{job.description}</p>}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                  flexWrap: "wrap",
-                  marginTop: "6px",
-                }}
-              >
-                {job.salary && (
-                  <span style={{ fontSize: "14px", color: "#4F7C6A", fontWeight: 600 }}>
-                    {job.salary}
-                  </span>
-                )}
-                <Link href="/jobs/detail" style={applyLinkStyle}>
-                  View role →
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
-      </main>
+                          {job.job_type && (
+                            <Chip
+                              label={job.job_type}
+                              sx={{
+                                backgroundColor: "rgba(55, 97, 77, 0.08)",
+                                color: "secondary.main",
+                                fontWeight: 700,
+                                fontSize: "0.75rem",
+                                textTransform: "capitalize",
+                              }}
+                            />
+                          )}
+                        </Box>
+
+                        {job.description && (
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              mb: 3,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              lineHeight: 1.6,
+                            }}
+                          >
+                            {job.description}
+                          </Typography>
+                        )}
+
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 2,
+                            borderTop: "1px solid rgba(43, 38, 32, 0.06)",
+                            pt: 2.5,
+                          }}
+                        >
+                          {job.salary ? (
+                            <Typography
+                              variant="subtitle1"
+                              sx={{ fontWeight: 800, color: "secondary.main" }}
+                            >
+                              {job.salary}
+                            </Typography>
+                          ) : (
+                            <Box />
+                          )}
+
+                          <Button
+                            component={Link}
+                            href="/jobs/detail"
+                            variant="text"
+                            color="primary"
+                            endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                            sx={{ fontWeight: 700, p: 0, minWidth: "auto", "&:hover": { background: "none" } }}
+                          >
+                            View details
+                          </Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </>
+        )}
+      </Container>
 
       <SiteFooter />
-    </div>
+    </Box>
   );
 }
-
-const pageStyle: React.CSSProperties = {
-  background: "#FBF7F2",
-  fontFamily: "'Public Sans',sans-serif",
-  color: "#2B2620",
-  minHeight: "100vh",
-  overflowX: "hidden",
-  display: "flex",
-  flexDirection: "column",
-};
-
-const eyebrowStyle: React.CSSProperties = {
-  fontSize: "13px",
-  fontWeight: 700,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-  color: "#C2683C",
-  marginBottom: "14px",
-};
-
-const headingStyle: React.CSSProperties = {
-  fontFamily: "'Bricolage Grotesque',sans-serif",
-  fontWeight: 800,
-  fontSize: "clamp(30px,5vw,48px)",
-  lineHeight: 1.03,
-  letterSpacing: "-0.025em",
-  margin: "0 0 12px",
-};
-
-const leadStyle: React.CSSProperties = {
-  fontSize: "clamp(16px,2vw,19px)",
-  lineHeight: 1.6,
-  color: "#5B554C",
-  maxWidth: "560px",
-  margin: 0,
-};
-
-const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #EFE7DC",
-  borderRadius: "18px",
-  padding: "clamp(20px,3vw,26px)",
-  display: "flex",
-  flexDirection: "column",
-  gap: "12px",
-};
-
-const jobTitleStyle: React.CSSProperties = {
-  fontFamily: "'Bricolage Grotesque',sans-serif",
-  fontWeight: 700,
-  fontSize: "20px",
-  margin: "0 0 4px",
-  letterSpacing: "-0.01em",
-};
-
-const companyStyle: React.CSSProperties = { fontSize: "15px", color: "#5B554C" };
-
-const pillStyle: React.CSSProperties = {
-  flex: "none",
-  height: "fit-content",
-  fontSize: "12px",
-  fontWeight: 600,
-  color: "#4F7C6A",
-  background: "rgba(79,124,106,0.12)",
-  padding: "6px 12px",
-  borderRadius: "100px",
-  textTransform: "capitalize",
-};
-
-const descStyle: React.CSSProperties = {
-  fontSize: "14px",
-  lineHeight: 1.55,
-  color: "#6B6357",
-  margin: 0,
-};
-
-const applyLinkStyle: React.CSSProperties = {
-  fontSize: "14px",
-  fontWeight: 600,
-  color: "#C2683C",
-};
-
-const alertStyle: React.CSSProperties = {
-  marginTop: "20px",
-  background: "rgba(194,104,60,0.10)",
-  border: "1px solid rgba(194,104,60,0.35)",
-  color: "#9A4A24",
-  borderRadius: "10px",
-  padding: "12px 14px",
-  fontSize: "14px",
-};

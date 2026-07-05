@@ -16,11 +16,13 @@ import (
 func NewServer(port string, db *sql.DB) *http.Server {
 	rateLimiter := middleware.NewRateLimiter()
 	handler := loggingMiddleware(
-		middleware.SecurityHeaders(
-			rateLimiter.Middleware(
-				middleware.VerifyOrigin(
-					observability.WrapHandler(
-						observability.MetricsMiddleware(NewRouter(db)),
+		middleware.CORS(
+			middleware.SecurityHeaders(
+				rateLimiter.Middleware(
+					middleware.VerifyOrigin(
+						observability.WrapHandler(
+							observability.MetricsMiddleware(NewRouter(db)),
+						),
 					),
 				),
 			),

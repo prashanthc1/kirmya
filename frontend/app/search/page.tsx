@@ -1,8 +1,19 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Chip,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 import { api, ApiError } from "@/lib/api/client";
@@ -30,13 +41,21 @@ function SearchResults() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Adjust state when query changes during render to avoid useEffect warnings
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setLoading(true);
+    setResults([]);
+    setError(null);
+  }
+
   useEffect(() => {
     let active = true;
-    setLoading(true);
     (async () => {
       try {
         const data = await api.get<SearchResponse>(
-          `/search?q=${encodeURIComponent(query)}`,
+          `/search?q=${encodeURIComponent(query)}`
         );
         if (active) {
           setResults(data?.results ?? []);
@@ -47,7 +66,7 @@ function SearchResults() {
           setError(
             err instanceof ApiError
               ? err.message
-              : "Search is unavailable right now. Please try again.",
+              : "Search is unavailable right now. Please try again."
           );
         }
       } finally {
@@ -60,142 +79,132 @@ function SearchResults() {
   }, [query]);
 
   return (
-    <main
-      style={{
-        flex: 1,
-        width: "100%",
-        maxWidth: "900px",
-        margin: "0 auto",
-        padding: "clamp(32px,4vw,52px) 24px 72px",
-      }}
-    >
-      <div style={eyebrowStyle}>Search</div>
-      <h1 style={headingStyle}>
-        {query ? <>Results for &ldquo;{query}&rdquo;</> : "Search Kirmya"}
-      </h1>
+    <Container maxWidth="md" sx={{ flex: 1, py: { xs: 6, md: 8 } }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          component="span"
+          sx={{
+            fontSize: "0.8rem",
+            fontWeight: 800,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "primary.main",
+            display: "block",
+            mb: 1.5,
+          }}
+        >
+          Search
+        </Typography>
+        <Typography
+          variant="h2"
+          sx={{
+            fontSize: { xs: "2.25rem", md: "3rem" },
+            mb: 2,
+          }}
+        >
+          {query ? <>Results for &ldquo;{query}&rdquo;</> : "Search Kirmya"}
+        </Typography>
 
-      <p style={{ fontSize: "14px", color: "#8A8175", margin: "6px 0 0" }}>
-        {loading
-          ? "Searching…"
-          : `${results.length} result${results.length === 1 ? "" : "s"}`}
-        {engine ? ` · Served by ${engine}` : ""}
-      </p>
+        <Typography variant="body2" color="text.secondary">
+          {loading
+            ? "Searching…"
+            : `${results.length} result${results.length === 1 ? "" : "s"}`}
+          {engine && !loading ? ` · Served by ${engine}` : ""}
+        </Typography>
+      </Box>
 
       {error && (
-        <div role="alert" style={alertStyle}>
+        <Alert severity="error" sx={{ mb: 4, borderRadius: 3 }}>
           {error}
-        </div>
+        </Alert>
+      )}
+
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+          <CircularProgress color="primary" />
+        </Box>
       )}
 
       {!loading && !error && results.length === 0 && query && (
-        <p style={{ color: "#5B554C", marginTop: "28px" }}>
+        <Typography variant="body1" color="text.secondary" sx={{ py: 4 }}>
           Nothing matched &ldquo;{query}&rdquo;. Try a different term.
-        </p>
+        </Typography>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "28px" }}>
-        {results.map((hit) => (
-          <Link key={`${hit.type}-${hit.ref_id}`} href={hit.url || "#"} style={cardLinkStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-              <span style={typeBadgeStyle}>{hit.type}</span>
-              <div style={{ minWidth: 0 }}>
-                <div style={titleStyle}>{hit.title}</div>
-                {hit.subtitle && <div style={subtitleStyle}>{hit.subtitle}</div>}
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </main>
+      {!loading && !error && results.length > 0 && (
+        <Grid container spacing={2}>
+          {results.map((hit) => (
+            <Grid item xs={12} key={`${hit.type}-${hit.ref_id}`}>
+              <Card
+                component={Link}
+                href={hit.url || "#"}
+                sx={{
+                  display: "block",
+                  textDecoration: "none",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 10px 30px rgba(43, 38, 32, 0.06)",
+                    borderColor: "primary.light",
+                  },
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Chip
+                      label={hit.type}
+                      sx={{
+                        backgroundColor: "rgba(55, 97, 77, 0.08)",
+                        color: "secondary.main",
+                        fontWeight: 700,
+                        fontSize: "0.75rem",
+                        textTransform: "uppercase",
+                      }}
+                    />
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{
+                          fontWeight: 700,
+                          color: "text.primary",
+                          fontFamily: "var(--font-bricolage)",
+                        }}
+                      >
+                        {hit.title}
+                      </Typography>
+                      {hit.subtitle && (
+                        <Typography variant="body2" color="text.secondary" noWrap>
+                          {hit.subtitle}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Container>
   );
 }
 
 export default function SearchPage() {
   return (
-    <div style={pageStyle}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Search" }]} />
       <Suspense
         fallback={
-          <main style={{ flex: 1, maxWidth: "900px", margin: "0 auto", padding: "52px 24px" }}>
-            <p style={{ color: "#8A8175" }}>Searching…</p>
-          </main>
+          <Container maxWidth="md" sx={{ flex: 1, py: 8 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+              <CircularProgress color="primary" />
+            </Box>
+          </Container>
         }
       >
         <SearchResults />
       </Suspense>
       <SiteFooter />
-    </div>
+    </Box>
   );
 }
-
-const pageStyle: React.CSSProperties = {
-  background: "#FBF7F2",
-  fontFamily: "'Public Sans',sans-serif",
-  color: "#2B2620",
-  minHeight: "100vh",
-  overflowX: "hidden",
-  display: "flex",
-  flexDirection: "column",
-};
-
-const eyebrowStyle: React.CSSProperties = {
-  fontSize: "13px",
-  fontWeight: 700,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-  color: "#C2683C",
-  marginBottom: "12px",
-};
-
-const headingStyle: React.CSSProperties = {
-  fontFamily: "'Bricolage Grotesque',sans-serif",
-  fontWeight: 800,
-  fontSize: "clamp(28px,4vw,40px)",
-  lineHeight: 1.05,
-  letterSpacing: "-0.02em",
-  margin: 0,
-};
-
-const cardLinkStyle: React.CSSProperties = {
-  display: "block",
-  background: "#fff",
-  border: "1px solid #EFE7DC",
-  borderRadius: "14px",
-  padding: "16px 18px",
-  textDecoration: "none",
-  color: "inherit",
-};
-
-const typeBadgeStyle: React.CSSProperties = {
-  flex: "none",
-  fontSize: "11px",
-  fontWeight: 700,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  color: "#5B554C",
-  background: "#F3ECE2",
-  padding: "5px 10px",
-  borderRadius: "8px",
-};
-
-const titleStyle: React.CSSProperties = {
-  fontWeight: 600,
-  fontSize: "16px",
-  color: "#2B2620",
-};
-
-const subtitleStyle: React.CSSProperties = {
-  fontSize: "13px",
-  color: "#8A8175",
-  marginTop: "2px",
-};
-
-const alertStyle: React.CSSProperties = {
-  marginTop: "20px",
-  background: "rgba(194,104,60,0.10)",
-  border: "1px solid rgba(194,104,60,0.35)",
-  color: "#9A4A24",
-  borderRadius: "10px",
-  padding: "12px 14px",
-  fontSize: "14px",
-};
