@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { login, DEMO } from "./helpers";
+import { login, openAccountMenu, DEMO } from "./helpers";
 
 test("admin sees the console; non-admin does not", async ({ page }) => {
-  // Admin: the nav link is visible and the console loads with analytics.
+  // Admin: the account menu exposes the Admin link and the console loads.
   await login(page, DEMO.admin);
-  const adminLink = page.getByRole("link", { name: "Admin" });
+  await openAccountMenu(page);
+  const adminLink = page.getByRole("link", { name: "Admin", exact: true });
   await expect(adminLink).toBeVisible();
   await adminLink.click();
   await expect(page).toHaveURL(/\/admin/);

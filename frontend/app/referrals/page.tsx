@@ -1,24 +1,192 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
+import { api, ApiError } from "@/lib/api/client";
 
-const CONTENT = "\n  \n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:clamp(56px,7vw,100px) 40px clamp(44px,5vw,64px);\">\n    <div style=\"display:grid; grid-template-columns:1.05fr 0.95fr; gap:48px; align-items:center;\">\n      <div>\n        <div style=\"display:inline-block; font-size:13px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#4F7C6A; background:rgba(79,124,106,0.12); padding:8px 16px; border-radius:100px; margin-bottom:26px;\">Real referrals</div>\n        <h1 style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(40px,6vw,68px); line-height:1.02; letter-spacing:-0.025em; margin:0 0 22px;\">A warm intro beats a cold apply.</h1>\n        <p style=\"font-size:clamp(17px,2vw,20px); line-height:1.6; color:#5B554C; max-width:500px; margin:0 0 34px;\">The cold-apply black hole swallows most applications before a human sees them. Kirmya connects you to people already inside the companies you want — and lets you ask for the intro that changes everything.</p>\n        <div style=\"display:flex; gap:14px; flex-wrap:wrap;\">\n          <a href=\"/sign-in\" style=\"background:#C2683C; color:#fff; font-size:16px; font-weight:600; padding:16px 32px; border-radius:100px;\">Request a referral</a>\n          <a href=\"/jobs\" style=\"background:#2B2620; color:#fff; font-size:16px; font-weight:600; padding:16px 32px; border-radius:100px;\">Browse companies</a>\n        </div>\n      </div>\n      <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:22px; padding:30px;\">\n        <div style=\"display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;\">\n          <div style=\"display:flex; align-items:center; gap:13px;\">\n            <span style=\"width:46px; height:46px; border-radius:10px; background:#EAF0EC; display:flex; align-items:center; justify-content:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; color:#4F7C6A; font-size:18px;\">N</span>\n            <div><div style=\"font-weight:600; font-size:15px;\">Northwind Logistics</div><div style=\"font-size:13px; color:#8A8175;\">VP of Operations</div></div>\n          </div>\n          <span style=\"font-size:12px; color:#4F7C6A; font-weight:600; background:rgba(79,124,106,0.12); padding:5px 11px; border-radius:100px;\">3 inside</span>\n        </div>\n        <div style=\"display:flex; flex-direction:column; gap:12px;\">\n          <div style=\"display:flex; align-items:center; gap:12px; padding:14px; border:1px solid #EFE7DC; border-radius:14px;\">\n            <span style=\"flex:none; width:38px; height:38px; border-radius:50%; background:#C2683C; color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; font-family:'Bricolage Grotesque',sans-serif;\">EP</span>\n            <div style=\"flex:1; min-width:0;\"><div style=\"font-weight:600; font-size:14px;\">Elena Park</div><div style=\"font-size:12px; color:#8A8175;\">Director of Ops · 4 yrs there</div></div>\n            <span style=\"font-size:12px; font-weight:600; color:#4F7C6A; background:rgba(79,124,106,0.12); padding:6px 12px; border-radius:100px;\">Open to refer</span>\n          </div>\n          <div style=\"display:flex; align-items:center; gap:12px; padding:14px; border:1px solid #EFE7DC; border-radius:14px;\">\n            <span style=\"flex:none; width:38px; height:38px; border-radius:50%; background:#4F7C6A; color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; font-family:'Bricolage Grotesque',sans-serif;\">DT</span>\n            <div style=\"flex:1; min-width:0;\"><div style=\"font-weight:600; font-size:14px;\">David Tran</div><div style=\"font-size:12px; color:#8A8175;\">Sr. Supply Planner · 6 yrs there</div></div>\n            <span style=\"font-size:12px; font-weight:600; color:#4F7C6A; background:rgba(79,124,106,0.12); padding:6px 12px; border-radius:100px;\">Open to refer</span>\n          </div>\n        </div>\n        <button style=\"width:100%; margin-top:16px; border:none; background:#C2683C; color:#fff; font-family:'Public Sans',sans-serif; font-size:15px; font-weight:600; padding:13px; border-radius:100px; cursor:pointer;\">Ask Elena for an intro</button>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:0 40px clamp(48px,6vw,72px);\">\n    <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:22px; padding:clamp(32px,4vw,48px); display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:32px; text-align:center;\">\n      <div><div style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(34px,4.5vw,52px); color:#C2683C; letter-spacing:-0.02em;\">9×</div><div style=\"font-size:15px; color:#6B6357; margin-top:6px;\">More likely to get an interview</div></div>\n      <div><div style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(34px,4.5vw,52px); color:#4F7C6A; letter-spacing:-0.02em;\">480</div><div style=\"font-size:15px; color:#6B6357; margin-top:6px;\">Companies with insiders</div></div>\n      <div><div style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(34px,4.5vw,52px); color:#2B2620; letter-spacing:-0.02em;\">31k</div><div style=\"font-size:15px; color:#6B6357; margin-top:6px;\">Members open to refer</div></div>\n      <div><div style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(34px,4.5vw,52px); color:#2B2620; letter-spacing:-0.02em;\">48h</div><div style=\"font-size:15px; color:#6B6357; margin-top:6px;\">Median reply to a request</div></div>\n    </div>\n  </section>\n\n  \n  <section style=\"background:#F3ECE2; border-top:1px solid #EFE7DC; border-bottom:1px solid #EFE7DC;\">\n    <div style=\"max-width:1240px; margin:0 auto; padding:clamp(56px,6vw,84px) 40px;\">\n      <div style=\"text-align:center; max-width:620px; margin:0 auto clamp(40px,5vw,56px);\">\n        <div style=\"font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#C2683C; margin-bottom:14px;\">How referrals work</div>\n        <h2 style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(30px,4vw,44px); line-height:1.05; letter-spacing:-0.02em; margin:0;\">Three steps to skip the queue.</h2>\n      </div>\n      <div style=\"display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;\">\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:34px;\">\n          <div style=\"width:46px; height:46px; border-radius:50%; background:#C2683C; color:#fff; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:20px;\">1</div>\n          <h3 style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:21px; margin:0 0 10px;\">Find a real insider</h3>\n          <p style=\"font-size:15px; line-height:1.6; color:#6B6357; margin:0;\">Search any company and see members already working there who've opted in to refer.</p>\n        </div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:34px;\">\n          <div style=\"width:46px; height:46px; border-radius:50%; background:#4F7C6A; color:#fff; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:20px;\">2</div>\n          <h3 style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:21px; margin:0 0 10px;\">Send a short, honest note</h3>\n          <p style=\"font-size:15px; line-height:1.6; color:#6B6357; margin:0;\">We pre-fill your profile and the role. You add a sentence on why it fits — no awkward LinkedIn cold-DM.</p>\n        </div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:34px;\">\n          <div style=\"width:46px; height:46px; border-radius:50%; background:#2B2620; color:#fff; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:20px;\">3</div>\n          <h3 style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:21px; margin:0 0 10px;\">They vouch, you're in</h3>\n          <p style=\"font-size:15px; line-height:1.6; color:#6B6357; margin:0;\">Your application lands on a recruiter's desk with a name attached — not at the bottom of a pile.</p>\n        </div>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:clamp(56px,6vw,84px) 40px;\">\n    <div style=\"display:grid; grid-template-columns:0.9fr 1.1fr; gap:48px; align-items:center;\">\n      <div>\n        <div style=\"font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#C2683C; margin-bottom:14px;\">Why it's different</div>\n        <h2 style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(28px,3.6vw,40px); line-height:1.08; letter-spacing:-0.02em; margin:0 0 16px;\">No begging strangers. No awkward asks.</h2>\n        <p style=\"font-size:16px; line-height:1.7; color:#4A443B; margin:0;\">Everyone who appears as a referrer chose to be there. Asking is normal, expected, and easy — because the whole community is built around people helping each other land.</p>\n      </div>\n      <div style=\"display:grid; grid-template-columns:1fr 1fr; gap:14px;\">\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:16px; padding:24px;\"><div style=\"font-size:22px; margin-bottom:12px; color:#4F7C6A;\">✓</div><div style=\"font-weight:600; font-size:16px; margin-bottom:5px;\">Opt-in only</div><div style=\"font-size:14px; color:#8A8175; line-height:1.5;\">Referrers chose to help.</div></div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:16px; padding:24px;\"><div style=\"font-size:22px; margin-bottom:12px; color:#C2683C;\">✎</div><div style=\"font-weight:600; font-size:16px; margin-bottom:5px;\">Pre-filled ask</div><div style=\"font-size:14px; color:#8A8175; line-height:1.5;\">We draft the intro for you.</div></div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:16px; padding:24px;\"><div style=\"font-size:22px; margin-bottom:12px; color:#6A5FA0;\">⦿</div><div style=\"font-weight:600; font-size:16px; margin-bottom:5px;\">Tracked status</div><div style=\"font-size:14px; color:#8A8175; line-height:1.5;\">See when it's sent and seen.</div></div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:16px; padding:24px;\"><div style=\"font-size:22px; margin-bottom:12px; color:#2B2620;\">♥</div><div style=\"font-weight:600; font-size:16px; margin-bottom:5px;\">Pay it forward</div><div style=\"font-size:14px; color:#8A8175; line-height:1.5;\">Refer once you're hired.</div></div>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:0 40px clamp(56px,6vw,90px);\">\n    <div style=\"background:#4F7C6A; border-radius:24px; padding:clamp(40px,5vw,64px); text-align:center;\">\n      <h2 style=\"font-family:'Bricolage Grotesque',sans-serif; font-weight:800; color:#fff; font-size:clamp(28px,4vw,44px); line-height:1.05; letter-spacing:-0.02em; margin:0 0 14px;\">Someone inside is rooting for you.</h2>\n      <p style=\"font-size:clamp(16px,2vw,18px); color:rgba(255,255,255,0.88); margin:0 auto 28px; max-width:520px;\">Find your way in through a real person. Your first referral request is one click away.</p>\n      <a href=\"/sign-in\" style=\"background:#fff; color:#2B2620; font-size:16px; font-weight:600; padding:16px 34px; border-radius:100px; display:inline-block;\">Request a referral</a>\n    </div>\n  </section>\n\n  \n  \n";
+interface Referral {
+  id: string;
+  company: string;
+  message: string;
+  status: string;
+  outcome: string;
+  created_at: string;
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "#B0852E",
+  accepted: "#4F7C6A",
+  declined: "#9A4A24",
+};
 
 export default function ReferralsPage() {
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const data = await api.get<{ referrals: Referral[] }>("/referrals/outgoing");
+        if (active) setReferrals(data?.referrals ?? []);
+      } catch (err) {
+        if (active) {
+          setError(
+            err instanceof ApiError
+              ? err.message
+              : "Could not load your referrals. Please try again.",
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
-    <div
-      style={{
-        background: "#FBF7F2",
-        fontFamily: "'Public Sans',sans-serif",
-        color: "#2B2620",
-        minHeight: "100vh",
-        overflowX: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div style={pageStyle}>
       <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Referrals" }]} />
-      <div style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: CONTENT }} />
+
+      <main
+        style={{
+          flex: 1,
+          width: "100%",
+          maxWidth: "860px",
+          margin: "0 auto",
+          padding: "clamp(32px,4vw,52px) 24px 72px",
+        }}
+      >
+        <div style={eyebrowStyle}>Referrals</div>
+        <h1 style={headingStyle}>Your requests</h1>
+        <p style={leadStyle}>
+          Track the referral requests you&apos;ve sent and where each one stands.
+        </p>
+
+        {error && (
+          <div role="alert" style={alertStyle}>
+            {error}
+          </div>
+        )}
+
+        {loading && <p style={{ color: "#8A8175", marginTop: "24px" }}>Loading…</p>}
+
+        {!loading && !error && referrals.length === 0 && (
+          <p style={{ color: "#5B554C", marginTop: "24px" }}>
+            You haven&apos;t requested any referrals yet.
+          </p>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "28px" }}>
+          {referrals.map((ref) => (
+            <article key={ref.id} style={cardStyle}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+                <h2 style={companyStyle}>{ref.company || "Referral request"}</h2>
+                <span
+                  style={{
+                    ...statusPillStyle,
+                    color: STATUS_COLORS[ref.status] ?? "#5B554C",
+                    background:
+                      ref.status === "accepted"
+                        ? "rgba(79,124,106,0.12)"
+                        : "#F3ECE2",
+                  }}
+                >
+                  {ref.outcome || ref.status}
+                </span>
+              </div>
+              {ref.message && <p style={messageStyle}>{ref.message}</p>}
+            </article>
+          ))}
+        </div>
+      </main>
+
       <SiteFooter />
     </div>
   );
 }
+
+const pageStyle: React.CSSProperties = {
+  background: "#FBF7F2",
+  fontFamily: "'Public Sans',sans-serif",
+  color: "#2B2620",
+  minHeight: "100vh",
+  overflowX: "hidden",
+  display: "flex",
+  flexDirection: "column",
+};
+
+const eyebrowStyle: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: 700,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: "#4F7C6A",
+  marginBottom: "14px",
+};
+
+const headingStyle: React.CSSProperties = {
+  fontFamily: "'Bricolage Grotesque',sans-serif",
+  fontWeight: 800,
+  fontSize: "clamp(30px,5vw,46px)",
+  lineHeight: 1.03,
+  letterSpacing: "-0.025em",
+  margin: "0 0 12px",
+};
+
+const leadStyle: React.CSSProperties = {
+  fontSize: "clamp(16px,2vw,18px)",
+  lineHeight: 1.6,
+  color: "#5B554C",
+  maxWidth: "520px",
+  margin: 0,
+};
+
+const cardStyle: React.CSSProperties = {
+  background: "#fff",
+  border: "1px solid #EFE7DC",
+  borderRadius: "18px",
+  padding: "clamp(18px,3vw,24px)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+};
+
+const companyStyle: React.CSSProperties = {
+  fontFamily: "'Bricolage Grotesque',sans-serif",
+  fontWeight: 700,
+  fontSize: "19px",
+  margin: 0,
+  letterSpacing: "-0.01em",
+};
+
+const statusPillStyle: React.CSSProperties = {
+  flex: "none",
+  height: "fit-content",
+  fontSize: "12px",
+  fontWeight: 600,
+  padding: "6px 12px",
+  borderRadius: "100px",
+  textTransform: "capitalize",
+};
+
+const messageStyle: React.CSSProperties = {
+  fontSize: "14px",
+  lineHeight: 1.55,
+  color: "#6B6357",
+  margin: 0,
+};
+
+const alertStyle: React.CSSProperties = {
+  marginTop: "20px",
+  background: "rgba(194,104,60,0.10)",
+  border: "1px solid rgba(194,104,60,0.35)",
+  color: "#9A4A24",
+  borderRadius: "10px",
+  padding: "12px 14px",
+  fontSize: "14px",
+};

@@ -333,6 +333,15 @@ function ProfileMenu({
             />
           ))}
 
+          {user.roles?.includes("admin") && (
+            <MenuRow
+              href="/admin"
+              icon={"◆"}
+              label="Admin"
+              onSelect={() => setOpen(false)}
+            />
+          )}
+
           <div style={{ height: "1px", background: "#EFE7DC", margin: "8px 6px" }} />
 
           <MenuRow
