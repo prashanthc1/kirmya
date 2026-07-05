@@ -300,7 +300,11 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                 component={Link}
                 href={link.href}
                 role="link"
-                sx={{ borderRadius: 2, py: 1.0 }}
+                sx={{
+                  borderRadius: 2,
+                  py: 1.0,
+                  display: { xs: "flex", md: "none" }, // Hide on desktop because they are already in the top nav
+                }}
               >
                 <ListItemIcon aria-hidden="true">
                   <Typography variant="body1">{link.icon}</Typography>
@@ -309,7 +313,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
               </MenuItem>
             ))}
 
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: 1, display: { xs: "block", md: "none" } }} />
 
             <MenuItem component={Link} href="/profile" sx={{ borderRadius: 2, py: 1.2 }}>
               <ListItemIcon>
