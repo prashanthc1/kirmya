@@ -17,7 +17,7 @@ export default function MentorshipPage() {
       }}
     >
       <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Mentorship" }]} />
-      <div style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: CONTENT }} />
+      <main style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: CONTENT }} />
       <SiteFooter />
     </div>
   );

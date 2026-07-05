@@ -13,7 +13,7 @@ test("admin sees the console; non-admin does not", async ({ page }) => {
   await expect(page.getByText("Total").first()).toBeVisible(); // a stat card
 
   // Users tab lists accounts.
-  await page.getByRole("button", { name: "Users" }).click();
+  await page.getByRole("tab", { name: "Users" }).click();
   await expect(page.getByText(DEMO.admin).first()).toBeVisible();
 });
 

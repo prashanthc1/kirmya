@@ -17,7 +17,7 @@ export default function EditProfilePage() {
       }}
     >
       <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile", href: "/profile" }, { label: "Edit" }]} />
-      <div style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: CONTENT }} />
+      <main style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: CONTENT }} />
       <SiteFooter />
     </div>
   );

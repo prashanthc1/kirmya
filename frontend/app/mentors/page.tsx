@@ -16,6 +16,7 @@ export default function MentorsPage() {
         breadcrumb={[{ label: "Home", href: "/" }, { label: "Mentors" }]}
       />
 
+      <main style={{ display: "block" }}>
       {/* HEADING */}
       <section
         style={{
@@ -580,6 +581,7 @@ export default function MentorsPage() {
           </a>
         </div>
       </section>
+      </main>
 
       <SiteFooter />
     </div>

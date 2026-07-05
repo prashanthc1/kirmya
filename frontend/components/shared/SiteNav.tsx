@@ -302,7 +302,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                 role="link"
                 sx={{ borderRadius: 2, py: 1.0 }}
               >
-                <ListItemIcon>
+                <ListItemIcon aria-hidden="true">
                   <Typography variant="body1">{link.icon}</Typography>
                 </ListItemIcon>
                 <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: 500 }} />
@@ -332,7 +332,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                 role="link"
                 sx={{ borderRadius: 2, py: 1.2, color: "secondary.main" }}
               >
-                <ListItemIcon sx={{ color: "secondary.main" }}>
+                <ListItemIcon aria-hidden="true" sx={{ color: "secondary.main" }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 800, ml: 0.5 }}>◆</Typography>
                 </ListItemIcon>
                 <ListItemText primary="Admin" primaryTypographyProps={{ fontWeight: 700 }} />
