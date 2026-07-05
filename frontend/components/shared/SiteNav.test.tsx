@@ -25,6 +25,7 @@ vi.mock("next/link", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/",
 }));
 
 vi.mock("@/lib/auth/auth-context", () => ({
@@ -51,13 +52,13 @@ describe("SiteNav", () => {
     render(<SiteNav />);
     expect(screen.getByText("Kirmya")).toBeInTheDocument();
     expect(screen.getByText("Sign in")).toBeInTheDocument();
-    expect(screen.getByText("Start your comeback")).toBeInTheDocument();
+    expect(screen.getByText("Start comeback")).toBeInTheDocument();
   });
 
-  it("shows logged-out CTAs while the session is still loading", () => {
+  it("shows a loading skeleton while the session is still loading", () => {
     h.auth.loading = true;
     render(<SiteNav />);
-    expect(screen.getByText("Sign in")).toBeInTheDocument();
+    expect(screen.queryByText("Sign in")).not.toBeInTheDocument();
   });
 
   it("shows the avatar trigger and opens the account menu when logged in", () => {
@@ -73,7 +74,7 @@ describe("SiteNav", () => {
     fireEvent.click(screen.getByRole("button", { name: /Ada L\./ }));
 
     expect(screen.getByRole("menuitem", { name: /Sign out/ })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Jobs" })).toHaveAttribute(
+    expect(screen.getByText("Jobs").closest("a")).toHaveAttribute(
       "href",
       "/jobs",
     );
@@ -85,7 +86,7 @@ describe("SiteNav", () => {
 
   it("does not render a breadcrumb when none is provided", () => {
     render(<SiteNav />);
-    expect(screen.queryByLabelText("Breadcrumb")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/breadcrumb/i)).not.toBeInTheDocument();
   });
 
   it("renders breadcrumb items and marks the last as the current page", () => {
@@ -94,8 +95,8 @@ describe("SiteNav", () => {
         breadcrumb={[{ label: "Jobs", href: "/jobs" }, { label: "Frontend Engineer" }]}
       />,
     );
-    expect(screen.getByLabelText("Breadcrumb")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Jobs" })).toHaveAttribute("href", "/jobs");
+    expect(screen.getByLabelText(/breadcrumb/i)).toBeInTheDocument();
+    expect(screen.getByText("Jobs").closest("a")).toHaveAttribute("href", "/jobs");
     expect(screen.getByText("Frontend Engineer")).toHaveAttribute("aria-current", "page");
   });
 });

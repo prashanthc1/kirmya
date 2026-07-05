@@ -5,6 +5,7 @@ package outbox
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -16,6 +17,11 @@ import (
 func TestOutbox_TransactionalPublishAndRelay(t *testing.T) {
 	db := testsupport.OpenTestDB(t)
 	ctx := context.Background()
+
+	// Clear the outbox table to ensure a clean slate for this test
+	if _, err := db.ExecContext(ctx, "TRUNCATE event_outbox RESTART IDENTITY"); err != nil {
+		t.Fatalf("failed to truncate event_outbox: %v", err)
+	}
 
 	bus := eventbus.New()
 	pub := NewPublisher(db)
@@ -32,7 +38,7 @@ func TestOutbox_TransactionalPublishAndRelay(t *testing.T) {
 			t.Fatalf("unexpected publish error: %v", err)
 		}
 		// Return an error to force rollback
-		return tx.WithTx(txCtx, nil).Err() // arbitrary error to trigger rollback, or custom error
+		return errors.New("force rollback")
 	})
 	if err == nil {
 		t.Fatalf("expected error on rollback transaction, got nil")

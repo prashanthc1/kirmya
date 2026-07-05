@@ -383,6 +383,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                   <Typography
                     key={index}
                     variant="body2"
+                    aria-current="page"
                     sx={{ color: "text.primary", fontWeight: 700 }}
                   >
                     {item.label}
