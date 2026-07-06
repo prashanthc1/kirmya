@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
+import AuthGuard from "@/components/shared/AuthGuard";
 import { 
   Briefcase, 
   Bookmark, 
@@ -48,7 +49,7 @@ interface DashboardSummary {
   };
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -419,5 +420,13 @@ export default function DashboardPage() {
 
       <SiteFooter />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
   );
 }

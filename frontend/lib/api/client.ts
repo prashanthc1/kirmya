@@ -39,17 +39,26 @@ export class ApiError extends Error {
   }
 }
 
-// --- in-memory access token -------------------------------------------------
-// Kept in a module variable rather than storage so it never survives a full
-// reload (the refresh cookie re-establishes the session) and is unreachable to
-// injected scripts reading storage.
-let accessToken: string | null = null;
+// --- persistent access token -------------------------------------------------
+// Cache the token in localStorage to maintain the login session across full reloads,
+// avoiding logged-out UI flashes before the refresh cookie establishes a new session.
+let accessToken: string | null = typeof window !== "undefined" ? localStorage.getItem("kirmya_access_token") : null;
 
 export function setAccessToken(token: string | null): void {
   accessToken = token;
+  if (typeof window !== "undefined") {
+    if (token) {
+      localStorage.setItem("kirmya_access_token", token);
+    } else {
+      localStorage.removeItem("kirmya_access_token");
+    }
+  }
 }
 
 export function getAccessToken(): string | null {
+  if (!accessToken && typeof window !== "undefined") {
+    accessToken = localStorage.getItem("kirmya_access_token");
+  }
   return accessToken;
 }
 

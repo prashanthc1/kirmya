@@ -6,6 +6,7 @@ import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 import { api, ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/auth-context";
+import AuthGuard from "@/components/shared/AuthGuard";
 
 interface Analytics {
   users: { total: number; active: number; new_7d: number };
@@ -25,7 +26,7 @@ interface AdminUser {
 
 type Tab = "overview" | "users";
 
-export default function AdminPage() {
+function AdminConsole() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
@@ -253,3 +254,11 @@ const alertStyle: React.CSSProperties = {
   padding: "12px 14px",
   fontSize: "14px",
 };
+
+export default function AdminPage() {
+  return (
+    <AuthGuard>
+      <AdminConsole />
+    </AuthGuard>
+  );
+}

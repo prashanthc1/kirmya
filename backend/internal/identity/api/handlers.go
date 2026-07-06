@@ -494,6 +494,7 @@ func (h *Handler) setRefreshCookie(w http.ResponseWriter, r *http.Request, raw s
 		Secure:   secureCookies(r),
 		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Now().Add(30 * 24 * time.Hour),
+		MaxAge:   30 * 24 * 3600, // 30 days in seconds
 	})
 }
 
