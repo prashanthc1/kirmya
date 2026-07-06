@@ -3,6 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { 
+  Sparkles, 
+  Mail, 
+  Lock, 
+  ShieldCheck, 
+  Loader2, 
+  ArrowRight,
+  UserCheck
+} from "lucide-react";
 import { api, setAccessToken, ApiError } from "@/lib/api/client";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-context";
 
@@ -57,333 +66,131 @@ export default function SignInPage() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-        fontFamily: "'Public Sans',sans-serif",
-        color: "#2B2620",
-        background: "#FBF7F2",
-      }}
-    >
-      {/* LEFT BRAND PANEL */}
-      <div
-        style={{
-          flex: "1 1 0",
-          minWidth: 0,
-          background: "#2B2620",
-          color: "#fff",
-          padding: "clamp(36px,4vw,56px)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-160px",
-            right: "-120px",
-            width: "480px",
-            height: "480px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(79,124,106,0.45), transparent 68%)",
-            pointerEvents: "none",
-          }}
-        />
-        <Link
-          href="/"
-          style={{
-            fontFamily: "'Public Sans',sans-serif",
-            fontSize: "26px",
-            fontWeight: 800,
-            letterSpacing: "-0.02em",
-            color: "#fff",
-            position: "relative",
-          }}
-        >
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+      {/* Left Branding Panel (Desktop) */}
+      <div className="hidden md:flex flex-1 bg-slate-900 dark:bg-zinc-950 p-12 flex-col justify-between relative overflow-hidden text-white border-r border-border/10">
+        {/* Glow */}
+        <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 rounded-full bg-blue-500/10 blur-[120px] pointer-events-none" />
+        
+        <Link href="/" className="text-xl font-bold tracking-tight">
           Kirmya
         </Link>
-        <div style={{ position: "relative", maxWidth: "440px" }}>
-          <div
-            style={{
-              fontSize: "46px",
-              lineHeight: 1,
-              color: "#E7A57E",
-              fontFamily: "'Public Sans',sans-serif",
-              marginBottom: "12px",
-            }}
-          >
-            &ldquo;
-          </div>
-          <p
-            style={{
-              fontFamily: "'Public Sans',sans-serif",
-              fontWeight: 500,
-              fontSize: "clamp(20px,2.2vw,28px)",
-              lineHeight: 1.35,
-              letterSpacing: "-0.01em",
-              margin: "0 0 24px",
-            }}
-          >
-            One account. I&apos;m a job seeker, a mentor, and occasionally the
-            one hiring. Kirmya handles all of it.
+
+        <div className="space-y-6 max-w-md relative z-10">
+          <div className="text-primary text-4xl font-extrabold">&ldquo;</div>
+          <p className="text-2xl font-semibold leading-relaxed tracking-tight">
+            One account. I&apos;m a job seeker, a mentor, and occasionally the one hiring. Kirmya handles all of it seamlessly.
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <span
-              style={{
-                width: "46px",
-                height: "46px",
-                borderRadius: "50%",
-                background: "#C2683C",
-                flex: "none",
-                display: "inline-block",
-              }}
-            />
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+              PN
+            </div>
             <div>
-              <div style={{ fontWeight: 600, fontSize: "15px" }}>Priya Nair</div>
-              <div style={{ fontSize: "13px", color: "#9C958A" }}>
-                Career coach &amp; operations lead · 3 roles active
-              </div>
+              <p className="text-xs font-bold text-slate-100">Priya Nair</p>
+              <p className="text-[10px] text-slate-400">Career Coach &bull; 3 roles active</p>
             </div>
           </div>
         </div>
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            gap: "28px",
-            fontSize: "14px",
-            color: "#9C958A",
-            flexWrap: "wrap",
-          }}
-        >
-          <span>
-            <strong
-              style={{
-                color: "#fff",
-                fontFamily: "'Public Sans',sans-serif",
-                fontSize: "18px",
-              }}
-            >
-              12.4k
-            </strong>
-            &nbsp;placed
-          </span>
-          <span>
-            <strong
-              style={{
-                color: "#fff",
-                fontFamily: "'Public Sans',sans-serif",
-                fontSize: "18px",
-              }}
-            >
-              480
-            </strong>
-            &nbsp;partners
-          </span>
-          <span>
-            <strong
-              style={{
-                color: "#fff",
-                fontFamily: "'Public Sans',sans-serif",
-                fontSize: "18px",
-              }}
-            >
-              100%
-            </strong>
-            &nbsp;free to join
-          </span>
-        </div>
+
+        <p className="text-[10px] text-slate-500">&copy; {new Date().getFullYear()} Kirmya. Built for your comeback.</p>
       </div>
 
-      {/* RIGHT FORM PANEL */}
-      <div
-        style={{
-          flex: "1 1 0",
-          minWidth: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "clamp(28px,4vw,56px)",
-          overflowY: "auto",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: "440px" }}>
-          <h1
-            style={{
-              fontFamily: "'Public Sans',sans-serif",
-              fontWeight: 800,
-              fontSize: "clamp(28px,3.4vw,38px)",
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
-              margin: "0 0 8px",
-            }}
-          >
-            Welcome back
-          </h1>
-          <p style={{ fontSize: "16px", color: "#5B554C", margin: "0 0 28px" }}>
-            Sign in to your Kirmya account.
-          </p>
+      {/* Right Login Form Panel */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background relative overflow-hidden">
+        {/* Mobile Logo */}
+        <div className="md:hidden absolute top-8 left-8">
+          <Link href="/" className="text-lg font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Kirmya
+          </Link>
+        </div>
 
-          <form onSubmit={handleSubmit} noValidate>
-            {error && (
-              <div
-                role="alert"
-                style={{
-                  background: "rgba(194,104,60,0.10)",
-                  border: "1px solid rgba(194,104,60,0.35)",
-                  color: "#9A4A24",
-                  borderRadius: "10px",
-                  padding: "11px 14px",
-                  fontSize: "14px",
-                  marginBottom: "16px",
-                }}
-              >
-                {error}
-              </div>
-            )}
+        <div className="w-full max-w-sm space-y-6">
+          <div className="space-y-1.5 text-center md:text-left">
+            <h1 className="text-2xl font-extrabold tracking-tight">Welcome back</h1>
+            <p className="text-xs text-muted-foreground">Sign in to resume your active career search pipeline.</p>
+          </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
-                marginBottom: "22px",
-              }}
-            >
-              <div>
-                <label htmlFor="email" style={labelStyle}>
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@email.com"
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" style={labelStyle}>
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Your password"
-                  style={inputStyle}
-                />
-              </div>
-              {mfaRequired && (
-                <div>
-                  <label htmlFor="code" style={labelStyle}>
-                    Authentication code
-                  </label>
+          {error && (
+            <div className={`p-4 rounded-2xl text-xs font-medium border ${
+              mfaRequired 
+                ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400" 
+                : "bg-destructive/10 border-destructive/20 text-destructive"
+            }`}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!mfaRequired ? (
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground block">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
+                    <input
+                      type="email"
+                      placeholder="name@company.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 rounded-full border border-border/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-muted-foreground block">Password</label>
+                    <Link href="/forgot-password" className="text-[10px] font-bold text-primary hover:underline">
+                      Forgot Password?
+                    </Link>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 rounded-full border border-border/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm shadow-sm"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground block">6-digit MFA Code</label>
+                <div className="relative">
+                  <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                   <input
-                    id="code"
-                    name="code"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
+                    type="text"
+                    placeholder="000 000"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    placeholder="6-digit code"
-                    style={inputStyle}
+                    required
+                    maxLength={6}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-full border border-border/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm shadow-sm"
                   />
                 </div>
-              )}
-            </div>
-
-            <div style={{ textAlign: "right", marginBottom: "20px" }}>
-              <Link
-                href="/forgot-password"
-                style={{
-                  fontSize: "14px",
-                  color: "#C2683C",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Forgot password ?
-              </Link>
-            </div>
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={loading}
-              style={{
-                width: "100%",
-                border: "none",
-                background: loading ? "#D89870" : "#C2683C",
-                color: "#fff",
-                fontFamily: "'Public Sans',sans-serif",
-                fontSize: "16px",
-                fontWeight: 600,
-                padding: "15px",
-                borderRadius: "100px",
-                cursor: loading ? "default" : "pointer",
-                marginBottom: "14px",
-              }}
+              className="w-full py-2.5 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-sm font-bold shadow-sm flex items-center justify-center gap-1.5"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
+              {mfaRequired ? "Verify Code" : "Sign In"}
+              <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "14px",
-              margin: "18px 0",
-            }}
-          >
-            <span style={{ flex: 1, height: "1px", background: "#EFE7DC" }} />
-            <span style={{ fontSize: "13px", color: "#A89C8A" }}>or</span>
-            <span style={{ flex: 1, height: "1px", background: "#EFE7DC" }} />
-          </div>
-
-          <button
-            type="button"
-            style={{
-              width: "100%",
-              border: "1px solid #E2D9CC",
-              background: "#fff",
-              color: "#2B2620",
-              fontFamily: "'Public Sans',sans-serif",
-              fontSize: "15px",
-              fontWeight: 600,
-              padding: "14px",
-              borderRadius: "100px",
-              cursor: "pointer",
-            }}
-          >
-            Continue with Google
-          </button>
-
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: "28px",
-              fontSize: "15px",
-              color: "#5B554C",
-            }}
-          >
-            Don&apos;t have an account ?{" "}
-            <Link
-              href="/sign-up"
-              style={{ color: "#C2683C", fontWeight: 600, cursor: "pointer" }}
-            >
-              Create one free
+          <div className="text-center text-xs text-muted-foreground pt-4 border-t border-border/40">
+            Don&apos;t have an account?{" "}
+            <Link href="/sign-up" className="font-bold text-primary hover:underline">
+              Create one
             </Link>
           </div>
         </div>
@@ -391,23 +198,3 @@ export default function SignInPage() {
     </div>
   );
 }
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "13px",
-  fontWeight: 600,
-  color: "#8A8175",
-  marginBottom: "7px",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid #E2D9CC",
-  borderRadius: "10px",
-  padding: "13px 14px",
-  fontSize: "15px",
-  color: "#2B2620",
-  outline: "none",
-  background: "#FCFAF7",
-  boxSizing: "border-box",
-};

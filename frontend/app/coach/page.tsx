@@ -1,23 +1,242 @@
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Sparkles, 
+  Send, 
+  BrainCircuit, 
+  Terminal, 
+  DollarSign, 
+  FileText, 
+  GraduationCap, 
+  CheckCircle, 
+  Cpu,
+  Loader2,
+  ArrowRight,
+  TrendingUp,
+  Briefcase
+} from "lucide-react";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 
-const CONTENT = "\n  \n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:clamp(48px,6vw,88px) 40px clamp(44px,5vw,64px);\">\n    <div style=\"display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,4vw,56px); align-items:center;\">\n      <div>\n        <div style=\"display:inline-block; font-size:13px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#C2683C; background:rgba(194,104,60,0.12); padding:8px 16px; border-radius:100px; margin-bottom:26px;\">AI career coach</div>\n        <h1 style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(40px,6vw,68px); line-height:1.02; letter-spacing:-0.025em; margin:0 0 22px;\">A coach in your corner, 24/7.</h1>\n        <p style=\"font-size:clamp(17px,2vw,20px); line-height:1.6; color:#5B554C; max-width:500px; margin:0 0 34px;\">Interview prep at midnight. A salary script before the call. The honest answer to \"what do I even do this week?\" Your coach is always on, never judges, and never gets tired of your questions.</p>\n        <a href=\"/sign-in\" style=\"background:#C2683C; color:#fff; font-size:16px; font-weight:600; padding:16px 32px; border-radius:100px; display:inline-block;\">Talk to your coach</a>\n      </div>\n      \n      <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:24px; box-shadow:0 24px 60px rgba(43,38,32,0.1); overflow:hidden;\">\n        <div style=\"background:#2B2620; padding:18px 22px; display:flex; align-items:center; gap:12px;\">\n          <span style=\"width:38px; height:38px; border-radius:50%; background:#C2683C; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px;\">✦</span>\n          <div><div style=\"color:#fff; font-weight:600; font-size:15px;\">Kirmya Coach</div><div style=\"color:#9C958A; font-size:12px; display:flex; align-items:center; gap:6px;\"><span style=\"width:7px; height:7px; border-radius:50%; background:#7BB39A; display:inline-block;\"></span> Always online</div></div>\n        </div>\n        <div style=\"padding:24px 22px; display:flex; flex-direction:column; gap:14px; background:#FBF7F2;\">\n          <div style=\"align-self:flex-end; max-width:80%; background:#C2683C; color:#fff; padding:13px 16px; border-radius:16px 16px 4px 16px; font-size:14.5px; line-height:1.5;\">I have a VP Ops interview Thursday and I'm nervous about the layoff question.</div>\n          <div style=\"align-self:flex-start; max-width:88%; background:#fff; border:1px solid #EFE7DC; padding:13px 16px; border-radius:16px 16px 16px 4px; font-size:14.5px; line-height:1.55; color:#2B2620;\">Totally normal. Let's reframe it. Try: \"My role was cut in a restructuring — it had nothing to do with performance. What it gave me was time to go deep on X.\" Want to rehearse your version out loud?</div>\n          <div style=\"align-self:flex-end; max-width:80%; background:#C2683C; color:#fff; padding:13px 16px; border-radius:16px 16px 4px 16px; font-size:14.5px; line-height:1.5;\">Yes. And can you quiz me on S&amp;OP questions after?</div>\n          <div style=\"align-self:flex-start; display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #EFE7DC; padding:14px 16px; border-radius:16px 16px 16px 4px;\">\n            <span style=\"width:7px; height:7px; border-radius:50%; background:#C2A48C; display:inline-block; animation:blink 1.2s infinite;\"></span>\n            <span style=\"width:7px; height:7px; border-radius:50%; background:#C2A48C; display:inline-block; animation:blink 1.2s infinite .2s;\"></span>\n            <span style=\"width:7px; height:7px; border-radius:50%; background:#C2A48C; display:inline-block; animation:blink 1.2s infinite .4s;\"></span>\n          </div>\n        </div>\n        <div style=\"padding:14px 18px; border-top:1px solid #EFE7DC; display:flex; align-items:center; gap:10px; background:#fff;\">\n          <div style=\"flex:1; font-size:14px; color:#A89C8A;\">Ask anything about your search…</div>\n          <span style=\"width:38px; height:38px; border-radius:50%; background:#C2683C; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;\">↑</span>\n        </div>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:0 40px clamp(56px,6vw,84px);\">\n    <div style=\"text-align:center; max-width:600px; margin:0 auto clamp(36px,4vw,48px);\">\n      <div style=\"font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#C2683C; margin-bottom:14px;\">What it helps with</div>\n      <h2 style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(30px,4vw,44px); line-height:1.05; letter-spacing:-0.02em; margin:0;\">Every hard part of the search, with you.</h2>\n    </div>\n    <div style=\"display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px;\">\n      <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:32px;\">\n        <div style=\"width:48px; height:48px; border-radius:12px; background:rgba(194,104,60,0.14); margin-bottom:18px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#C2683C;\">◎</div>\n        <h3 style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:20px; margin:0 0 8px;\">Interview prep</h3>\n        <p style=\"font-size:15px; line-height:1.55; color:#6B6357; margin:0;\">Mock questions for your exact role, instant feedback, and a calm answer to the layoff question.</p>\n      </div>\n      <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:32px;\">\n        <div style=\"width:48px; height:48px; border-radius:12px; background:rgba(79,124,106,0.14); margin-bottom:18px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#4F7C6A;\">＄</div>\n        <h3 style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:20px; margin:0 0 8px;\">Salary negotiation</h3>\n        <p style=\"font-size:15px; line-height:1.55; color:#6B6357; margin:0;\">Know your range, get a word-for-word script, and practice holding the number without flinching.</p>\n      </div>\n      <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:32px;\">\n        <div style=\"width:48px; height:48px; border-radius:12px; background:rgba(106,95,160,0.14); margin-bottom:18px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#6A5FA0;\">◷</div>\n        <h3 style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:20px; margin:0 0 8px;\">Your weekly plan</h3>\n        <p style=\"font-size:15px; line-height:1.55; color:#6B6357; margin:0;\">Overwhelmed? It turns the whole search into three clear things to do this week. That's it.</p>\n      </div>\n      <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:32px;\">\n        <div style=\"width:48px; height:48px; border-radius:12px; background:rgba(176,133,46,0.14); margin-bottom:18px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#B0852E;\">✎</div>\n        <h3 style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:20px; margin:0 0 8px;\">Outreach &amp; follow-ups</h3>\n        <p style=\"font-size:15px; line-height:1.55; color:#6B6357; margin:0;\">Drafts the referral note, the thank-you, the check-in — so the hardest message takes ten seconds.</p>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"background:#2B2620; color:#fff; border-top:1px solid #EFE7DC;\">\n    <div style=\"max-width:1080px; margin:0 auto; padding:clamp(56px,6vw,84px) 40px; text-align:center;\">\n      <div style=\"font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#E7A57E; margin-bottom:18px;\">It gets what you've been through</div>\n      <p style=\"font-family:'Public Sans',sans-serif; font-weight:500; font-size:clamp(22px,3.2vw,34px); line-height:1.3; letter-spacing:-0.01em; margin:0 auto; max-width:820px;\">Trained on the comeback, not the hustle. No toxic positivity, no \"just network harder\" — just steady, specific help on the days that feel impossible.</p>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:clamp(56px,6vw,84px) 40px clamp(56px,6vw,90px);\">\n    <div style=\"background:#4F7C6A; border-radius:24px; padding:clamp(40px,5vw,64px); text-align:center;\">\n      <h2 style=\"font-family:'Public Sans',sans-serif; font-weight:800; color:#fff; font-size:clamp(28px,4vw,44px); line-height:1.05; letter-spacing:-0.02em; margin:0 0 14px;\">Ask your first question tonight.</h2>\n      <p style=\"font-size:clamp(16px,2vw,18px); color:rgba(255,255,255,0.88); margin:0 auto 28px; max-width:520px;\">Your coach is ready whenever you are — free, private, and always on.</p>\n      <a href=\"/sign-in\" style=\"background:#fff; color:#2B2620; font-size:16px; font-weight:600; padding:16px 34px; border-radius:100px; display:inline-block;\">Talk to your coach</a>\n    </div>\n  </section>\n\n  \n  \n";
+interface Message {
+  id: string;
+  sender: "user" | "coach";
+  text: string;
+  timestamp: string;
+}
+
+const STARTER_PROMPTS = [
+  {
+    icon: BrainCircuit,
+    title: "Layoff Explanation",
+    desc: "Rehearse how to explain a career gap or layoff positively.",
+    prompt: "I want to practice explaining my recent layoff to a recruiter without sounding nervous."
+  },
+  {
+    icon: DollarSign,
+    title: "Salary Negotiation",
+    desc: "Draft a word-for-word response for salary counters.",
+    prompt: "Can you help me draft a counter-offer script for a Senior Operations role?"
+  },
+  {
+    icon: Briefcase,
+    title: "Interview Rehearsal",
+    desc: "Practice mock questions for supply chain and engineering.",
+    prompt: "Quiz me on S&OP or System Design questions for my upcoming interview."
+  },
+  {
+    icon: FileText,
+    title: "Cold Referral Draft",
+    desc: "Generate a short message to request a warm connection.",
+    prompt: "Help me write a concise LinkedIn message to request a referral for an engineering role."
+  }
+];
 
 export default function CoachPage() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      sender: "coach",
+      text: "Hello! I am your Kirmya AI Career Coach, trained specifically in transition support, salary negotiation, and interview confidence. Choose a topic below or type anything to get started.",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
+
+  const handleSendMessage = (textToSend: string) => {
+    if (!textToSend.trim() || loading) return;
+
+    const userMessage: Message = {
+      id: Math.random().toString(),
+      sender: "user",
+      text: textToSend,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
+
+    // Mock AI response delay
+    setTimeout(() => {
+      let coachReply = "";
+      const textLower = textToSend.toLowerCase();
+
+      if (textLower.includes("layoff")) {
+        coachReply = "Layoffs are a business metric, not a personal report card. When a recruiter asks, keep it brief and positive: 'My role was impacted by restructuring alongside X% of the workforce. What that gave me was an opportunity to focus fully on honing my skills in Y.' Let's try to draft your specific pitch. Tell me, what was your previous role?";
+      } else if (textLower.includes("salary") || textLower.includes("counter")) {
+        coachReply = "The key to salary negotiation is gratitude followed by a firm, clear range. Try: 'Thank you so much for the offer, I'm thrilled about the team. Given my experience in X and matching market indicators, I was hoping to land closer to $185,000. Is there flexibility to make that adjustment?' Never apologize for asking for your market worth.";
+      } else if (textLower.includes("quiz") || textLower.includes("interview") || textLower.includes("s&op")) {
+        coachReply = "Excellent, let's start a mock interview. Imagine I am the hiring manager. Question 1: 'Can you describe a time you resolved a major constraint in your team's weekly workflow under pressure?' Answer as you would in an interview.";
+      } else {
+        coachReply = "That is a great starting point. To give you the most tailored strategy, tell me a bit more about the job you are targeting or upload your resume in the Resume section. What is the next milestone in your search?";
+      }
+
+      const coachMessage: Message = {
+        id: Math.random().toString(),
+        sender: "coach",
+        text: coachReply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      setMessages((prev) => [...prev, coachMessage]);
+      setLoading(false);
+    }, 1800);
+  };
+
   return (
-    <div
-      style={{
-        background: "#FBF7F2",
-        fontFamily: "'Public Sans',sans-serif",
-        color: "#2B2620",
-        minHeight: "100vh",
-        overflowX: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Coach" }]} />
-      <div style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: CONTENT }} />
+
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-6 overflow-hidden">
+        {/* Left Side: Coach Info / Prompts */}
+        <div className="lg:w-[320px] lg:flex-none flex flex-col gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+              <Sparkles className="h-3.5 w-3.5" />
+              AI Career Operating System
+            </div>
+            <h1 className="text-2xl font-extrabold tracking-tight">AI Career Coach</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your on-demand partner for interview training, cover letter generation, and salary negotiation. Always private, always active.
+            </p>
+          </div>
+
+          {/* Quick starterm prompt cards */}
+          <div className="space-y-3">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Quick Starters</span>
+            <div className="grid grid-cols-1 gap-2.5">
+              {STARTER_PROMPTS.map((prompt, idx) => {
+                const Icon = prompt.icon;
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => handleSendMessage(prompt.prompt)}
+                    className="p-3.5 bg-card border border-border/60 rounded-2xl cursor-pointer hover:bg-secondary/40 hover:border-border transition-all flex flex-col gap-1.5 group text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                        <Icon className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="text-xs font-bold group-hover:text-primary transition-colors">{prompt.title}</span>
+                    </div>
+                    <p className="text-[10.5px] text-muted-foreground leading-normal">{prompt.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Interactive Chat Panel */}
+        <div className="flex-grow flex flex-col bg-card border border-border/80 rounded-3xl overflow-hidden shadow-sm h-[calc(100vh-160px)]">
+          {/* Header */}
+          <div className="p-4 md:px-6 border-b border-border/40 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                <Sparkles className="h-4.5 w-4.5" />
+              </div>
+              <div>
+                <span className="text-sm font-bold block">Kirmya Career Co-pilot</span>
+                <span className="text-[10px] text-muted-foreground block">Always online &bull; Secure AES Encryption</span>
+              </div>
+            </div>
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
+
+          {/* Messages display area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <AnimatePresence initial={false}>
+              {messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex flex-col max-w-[85%] sm:max-w-[70%] ${
+                    msg.sender === "user" ? "ml-auto items-end" : "mr-auto items-start"
+                  }`}
+                >
+                  <div className={`p-4 rounded-3xl text-sm leading-relaxed ${
+                    msg.sender === "user"
+                      ? "bg-primary text-primary-foreground rounded-tr-none shadow-sm shadow-blue-500/5"
+                      : "bg-secondary/40 text-foreground rounded-tl-none border border-border/40"
+                  }`}>
+                    {msg.text}
+                  </div>
+                  <span className="text-[9px] text-muted-foreground mt-1 px-1">{msg.timestamp}</span>
+                </motion.div>
+              ))}
+
+              {loading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 mr-auto bg-secondary/40 border border-border/40 p-4 rounded-3xl rounded-tl-none text-sm text-muted-foreground max-w-[70%]"
+                >
+                  <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                  <span>Coach is analyzing market responses...</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input control row */}
+          <div className="p-4 border-t border-border/40 bg-card">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Ask Kirmya Coach about job status, negotiation scripts, or mock prep..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage(input)}
+                className="w-full pl-4 pr-12 py-3 rounded-full border border-border/80 bg-secondary/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm shadow-sm"
+              />
+              <button
+                onClick={() => handleSendMessage(input)}
+                disabled={loading || !input.trim()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground transition-all disabled:opacity-40 disabled:hover:bg-primary shadow-sm"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <SiteFooter />
     </div>
   );

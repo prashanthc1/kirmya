@@ -1,41 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Menu,
-  MenuItem,
-  Avatar,
-  Box,
-  Container,
-  Breadcrumbs,
-  Link as MuiLink,
-  Divider,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import SettingsIcon from "@mui/icons-material/Settings";
-import LogoutIcon from "@mui/icons-material/Logout";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import PersonIcon from "@mui/icons-material/Person";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { useTheme } from "next-themes";
+import { 
+  Sun, 
+  Moon, 
+  Laptop, 
+  Menu, 
+  X, 
+  LogOut, 
+  Settings, 
+  User, 
+  ChevronRight, 
+  Briefcase, 
+  Users, 
+  FileText, 
+  GraduationCap, 
+  Sparkles, 
+  Compass,
+  Bell
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MENU_LINKS = [
-  { label: "Jobs", href: "/jobs", icon: "◎" },
-  { label: "Referrals", href: "/referrals", icon: "↳" },
-  { label: "Mentorship", href: "/mentorship", icon: "✳" },
-  { label: "Communities", href: "/communities", icon: "▦" },
-  { label: "Career Paths", href: "/career-paths", icon: "↗" },
-  { label: "Coach", href: "/coach", icon: "✦" },
-  { label: "Resume", href: "/resume", icon: "▤" },
+  { label: "Jobs", href: "/jobs", icon: Briefcase },
+  { label: "Referrals", href: "/referrals", icon: Compass },
+  { label: "Mentorship", href: "/mentorship", icon: GraduationCap },
+  { label: "Communities", href: "/communities", icon: Users },
+  { label: "AI Coach", href: "/coach", icon: Sparkles },
+  { label: "Resume", href: "/resume", icon: FileText },
 ];
 
 export interface BreadcrumbItem {
@@ -48,36 +44,25 @@ interface SiteNavProps {
 }
 
 export default function SiteNav({ breadcrumb }: SiteNavProps) {
-  const { user, loading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  
+  const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  // Mobile menu control
-  const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
-  // Profile menu control
-  const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
-
-  const handleOpenMobile = (event: React.MouseEvent<HTMLElement>) => {
-    setMobileAnchor(event.currentTarget);
-  };
-  const handleCloseMobile = () => {
-    setMobileAnchor(null);
-  };
-
-  const handleOpenProfile = (event: React.MouseEvent<HTMLElement>) => {
-    setProfileAnchor(event.currentTarget);
-  };
-  const handleCloseProfile = () => {
-    setProfileAnchor(null);
-  };
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSignOut = async () => {
-    handleCloseProfile();
+    setProfileMenuOpen(false);
     await signOut();
     router.push("/");
   };
 
-  // Get initials for Avatar fallback
   const getInitials = (name: string) => {
     const parts = name.trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return "?";
@@ -85,356 +70,285 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  const firstName = user?.full_name?.trim().split(/\s+/)[0] || "User";
-  const lastInitial =
-    user?.full_name?.trim().split(/\s+/).slice(1).join(" ").charAt(0) || "";
+  const currentTheme = mounted ? theme : "system";
 
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      className="glass-nav"
-      sx={{
-        background: "rgba(252, 250, 247, 0.8)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        borderBottom: "1px solid rgba(43, 38, 32, 0.06)",
-        top: 0,
-        zIndex: 1100,
-      }}
-    >
-      <Container maxWidth="lg">
-        <Toolbar
-          disableGutters
-          sx={{
-            height: 72,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          {/* Brand Logo */}
-          <Typography
-            variant="h5"
-            component={Link}
-            href="/"
-            sx={{
-              fontFamily: "var(--font-public-sans), sans-serif",
-              fontWeight: 800,
-              color: "text.primary",
-              textDecoration: "none",
-              letterSpacing: "-0.02em",
-              display: "flex",
-              alignItems: "center",
-              mr: 2,
-            }}
-          >
-            Kirmya
-          </Typography>
+    <header className="sticky top-0 z-50 w-full glass-nav transition-all duration-300">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          {/* Left Side: Brand Logo and Breadcrumbs */}
+          <div className="flex items-center gap-6">
+            <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                Kirmya
+              </span>
+            </Link>
 
-          {/* Navigation Links for Logged-In Users on Desktop */}
-          {user && (
-            <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
-              {MENU_LINKS.map((link) => {
-                const isActive = pathname === link.href;
-                return (
-                  <Button
-                    key={link.href}
-                    component={Link}
-                    href={link.href}
-                    sx={{
-                      color: isActive ? "primary.main" : "text.secondary",
-                      fontWeight: isActive ? 700 : 500,
-                      fontSize: "0.95rem",
-                      px: 2,
-                      py: 1,
-                      borderRadius: 100,
-                      backgroundColor: isActive ? "rgba(214, 104, 56, 0.06)" : "transparent",
-                      "&:hover": {
-                        backgroundColor: isActive
-                          ? "rgba(214, 104, 56, 0.1)"
-                          : "rgba(43, 38, 32, 0.04)",
-                        color: isActive ? "primary.main" : "text.primary",
-                      },
-                    }}
+            {/* Breadcrumb section */}
+            {breadcrumb && breadcrumb.length > 0 && (
+              <nav className="hidden sm:flex items-center space-x-1 text-sm text-muted-foreground">
+                <ChevronRight className="h-4 w-4" />
+                {breadcrumb.map((item, idx) => (
+                  <React.Fragment key={idx}>
+                    {idx > 0 && <ChevronRight className="h-4 w-4" />}
+                    {item.href ? (
+                      <Link href={item.href} className="hover:text-foreground transition-colors font-medium">
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <span className="text-foreground font-semibold">{item.label}</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </nav>
+            )}
+          </div>
+
+          {/* Desktop Navigation Center */}
+          <nav className="hidden md:flex items-center space-x-1">
+            {user && MENU_LINKS.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                    isActive 
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-blue-500/10" 
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right Side: Theme toggler, Inbox, User profile / Auth buttons */}
+          <div className="flex items-center gap-3">
+            {/* Theme Selector widget */}
+            {mounted && (
+              <div className="flex items-center gap-1 bg-secondary border border-border/40 p-1 rounded-full">
+                <button
+                  onClick={() => setTheme("light")}
+                  className={`p-1.5 rounded-full transition-all duration-200 ${
+                    theme === "light" 
+                      ? "bg-background text-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Light mode"
+                >
+                  <Sun className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setTheme("dark")}
+                  className={`p-1.5 rounded-full transition-all duration-200 ${
+                    theme === "dark" 
+                      ? "bg-background text-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Dark mode"
+                >
+                  <Moon className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setTheme("system")}
+                  className={`p-1.5 rounded-full transition-all duration-200 ${
+                    theme === "system" 
+                      ? "bg-background text-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="System preference"
+                >
+                  <Laptop className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                {/* Inbox Quick Link */}
+                <Link 
+                  href="/inbox" 
+                  className={`p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all ${
+                    pathname.startsWith("/inbox") ? "text-foreground bg-secondary" : ""
+                  }`}
+                  title="Messages"
+                >
+                  <Bell className="h-4.5 w-4.5" />
+                </Link>
+
+                {/* Profile menu toggle dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className="flex items-center gap-1.5 focus:outline-none"
                   >
-                    {link.label}
-                  </Button>
-                );
-              })}
-            </Box>
-          )}
+                    <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm select-none">
+                      {getInitials(user.full_name)}
+                    </div>
+                  </button>
 
-          {/* Right Action Area */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            {loading ? (
-              // Loading state placeholder
-              <Box sx={{ width: 100, height: 36, borderRadius: 100, bgcolor: "rgba(43, 38, 32, 0.05)" }} />
-            ) : !user ? (
-              // Logged out area
-              <>
-                <Button
-                  component={Link}
-                  href="/sign-in"
-                  variant="text"
-                  sx={{
-                    color: "text.primary",
-                    fontWeight: 600,
-                    px: 3,
-                    py: 1,
-                  }}
-                >
-                  Sign in
-                </Button>
-                <Button
-                  component={Link}
-                  href="/sign-up"
-                  variant="contained"
-                  color="primary"
-                  endIcon={<ArrowForwardIcon />}
-                  sx={{
-                    fontWeight: 600,
-                    boxShadow: "0 4px 14px rgba(214, 104, 56, 0.2)",
-                    px: 3.5,
-                    py: 1.2,
-                  }}
-                >
-                  Start comeback
-                </Button>
-              </>
+                  <AnimatePresence>
+                    {profileMenuOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-10" 
+                          onClick={() => setProfileMenuOpen(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 mt-2 w-56 rounded-2xl border border-border/80 bg-card p-2 text-card-foreground shadow-lg shadow-black/5 ring-1 ring-black/5 focus:outline-none z-20"
+                        >
+                          <div className="px-3 py-2 text-xs border-b border-border/40 mb-1">
+                            <p className="font-semibold text-foreground truncate">{user.full_name}</p>
+                            <p className="text-muted-foreground truncate">{user.email}</p>
+                          </div>
+                          
+                          <Link
+                            href="/profile"
+                            onClick={() => setProfileMenuOpen(false)}
+                            className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+                          >
+                            <User className="h-4 w-4" />
+                            My Profile
+                          </Link>
+                          
+                          <Link
+                            href="/settings"
+                            onClick={() => setProfileMenuOpen(false)}
+                            className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+                          >
+                            <Settings className="h-4 w-4" />
+                            Settings
+                          </Link>
+
+                          <button
+                            onClick={handleSignOut}
+                            className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Log Out
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
             ) : (
-              // Logged in user profile menu
-              <>
-                {/* Mobile Burger Menu button */}
-                <IconButton
-                  color="inherit"
-                  aria-label="open mobile navigation"
-                  edge="start"
-                  onClick={handleOpenMobile}
-                  sx={{ display: { xs: "flex", md: "none" }, color: "text.primary" }}
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  href="/sign-in"
+                  className="px-4 py-1.5 rounded-full text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
                 >
-                  <MenuIcon />
-                </IconButton>
-
-                {/* Profile Trigger */}
-                <Button
-                  onClick={handleOpenProfile}
-                  aria-controls={Boolean(profileAnchor) ? "account-menu" : undefined}
-                  aria-haspopup="menu"
-                  aria-expanded={Boolean(profileAnchor) ? "true" : undefined}
-                  sx={{
-                    px: 1.5,
-                    py: 0.75,
-                    borderRadius: 100,
-                    border: "1px solid rgba(43, 38, 32, 0.08)",
-                    color: "text.primary",
-                    textTransform: "none",
-                    gap: 1.5,
-                    backgroundColor: Boolean(profileAnchor) ? "rgba(43, 38, 32, 0.04)" : "transparent",
-                    "&:hover": {
-                      backgroundColor: "rgba(43, 38, 32, 0.04)",
-                      borderColor: "rgba(43, 38, 32, 0.15)",
-                    },
-                  }}
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="px-4 py-1.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95 transition-all shadow-sm hover:shadow"
                 >
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700, display: { xs: "none", sm: "block" } }}>
-                    {firstName}
-                    {lastInitial ? ` ${lastInitial}.` : ""}
-                  </Typography>
-                  <Avatar
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      bgcolor: "secondary.main",
-                      color: "primary.contrastText",
-                      fontFamily: "var(--font-public-sans), sans-serif",
-                      fontWeight: 700,
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    {getInitials(user.full_name)}
-                  </Avatar>
-                </Button>
-              </>
-            )}
-          </Box>
-
-          {/* Desktop/Mobile Profile Dropdown Menu */}
-          <Menu
-            anchorEl={profileAnchor}
-            id="account-menu"
-            open={Boolean(profileAnchor)}
-            onClose={handleCloseProfile}
-            onClick={handleCloseProfile}
-            transformOrigin={{ horizontal: "right", vertical: "top" }}
-            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-            PaperProps={{
-              elevation: 0,
-              sx: {
-                overflow: "visible",
-                filter: "drop-shadow(0px 8px 30px rgba(43, 38, 32, 0.1))",
-                mt: 1.5,
-                borderRadius: 4,
-                width: 280,
-                border: "1px solid rgba(43, 38, 32, 0.06)",
-                padding: "8px",
-              },
-            }}
-          >
-            {/* Header info */}
-            {user && (
-              <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 0.5 }}>
-                <Typography variant="body1" sx={{ fontWeight: 800, fontFamily: "var(--font-public-sans)" }}>
-                  {user.full_name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>
-                  {user.roles?.[0]?.replace(/[_-]+/g, " ") || "Member"}
-                </Typography>
-              </Box>
-            )}
-            <Divider sx={{ my: 1 }} />
-
-            {/* Menu Links with role="link" for E2E backward compatibility */}
-            {MENU_LINKS.map((link) => (
-              <MenuItem
-                key={link.href}
-                component={Link}
-                href={link.href}
-                role="link"
-                sx={{
-                  borderRadius: 2,
-                  py: 1.0,
-                  display: { xs: "flex", md: "none" }, // Hide on desktop because they are already in the top nav
-                }}
-              >
-                <ListItemIcon aria-hidden="true">
-                  <Typography variant="body1">{link.icon}</Typography>
-                </ListItemIcon>
-                <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: 500 }} />
-              </MenuItem>
-            ))}
-
-            <Divider sx={{ my: 1, display: { xs: "block", md: "none" } }} />
-
-            <MenuItem component={Link} href="/profile" sx={{ borderRadius: 2, py: 1.2 }}>
-              <ListItemIcon>
-                <PersonIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="My Profile" primaryTypographyProps={{ fontWeight: 600 }} />
-            </MenuItem>
-
-            <MenuItem component={Link} href="/settings" sx={{ borderRadius: 2, py: 1.2 }}>
-              <ListItemIcon>
-                <SettingsIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Settings" primaryTypographyProps={{ fontWeight: 600 }} />
-            </MenuItem>
-
-            {user?.roles?.includes("admin") && (
-              <MenuItem
-                component={Link}
-                href="/admin"
-                role="link"
-                sx={{ borderRadius: 2, py: 1.2, color: "secondary.main" }}
-              >
-                <ListItemIcon aria-hidden="true" sx={{ color: "secondary.main" }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 800, ml: 0.5 }}>◆</Typography>
-                </ListItemIcon>
-                <ListItemText primary="Admin" primaryTypographyProps={{ fontWeight: 700 }} />
-              </MenuItem>
+                  Join Kirmya
+                </Link>
+              </div>
             )}
 
-            <Divider sx={{ my: 1 }} />
-
-            <MenuItem onClick={handleSignOut} sx={{ borderRadius: 2, py: 1.2, color: "error.main" }}>
-              <ListItemIcon sx={{ color: "error.main" }}>
-                <LogoutIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Sign out" primaryTypographyProps={{ fontWeight: 600 }} />
-            </MenuItem>
-          </Menu>
-
-          {/* Mobile Navigation Dropdown Menu */}
-          <Menu
-            anchorEl={mobileAnchor}
-            id="mobile-nav-menu"
-            open={Boolean(mobileAnchor)}
-            onClose={handleCloseMobile}
-            onClick={handleCloseMobile}
-            transformOrigin={{ horizontal: "right", vertical: "top" }}
-            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-            PaperProps={{
-              elevation: 0,
-              sx: {
-                overflow: "visible",
-                filter: "drop-shadow(0px 8px 30px rgba(43, 38, 32, 0.1))",
-                mt: 1.5,
-                borderRadius: 4,
-                width: 240,
-                border: "1px solid rgba(43, 38, 32, 0.06)",
-                padding: "8px",
-              },
-            }}
-          >
-            {MENU_LINKS.map((link) => (
-              <MenuItem
-                key={link.href}
-                component={Link}
-                href={link.href}
-                onClick={handleCloseMobile}
-                sx={{ borderRadius: 2, py: 1.2 }}
-              >
-                <ListItemIcon>
-                  <Typography variant="body1">{link.icon}</Typography>
-                </ListItemIcon>
-                <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: 600 }} />
-              </MenuItem>
-            ))}
-          </Menu>
-        </Toolbar>
-      </Container>
-
-      {/* Breadcrumb Navigation Bar */}
-      {breadcrumb && breadcrumb.length > 0 && (
-        <Box
-          sx={{
-            borderTop: "1px solid rgba(43, 38, 32, 0.06)",
-            background: "rgba(252, 250, 247, 0.5)",
-            py: 1.5,
-          }}
-        >
-          <Container maxWidth="lg">
-            <Breadcrumbs
-              separator={<KeyboardArrowRightIcon sx={{ fontSize: 16, color: "text.disabled" }} />}
-              aria-label="breadcrumb"
+            {/* Mobile Hamburger menu toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary md:hidden"
             >
-              {breadcrumb.map((item, index) => {
-                const isLast = index === breadcrumb.length - 1;
-                return isLast ? (
-                  <Typography
-                    key={index}
-                    variant="body2"
-                    aria-current="page"
-                    sx={{ color: "text.primary", fontWeight: 700 }}
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu Panel */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-lg overflow-hidden"
+          >
+            <div className="space-y-1 px-4 py-3 pb-4">
+              {user ? (
+                <>
+                  <div className="px-3 py-2 border-b border-border/40 mb-2">
+                    <p className="text-sm font-bold text-foreground truncate">{user.full_name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                  
+                  {MENU_LINKS.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      >
+                        <Icon className="h-4.5 w-4.5" />
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                  
+                  <div className="border-t border-border/40 my-2 pt-2" />
+                  
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
                   >
-                    {item.label}
-                  </Typography>
-                ) : (
-                  <MuiLink
-                    key={index}
-                    component={Link}
-                    href={item.href || "#"}
-                    underline="hover"
-                    variant="body2"
-                    sx={{ color: "text.secondary", fontWeight: 500 }}
+                    <User className="h-4.5 w-4.5" />
+                    My Profile
+                  </Link>
+                  <Link
+                    href="/settings"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
                   >
-                    {item.label}
-                  </MuiLink>
-                );
-              })}
-            </Breadcrumbs>
-          </Container>
-        </Box>
-      )}
-    </AppBar>
+                    <Settings className="h-4.5 w-4.5" />
+                    Settings
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10"
+                  >
+                    <LogOut className="h-4.5 w-4.5" />
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <Link
+                    href="/sign-in"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex justify-center items-center py-2.5 rounded-xl text-sm font-semibold border border-border hover:bg-secondary"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/sign-up"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex justify-center items-center py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95"
+                  >
+                    Join Kirmya
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
   );
 }

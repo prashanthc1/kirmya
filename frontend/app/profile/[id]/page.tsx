@@ -2,27 +2,29 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  Avatar,
-  CircularProgress,
-  Alert,
-  Divider,
-} from "@mui/material";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import { 
+  User, 
+  MapPin, 
+  Clock, 
+  CheckCircle, 
+  UserPlus, 
+  UserCheck, 
+  X, 
+  Loader2, 
+  ArrowLeft,
+  Mail,
+  Calendar,
+  Sparkles,
+  Bookmark,
+  Layers,
+  GraduationCap,
+  Globe
+} from "lucide-react";
+import { motion } from "framer-motion";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 import { profileClient, Profile } from "@/lib/api/profile";
-import { networkClient, ConnectionStatusResponse, Connection } from "@/lib/api/network";
+import { networkClient, ConnectionStatusResponse } from "@/lib/api/network";
 import { ApiError } from "@/lib/api/client";
 
 export default function OtherProfilePage() {
@@ -39,34 +41,37 @@ export default function OtherProfilePage() {
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
     (async () => {
       try {
-        // Fetch current user ID
         const me = await profileClient.getMe();
-        setCurrentUserID(me.user_id);
+        if (active) setCurrentUserID(me.user_id);
 
         if (me.user_id === id) {
           router.replace("/profile");
           return;
         }
 
-        // Fetch dynamic profile
         const data = await profileClient.getByID(id);
-        setProfile(data);
+        if (active) setProfile(data);
 
-        // Fetch relationship status
         const conn = await networkClient.getConnectionStatus(id);
-        setConnectionStatus(conn);
+        if (active) setConnectionStatus(conn);
       } catch (err) {
-        setError(
-          err instanceof ApiError
-            ? err.message
-            : "Could not load profile. It might be private or not exist."
-        );
+        if (active) {
+          setError(
+            err instanceof ApiError
+              ? err.message
+              : "Could not load profile. It might be private or not exist."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     })();
+    return () => {
+      active = false;
+    };
   }, [id, router]);
 
   const handleConnect = async () => {
@@ -118,58 +123,31 @@ export default function OtherProfilePage() {
 
     if (status === "accepted") {
       return (
-        <Button
-          variant="outlined"
-          color="secondary"
-          startIcon={<CheckCircleOutlineIcon />}
+        <button
           disabled
-          sx={{
-            borderRadius: "100px",
-            textTransform: "none",
-            fontWeight: 600,
-            fontFamily: "var(--font-public-sans)",
-            borderColor: "secondary.main",
-            "&.Mui-disabled": {
-              color: "secondary.main",
-              borderColor: "secondary.main",
-            },
-          }}
+          className="px-6 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-1.5"
         >
+          <UserCheck className="h-4 w-4" />
           Connected
-        </Button>
+        </button>
       );
     }
 
     if (status === "pending") {
       if (requester_id === currentUserID) {
         return (
-          <Button
-            variant="outlined"
-            color="warning"
-            startIcon={<HourglassEmptyIcon />}
+          <button
             disabled
-            sx={{
-              borderRadius: "100px",
-              textTransform: "none",
-              fontWeight: 600,
-              fontFamily: "var(--font-public-sans)",
-              borderColor: "warning.main",
-              "&.Mui-disabled": {
-                color: "warning.main",
-                borderColor: "warning.main",
-              },
-            }}
+            className="px-6 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-1.5"
           >
-            Pending Request
-          </Button>
+            <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+            Pending Approval
+          </button>
         );
       } else {
-        // Find the incoming request ID. Since we don't have it directly in Status, we fetch incoming requests
         return (
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              variant="contained"
-              color="primary"
+          <div className="flex items-center gap-2">
+            <button
               disabled={actionLoading}
               onClick={async () => {
                 try {
@@ -182,19 +160,11 @@ export default function OtherProfilePage() {
                   console.error(e);
                 }
               }}
-              sx={{
-                borderRadius: "100px",
-                textTransform: "none",
-                fontWeight: 600,
-                fontFamily: "var(--font-public-sans)",
-                px: 3,
-              }}
+              className="px-5 py-2 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold shadow-sm"
             >
               Accept
-            </Button>
-            <Button
-              variant="outlined"
-              color="inherit"
+            </button>
+            <button
               disabled={actionLoading}
               onClick={async () => {
                 try {
@@ -207,81 +177,59 @@ export default function OtherProfilePage() {
                   console.error(e);
                 }
               }}
-              sx={{
-                borderRadius: "100px",
-                textTransform: "none",
-                fontWeight: 600,
-                fontFamily: "var(--font-public-sans)",
-              }}
+              className="px-5 py-2 rounded-full border border-border hover:bg-secondary text-xs font-bold"
             >
               Ignore
-            </Button>
-          </Box>
+            </button>
+          </div>
         );
       }
     }
 
     return (
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<PersonAddIcon />}
+      <button
         disabled={actionLoading}
         onClick={handleConnect}
-        sx={{
-          borderRadius: "100px",
-          textTransform: "none",
-          fontWeight: 600,
-          fontFamily: "var(--font-public-sans)",
-          px: 4,
-          py: 1.5,
-          backgroundColor: "#C2683C",
-          "&:hover": {
-            backgroundColor: "#a8562f",
-          },
-        }}
+        className="px-6 py-2 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold shadow-sm shadow-blue-500/10 flex items-center gap-1.5"
       >
-        Connect
-      </Button>
+        <UserPlus className="h-4 w-4" />
+        Connect to Message
+      </button>
     );
   };
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#FBF7F2" }}>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
         <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile" }]} />
-        <Box sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", py: 8 }}>
-          <CircularProgress color="primary" />
-        </Box>
+        <div className="flex-grow flex flex-col items-center justify-center py-20 gap-3">
+          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          <span className="text-sm font-semibold text-muted-foreground">Fetching professional timeline...</span>
+        </div>
         <SiteFooter />
-      </Box>
+      </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#FBF7F2" }}>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
         <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile" }]} />
-        <Container maxWidth="md" sx={{ flex: 1, py: 8 }}>
-          <Alert severity="error" sx={{ borderRadius: 3 }}>
-            {error || "Profile could not be loaded."}
-          </Alert>
-        </Container>
+        <main className="flex-grow max-w-lg mx-auto w-full px-4 py-20">
+          <div className="p-6 bg-destructive/10 border border-destructive/20 rounded-3xl text-destructive text-center space-y-3">
+            <p className="text-sm font-bold">{error || "Profile could not be loaded."}</p>
+            <button onClick={() => router.back()} className="px-4 py-2 bg-destructive text-destructive-foreground rounded-full text-xs font-bold">
+              Go Back
+            </button>
+          </div>
+        </main>
         <SiteFooter />
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box
-      sx={{
-        background: "#FBF7F2",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "var(--font-public-sans)",
-      }}
-    >
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <SiteNav
         breadcrumb={[
           { label: "Home", href: "/" },
@@ -290,284 +238,162 @@ export default function OtherProfilePage() {
         ]}
       />
 
-      <Container maxWidth="md" sx={{ flex: 1, py: { xs: 6, md: 8 } }}>
-        {/* Core Identity Panel */}
-        <Card
-          sx={{
-            borderRadius: 6,
-            border: "1px solid #EFE7DC",
-            boxShadow: "none",
-            p: { xs: 3, md: 4 },
-            mb: 4,
-            background: "#fff",
-          }}
-        >
-          <Grid container spacing={3} alignItems="flex-start">
-            <Grid item xs={12} sm="auto">
-              <Avatar
-                src={profile.photo_url || "/assets/avatar-marcus.svg"}
-                alt={profile.headline}
-                sx={{
-                  width: 96,
-                  height: 96,
-                  borderRadius: 5,
-                  backgroundColor: "#F3E7DC",
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={8} sx={{ flex: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap", mb: 1 }}>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    fontWeight: 800,
-                    fontFamily: "var(--font-bricolage)",
-                    color: "#2B2620",
-                  }}
-                >
-                  {profile.headline || "Professional"}
-                </Typography>
+      <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        
+        {/* Core Profile Header */}
+        <div className="bg-card border border-border/80 p-6 md:p-8 rounded-3xl shadow-sm space-y-6">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            <div className="h-20 w-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-2xl uppercase select-none shrink-0">
+              {profile.headline?.charAt(0) || "P"}
+            </div>
+
+            <div className="flex-grow space-y-2 text-center md:text-left">
+              <div className="flex flex-col md:flex-row items-center gap-2 justify-center md:justify-start">
+                <h1 className="text-xl md:text-2xl font-extrabold tracking-tight">{profile.headline || "Kirmya Professional"}</h1>
                 {profile.career_status && (
-                  <Chip
-                    label={profile.career_status.replace("_", " ")}
-                    size="small"
-                    sx={{
-                      backgroundColor: "rgba(79, 124, 106, 0.12)",
-                      color: "#4F7C6A",
-                      fontWeight: 700,
-                      fontSize: "0.75rem",
-                      textTransform: "capitalize",
-                    }}
-                  />
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-extrabold text-emerald-500 uppercase tracking-widest">
+                    {profile.career_status.replace("_", " ")}
+                  </span>
                 )}
-              </Box>
+              </div>
 
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: "1.1rem" }}>
-                {profile.bio || "Career recovery & transition professional"}
-              </Typography>
+              <p className="text-sm font-semibold text-muted-foreground">{profile.headline || "Career Transition & Development"}</p>
+              
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
+                {profile.bio || "Active community member focused on professional career comeback."}
+              </p>
 
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 3 }}>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-2 text-xs">
                 {profile.location && (
-                  <Chip
-                    label={`📍 ${profile.location}`}
-                    size="small"
-                    sx={{ background: "#F3ECE2", color: "#5B554C", fontWeight: 500 }}
-                  />
+                  <span className="px-3 py-1 bg-secondary text-muted-foreground rounded-full border border-border/40 flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {profile.location}
+                  </span>
                 )}
                 {profile.open_to_remote && (
-                  <Chip
-                    label="💻 Open to Remote"
-                    size="small"
-                    sx={{ background: "#F3ECE2", color: "#5B554C", fontWeight: 500 }}
-                  />
+                  <span className="px-3 py-1 bg-secondary text-muted-foreground rounded-full border border-border/40">
+                    💻 Open to Remote
+                  </span>
                 )}
                 {profile.willing_to_mentor && (
-                  <Chip
-                    label="🤝 Willing to Mentor"
-                    size="small"
-                    sx={{ background: "#F3ECE2", color: "#5B554C", fontWeight: 500 }}
-                  />
+                  <span className="px-3 py-1 bg-secondary text-muted-foreground rounded-full border border-border/40">
+                    🤝 Willing to Mentor
+                  </span>
                 )}
-              </Box>
+              </div>
+            </div>
+          </div>
 
-              {/* Action Button */}
-              <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                {renderConnectionButton()}
-              </Box>
-            </Grid>
-          </Grid>
-        </Card>
+          {/* Action Row */}
+          <div className="border-t border-border/40 pt-4 flex items-center justify-between gap-4 flex-wrap">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Messaging Gate status</span>
+            {renderConnectionButton()}
+          </div>
+        </div>
 
-        {/* Dynamic Detail Sections */}
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={8}>
-            {/* About / Summary */}
+        {/* Details Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+          {/* Left Column: Timeline & About */}
+          <div className="md:col-span-2 space-y-8">
+            
+            {/* About */}
             {profile.about && (
-              <Box sx={{ mb: 4 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontFamily: "var(--font-bricolage)",
-                    fontWeight: 700,
-                    mb: 1.5,
-                    color: "#2B2620",
-                  }}
-                >
-                  About
-                </Typography>
-                <Typography variant="body1" sx={{ color: "#4A443B", lineHeight: 1.7 }}>
-                  {profile.about}
-                </Typography>
-              </Box>
+              <div className="space-y-3">
+                <h2 className="text-lg font-bold text-foreground">About</h2>
+                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{profile.about}</p>
+              </div>
             )}
 
-            {/* Experience */}
+            {/* Experience timeline */}
             {profile.experiences && profile.experiences.length > 0 && (
-              <Box sx={{ mb: 4 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontFamily: "var(--font-bricolage)",
-                    fontWeight: 700,
-                    mb: 2,
-                    color: "#2B2620",
-                  }}
-                >
-                  Experience
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <div className="space-y-4">
+                <h2 className="text-lg font-bold text-foreground">Experience</h2>
+                <div className="space-y-6">
                   {profile.experiences.map((exp, index) => (
-                    <Box key={exp.id || index} sx={{ display: "flex", gap: 2 }}>
-                      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                        <Box
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: "50%",
-                            background: index === 0 ? "#C2683C" : "#4F7C6A",
-                            mt: 0.5,
-                          }}
-                        />
+                    <div key={exp.id || index} className="flex gap-4">
+                      <div className="flex flex-col items-center shrink-0">
+                        <div className={`h-4 w-4 rounded-full border-2 ${
+                          index === 0 ? "border-primary bg-primary" : "border-border bg-card"
+                        }`} />
                         {index < profile.experiences.length - 1 && (
-                          <Box sx={{ width: 2, flex: 1, background: "#EFE7DC", my: 0.5 }} />
+                          <div className="w-[1px] bg-border/80 flex-grow my-1" />
                         )}
-                      </Box>
-                      <Box>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#2B2620" }}>
-                          {exp.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      </div>
+                      <div className="space-y-1 pb-2">
+                        <h3 className="text-sm font-bold text-foreground">{exp.title}</h3>
+                        <p className="text-xs text-muted-foreground">
                           {exp.company} &bull; {exp.start_date} &ndash; {exp.is_current ? "Present" : exp.end_date}
-                        </Typography>
+                        </p>
                         {exp.description && (
-                          <Typography variant="body2" sx={{ color: "#5B554C", lineHeight: 1.6 }}>
-                            {exp.description}
-                          </Typography>
+                          <p className="text-xs text-muted-foreground/95 leading-relaxed mt-2">{exp.description}</p>
                         )}
-                      </Box>
-                    </Box>
+                      </div>
+                    </div>
                   ))}
-                </Box>
-              </Box>
+                </div>
+              </div>
             )}
 
-            {/* Education */}
+            {/* Education timeline */}
             {profile.educations && profile.educations.length > 0 && (
-              <Box sx={{ mb: 4 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontFamily: "var(--font-bricolage)",
-                    fontWeight: 700,
-                    mb: 2,
-                    color: "#2B2620",
-                  }}
-                >
-                  Education
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <div className="space-y-4">
+                <h2 className="text-lg font-bold text-foreground">Education</h2>
+                <div className="space-y-4">
                   {profile.educations.map((edu, index) => (
-                    <Box key={edu.id || index}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#2B2620" }}>
-                        {edu.school}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                    <div key={edu.id || index} className="space-y-1">
+                      <h3 className="text-sm font-bold text-foreground">{edu.school}</h3>
+                      <p className="text-xs text-muted-foreground font-medium">
                         {edu.degree} &bull; {edu.field_of_study}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {edu.start_date} &ndash; {edu.end_date}
-                      </Typography>
-                    </Box>
+                      </p>
+                      <span className="text-[10px] text-muted-foreground block">{edu.start_date} &ndash; {edu.end_date}</span>
+                    </div>
                   ))}
-                </Box>
-              </Box>
+                </div>
+              </div>
             )}
-          </Grid>
+          </div>
 
-          {/* Sidebar */}
-          <Grid item xs={12} md={4}>
-            {/* Skills */}
+          {/* Right Column: Sidebar */}
+          <div className="space-y-6">
+            {/* Skills snap */}
             {profile.skills && profile.skills.length > 0 && (
-              <Card
-                sx={{
-                  borderRadius: 4,
-                  border: "1px solid #EFE7DC",
-                  boxShadow: "none",
-                  p: 3,
-                  mb: 3,
-                  background: "#fff",
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontFamily: "var(--font-bricolage)",
-                    fontWeight: 700,
-                    mb: 2,
-                    color: "#2B2620",
-                  }}
-                >
+              <div className="bg-card border border-border/80 p-6 rounded-3xl shadow-sm space-y-4">
+                <h3 className="text-sm font-bold flex items-center gap-1.5">
+                  <Layers className="h-4.5 w-4.5 text-primary" />
                   Skills
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
                   {profile.skills.map((sk) => (
-                    <Chip
-                      key={sk.name}
-                      label={sk.name}
-                      variant="outlined"
-                      size="small"
-                      sx={{
-                        borderRadius: "100px",
-                        borderColor: "#EFE7DC",
-                        color: "#2B2620",
-                      }}
-                    />
+                    <span key={sk.name} className="px-2.5 py-1 bg-secondary text-muted-foreground border border-border/40 rounded-full text-[10px] font-semibold">
+                      {sk.name}
+                    </span>
                   ))}
-                </Box>
-              </Card>
+                </div>
+              </div>
             )}
 
             {/* Languages */}
             {profile.languages && profile.languages.length > 0 && (
-              <Card
-                sx={{
-                  borderRadius: 4,
-                  border: "1px solid #EFE7DC",
-                  boxShadow: "none",
-                  p: 3,
-                  background: "#fff",
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontFamily: "var(--font-bricolage)",
-                    fontWeight: 700,
-                    mb: 2,
-                    color: "#2B2620",
-                  }}
-                >
+              <div className="bg-card border border-border/80 p-6 rounded-3xl shadow-sm space-y-3">
+                <h3 className="text-sm font-bold flex items-center gap-1.5">
+                  <Globe className="h-4.5 w-4.5 text-primary" />
                   Languages
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                </h3>
+                <div className="space-y-2 text-xs">
                   {profile.languages.map((l) => (
-                    <Box key={l.name} sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: "#2B2620" }}>
-                        {l.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {l.proficiency}
-                      </Typography>
-                    </Box>
+                    <div key={l.name} className="flex justify-between items-center">
+                      <span className="font-semibold">{l.name}</span>
+                      <span className="text-muted-foreground">{l.proficiency}</span>
+                    </div>
                   ))}
-                </Box>
-              </Card>
+                </div>
+              </div>
             )}
-          </Grid>
-        </Grid>
-      </Container>
+          </div>
+        </div>
+      </main>
 
       <SiteFooter />
-    </Box>
+    </div>
   );
 }

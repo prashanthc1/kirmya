@@ -1,23 +1,212 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { 
+  GraduationCap, 
+  Users, 
+  Calendar, 
+  Sparkles, 
+  HeartHandshake, 
+  ChevronRight, 
+  Award,
+  Video,
+  MessagesSquare,
+  BookmarkCheck
+} from "lucide-react";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 
-const CONTENT = "\n  \n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:clamp(56px,7vw,100px) 40px clamp(44px,5vw,64px);\">\n    <div style=\"display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; align-items:center;\">\n      <div>\n        <div style=\"display:inline-block; font-size:13px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#4F7C6A; background:rgba(79,124,106,0.12); padding:8px 16px; border-radius:100px; margin-bottom:26px;\">Mentorship</div>\n        <h1 style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(40px,6vw,68px); line-height:1.02; letter-spacing:-0.025em; margin:0 0 22px;\">No one should job-hunt alone.</h1>\n        <p style=\"font-size:clamp(17px,2vw,20px); line-height:1.6; color:#5B554C; max-width:480px; margin:0 0 34px;\">Get paired with someone who's navigated a layoff and come out stronger — or pay it forward by guiding someone through theirs.</p>\n        <div style=\"display:flex; gap:14px; flex-wrap:wrap;\">\n          <a href=\"/mentors\" style=\"background:#C2683C; color:#fff; font-size:16px; font-weight:600; padding:16px 32px; border-radius:100px;\">Find a mentor</a>\n          <a href=\"/sign-in\" style=\"background:#2B2620; color:#fff; font-size:16px; font-weight:600; padding:16px 32px; border-radius:100px;\">Become a mentor</a>\n        </div>\n      </div>\n      <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:22px; padding:34px;\">\n        <div style=\"display:flex; align-items:center; gap:14px; margin-bottom:22px;\">\n          <span style=\"width:52px; height:52px; border-radius:50%; background:#4F7C6A; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px; font-family:'Public Sans',sans-serif;\">RG</span>\n          <div><div style=\"font-weight:600; font-size:16px;\">Rosa Guerrero</div><div style=\"font-size:13px; color:#8A8175;\">Sr. Logistics Manager · 17 yrs</div></div>\n          <span style=\"margin-left:auto; font-size:12px; color:#4F7C6A; font-weight:600; background:rgba(79,124,106,0.12); padding:5px 11px; border-radius:100px;\">Mentor</span>\n        </div>\n        <p style=\"font-family:'Public Sans',sans-serif; font-weight:500; font-size:19px; line-height:1.4; color:#2B2620; margin:0 0 18px;\">\"I had three mentors when I was laid off in 2009. This is how I pass that forward.\"</p>\n        <div style=\"display:flex; gap:8px; flex-wrap:wrap;\">\n          <span style=\"font-size:12px; color:#5B554C; background:#F3ECE2; padding:6px 13px; border-radius:100px;\">Career pivots</span>\n          <span style=\"font-size:12px; color:#5B554C; background:#F3ECE2; padding:6px 13px; border-radius:100px;\">Interview prep</span>\n          <span style=\"font-size:12px; color:#5B554C; background:#F3ECE2; padding:6px 13px; border-radius:100px;\">Negotiation</span>\n        </div>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:0 40px clamp(48px,6vw,72px);\">\n    <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:22px; padding:clamp(32px,4vw,48px); display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:32px; text-align:center;\">\n      <div><div style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(34px,4.5vw,50px); color:#C2683C; letter-spacing:-0.02em;\">2,100+</div><div style=\"font-size:15px; color:#6B6357; margin-top:6px;\">Active mentors</div></div>\n      <div><div style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(34px,4.5vw,50px); color:#4F7C6A; letter-spacing:-0.02em;\">Free</div><div style=\"font-size:15px; color:#6B6357; margin-top:6px;\">For mentees, always</div></div>\n      <div><div style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(34px,4.5vw,50px); color:#2B2620; letter-spacing:-0.02em;\">9,800</div><div style=\"font-size:15px; color:#6B6357; margin-top:6px;\">Sessions this year</div></div>\n      <div><div style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(34px,4.5vw,50px); color:#2B2620; letter-spacing:-0.02em;\">4.9★</div><div style=\"font-size:15px; color:#6B6357; margin-top:6px;\">Average rating</div></div>\n    </div>\n  </section>\n\n  \n  <section style=\"background:#F3ECE2; border-top:1px solid #EFE7DC; border-bottom:1px solid #EFE7DC;\">\n    <div style=\"max-width:1240px; margin:0 auto; padding:clamp(56px,6vw,84px) 40px;\">\n      <div style=\"text-align:center; max-width:600px; margin:0 auto clamp(40px,5vw,56px);\">\n        <div style=\"font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#C2683C; margin-bottom:14px;\">How it works</div>\n        <h2 style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(30px,4vw,44px); line-height:1.05; letter-spacing:-0.02em; margin:0;\">Guidance in three steps</h2>\n      </div>\n      <div style=\"display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;\">\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:34px;\">\n          <div style=\"width:46px; height:46px; border-radius:50%; background:#C2683C; color:#fff; font-family:'Public Sans',sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:20px;\">1</div>\n          <h3 style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:21px; margin:0 0 10px;\">Match on what matters</h3>\n          <p style=\"font-size:15px; line-height:1.6; color:#6B6357; margin:0;\">Tell us your field and what you're working through. We pair you with a mentor who's been there.</p>\n        </div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:34px;\">\n          <div style=\"width:46px; height:46px; border-radius:50%; background:#4F7C6A; color:#fff; font-family:'Public Sans',sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:20px;\">2</div>\n          <h3 style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:21px; margin:0 0 10px;\">Meet on your terms</h3>\n          <p style=\"font-size:15px; line-height:1.6; color:#6B6357; margin:0;\">Book a single session or an ongoing arrangement. Video, phone, or async messages — whatever fits.</p>\n        </div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:20px; padding:34px;\">\n          <div style=\"width:46px; height:46px; border-radius:50%; background:#2B2620; color:#fff; font-family:'Public Sans',sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:20px;\">3</div>\n          <h3 style=\"font-family:'Public Sans',sans-serif; font-weight:700; font-size:21px; margin:0 0 10px;\">Move forward with a plan</h3>\n          <p style=\"font-size:15px; line-height:1.6; color:#6B6357; margin:0;\">Leave each session with concrete next steps — a sharper résumé, a practiced pitch, real confidence.</p>\n        </div>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:clamp(56px,6vw,84px) 40px;\">\n    <div style=\"display:grid; grid-template-columns:0.85fr 1.15fr; gap:48px; align-items:center;\">\n      <div>\n        <div style=\"font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#C2683C; margin-bottom:14px;\">What mentors help with</div>\n        <h2 style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(28px,3.6vw,40px); line-height:1.08; letter-spacing:-0.02em; margin:0 0 16px;\">Practical help from people who get it.</h2>\n        <p style=\"font-size:16px; line-height:1.7; color:#4A443B; margin:0;\">Our mentors aren't life coaches — they're working professionals who've sat where you're sitting. The advice is specific, honest, and grounded in real experience.</p>\n      </div>\n      <div style=\"display:grid; grid-template-columns:1fr 1fr; gap:14px;\">\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:16px; padding:24px;\"><div style=\"font-size:22px; margin-bottom:12px;\">📄</div><div style=\"font-weight:600; font-size:16px; margin-bottom:5px;\">Résumé &amp; profile</div><div style=\"font-size:14px; color:#8A8175; line-height:1.5;\">Make your experience land.</div></div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:16px; padding:24px;\"><div style=\"font-size:22px; margin-bottom:12px;\">🎯</div><div style=\"font-weight:600; font-size:16px; margin-bottom:5px;\">Interview prep</div><div style=\"font-size:14px; color:#8A8175; line-height:1.5;\">Mock rounds &amp; feedback.</div></div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:16px; padding:24px;\"><div style=\"font-size:22px; margin-bottom:12px;\">🔀</div><div style=\"font-weight:600; font-size:16px; margin-bottom:5px;\">Career pivots</div><div style=\"font-size:14px; color:#8A8175; line-height:1.5;\">Translate skills to a new field.</div></div>\n        <div style=\"background:#fff; border:1px solid #EFE7DC; border-radius:16px; padding:24px;\"><div style=\"font-size:22px; margin-bottom:12px;\">🤝</div><div style=\"font-weight:600; font-size:16px; margin-bottom:5px;\">Offer negotiation</div><div style=\"font-size:14px; color:#8A8175; line-height:1.5;\">Know your worth, ask for it.</div></div>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:0 40px clamp(56px,6vw,84px);\">\n    <div style=\"background:#2B2620; color:#fff; border-radius:24px; padding:clamp(40px,5vw,60px); display:grid; grid-template-columns:1.2fr 0.8fr; gap:40px; align-items:center;\">\n      <div>\n        <div style=\"font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#E7A57E; margin-bottom:16px;\">Give back</div>\n        <h2 style=\"font-family:'Public Sans',sans-serif; font-weight:800; font-size:clamp(28px,3.6vw,42px); line-height:1.06; letter-spacing:-0.02em; margin:0 0 16px;\">The best mentors have been through it too.</h2>\n        <p style=\"font-size:17px; line-height:1.65; color:#C9C2B8; margin:0 0 28px; max-width:520px;\">An hour of your time can change someone's month. Set your own availability, choose your focus areas, and mentor on your schedule — paid or volunteer.</p>\n        <a href=\"/sign-in\" style=\"display:inline-block; background:#fff; color:#2B2620; font-size:16px; font-weight:600; padding:15px 32px; border-radius:100px;\">Become a mentor</a>\n      </div>\n      <div style=\"display:flex; flex-direction:column; gap:14px;\">\n        <div style=\"display:flex; gap:14px; align-items:center;\"><span style=\"flex:none; width:40px; height:40px; border-radius:50%; background:rgba(231,165,126,0.18); color:#E7A57E; display:flex; align-items:center; justify-content:center; font-size:18px;\">✓</span><span style=\"font-size:16px; color:#E5DFD5;\">Set your own rate or volunteer</span></div>\n        <div style=\"display:flex; gap:14px; align-items:center;\"><span style=\"flex:none; width:40px; height:40px; border-radius:50%; background:rgba(231,165,126,0.18); color:#E7A57E; display:flex; align-items:center; justify-content:center; font-size:18px;\">✓</span><span style=\"font-size:16px; color:#E5DFD5;\">Mentor 1 hour or 10 a month</span></div>\n        <div style=\"display:flex; gap:14px; align-items:center;\"><span style=\"flex:none; width:40px; height:40px; border-radius:50%; background:rgba(231,165,126,0.18); color:#E7A57E; display:flex; align-items:center; justify-content:center; font-size:18px;\">✓</span><span style=\"font-size:16px; color:#E5DFD5;\">Build your professional reputation</span></div>\n      </div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:900px; margin:0 auto; padding:0 40px clamp(56px,6vw,84px); text-align:center;\">\n    <div style=\"font-size:46px; line-height:1; color:#C2683C; font-family:'Public Sans',sans-serif; margin-bottom:14px;\">\"</div>\n    <p style=\"font-family:'Public Sans',sans-serif; font-weight:500; font-size:clamp(22px,3vw,32px); line-height:1.3; letter-spacing:-0.01em; margin:0 0 26px;\">My mentor had been laid off twice and rebuilt both times. Two sessions in, I stopped apologizing for my gap and started leading with my track record. I had an offer within a month.</p>\n    <div style=\"display:flex; align-items:center; justify-content:center; gap:14px;\">\n      <span style=\"width:48px; height:48px; border-radius:50%; background:#4F7C6A;\"></span>\n      <div style=\"text-align:left;\"><div style=\"font-weight:600; font-size:16px;\">Priya Nair</div><div style=\"font-size:14px; color:#8A8175;\">Product Manager · mentored by David T.</div></div>\n    </div>\n  </section>\n\n  \n  <section style=\"max-width:1240px; margin:0 auto; padding:0 40px clamp(56px,6vw,90px);\">\n    <div style=\"background:#4F7C6A; border-radius:24px; padding:clamp(40px,5vw,64px); text-align:center;\">\n      <h2 style=\"font-family:'Public Sans',sans-serif; font-weight:800; color:#fff; font-size:clamp(28px,4vw,44px); line-height:1.05; letter-spacing:-0.02em; margin:0 0 14px;\">Find someone in your corner.</h2>\n      <p style=\"font-size:clamp(16px,2vw,18px); color:rgba(255,255,255,0.88); margin:0 auto 28px; max-width:520px;\">Browse 2,100+ mentors who've walked this road. The first match is free.</p>\n      <a href=\"/mentors\" style=\"background:#fff; color:#2B2620; font-size:16px; font-weight:600; padding:16px 34px; border-radius:100px; display:inline-block;\">Browse mentors</a>\n    </div>\n  </section>\n\n  \n  \n";
+const STATS = [
+  { metric: "2,100+", label: "Active mentors" },
+  { metric: "Free", label: "For mentees, always" },
+  { metric: "9,800", label: "Sessions this year" },
+  { metric: "4.9★", label: "Average rating" }
+];
+
+const STEPS = [
+  {
+    step: "1",
+    title: "Match on what matters",
+    desc: "Tell us your industry field and what you're working through. We pair you with a mentor who's successfully navigated the same situation."
+  },
+  {
+    step: "2",
+    title: "Meet on your terms",
+    desc: "Book a single strategic session or a recurring arrangement. Meet via video, phone call, or async text — whatever fits your recovery schedule."
+  },
+  {
+    step: "3",
+    title: "Move forward with a plan",
+    desc: "Leave each session with concrete action items — a refined resume direction, a practiced layoff response pitch, and clear next steps."
+  }
+];
+
+const MENTOR_TOPICS = [
+  { icon: FileTextIcon, title: "Resume & Profile Review", desc: "Make your actual experience pop." },
+  { icon: TargetIcon, title: "Interview Practice", desc: "Interactive mock rounds & feedback." },
+  { icon: MoveIcon, title: "Career Path Pivots", desc: "Translate skills into a new niche." },
+  { icon: HandshakeIcon, title: "Offer Negotiation", desc: "Know your market worth & request it." }
+];
+
+function FileTextIcon() { return <Award className="h-5 w-5 text-primary" />; }
+function TargetIcon() { return <Sparkles className="h-5 w-5 text-primary" />; }
+function MoveIcon() { return <HeartHandshake className="h-5 w-5 text-primary" />; }
+function HandshakeIcon() { return <Users className="h-5 w-5 text-primary" />; }
 
 export default function MentorshipPage() {
   return (
-    <div
-      style={{
-        background: "#FBF7F2",
-        fontFamily: "'Public Sans',sans-serif",
-        color: "#2B2620",
-        minHeight: "100vh",
-        overflowX: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+      {/* Background Glow */}
+      <div className="absolute top-[-5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
+
       <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Mentorship" }]} />
-      <main style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: CONTENT }} />
+
+      {/* Hero Section */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Column: Heading */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <HeartHandshake className="h-3.5 w-3.5" />
+              Community Mentorship
+            </div>
+            
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.05]">
+              No one should job-hunt alone.
+            </h1>
+            
+            <p className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
+              Get matched with an experienced industry professional who has navigated a career layoff and come out stronger — or pay it forward by guiding someone through theirs.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Link
+                href="/mentors"
+                className="px-6 py-3 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-sm font-bold shadow-lg shadow-blue-500/10 flex items-center gap-1.5 group"
+              >
+                Find a Mentor
+                <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/sign-in"
+                className="px-6 py-3 rounded-full border border-border hover:bg-secondary text-sm font-bold"
+              >
+                Become a Mentor
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Column: Featured Mentor Card */}
+          <div className="lg:col-span-5 bg-card border border-border/80 p-6 rounded-3xl shadow-lg relative overflow-hidden">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-12 w-12 rounded-full bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-extrabold text-sm select-none shrink-0">
+                RG
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="text-sm font-bold">Rosa Guerrero</h3>
+                <p className="text-xs text-muted-foreground">Sr. Logistics Manager &bull; 17 years exp</p>
+              </div>
+              <span className="ml-auto px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-extrabold text-emerald-500 uppercase tracking-wider">
+                Mentor
+              </span>
+            </div>
+            
+            <p className="text-base font-semibold leading-relaxed text-foreground italic mb-4">
+              &ldquo;I had three mentors when I was laid off in 2009. This is how I pass that forward.&rdquo;
+            </p>
+
+            <div className="flex flex-wrap gap-1.5">
+              {["Career pivots", "Interview prep", "Offer negotiation"].map((tag) => (
+                <span key={tag} className="text-[10px] px-2.5 py-0.5 bg-secondary text-muted-foreground rounded-full border border-border/40 font-semibold">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Stats counter panel */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="bg-card border border-border/60 p-8 rounded-3xl grid grid-cols-2 md:grid-cols-4 gap-6 text-center shadow-sm">
+          {STATS.map((stat, idx) => (
+            <div key={idx} className="space-y-1">
+              <span className="text-3xl font-black tracking-tight text-primary block">{stat.metric}</span>
+              <span className="text-xs text-muted-foreground font-semibold block">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 3 Step Process */}
+      <section className="py-20 bg-secondary/25 border-y border-border/40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary">How it works</span>
+            <h2 className="text-3xl font-extrabold tracking-tight">Structured coaching in three steps</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {STEPS.map((step) => (
+              <div key={step.step} className="bg-card border border-border/50 p-8 rounded-3xl space-y-4 shadow-sm hover:border-border transition-all">
+                <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-extrabold text-sm">
+                  {step.step}
+                </div>
+                <h3 className="text-lg font-bold text-foreground">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* What mentors help with */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Left Column: Summary */}
+          <div className="lg:col-span-5 space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary">Focus Areas</span>
+            <h2 className="text-3xl font-extrabold tracking-tight">Practical guidance from people who have been there</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Our mentors are not career coaches — they are active industry professionals who have stood in your shoes. Their advice is tactical, transparent, and built on real experience.
+            </p>
+          </div>
+
+          {/* Right Column: Grid */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {MENTOR_TOPICS.map((topic, idx) => {
+              const Icon = topic.icon;
+              return (
+                <div key={idx} className="bg-card border border-border/60 p-6 rounded-2xl space-y-2 hover:border-border transition-all shadow-sm">
+                  <Icon />
+                  <h3 className="text-sm font-bold text-foreground pt-1">{topic.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-normal">{topic.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Call to action card */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 p-8 md:p-12 rounded-3xl text-center space-y-6 text-white shadow-xl shadow-emerald-500/5">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Find an internal advisor today</h2>
+          <p className="text-sm md:text-base text-emerald-100 max-w-md mx-auto leading-relaxed">
+            Browse our database of 2,100+ mentors who have walked this road. Your initial alignment session is completely free.
+          </p>
+          <Link
+            href="/mentors"
+            className="inline-flex px-8 py-3 rounded-full bg-white hover:bg-emerald-50 text-slate-900 text-sm font-bold shadow-sm transition-all"
+          >
+            Browse Mentors List
+          </Link>
+        </div>
+      </section>
+
       <SiteFooter />
     </div>
   );

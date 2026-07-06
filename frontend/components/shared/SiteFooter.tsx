@@ -44,98 +44,61 @@ const DEFAULT_GROUPS: [FooterGroup, FooterGroup, FooterGroup] = [
 
 export default function SiteFooter({ groups = DEFAULT_GROUPS }: SiteFooterProps) {
   return (
-    <footer style={{ background: "#2B2620", color: "#C9C2B8" }}>
-      <div
-        style={{
-          maxWidth: "1240px",
-          margin: "0 auto",
-          padding: "clamp(48px,5vw,68px) 40px 36px",
-          display: "grid",
-          gridTemplateColumns: "1.4fr repeat(3,1fr)",
-          gap: "40px",
-        }}
-      >
-        <div style={{ minWidth: "220px" }}>
-          <div
-            style={{
-              fontFamily: "'Public Sans',sans-serif",
-              fontSize: "24px",
-              fontWeight: 800,
-              color: "#fff",
-              letterSpacing: "-0.02em",
-              marginBottom: "14px",
-            }}
-          >
-            Kirmya
+    <footer className="w-full bg-card border-t border-border/40 py-12 md:py-16 mt-auto">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 md:gap-12">
+          {/* Brand Info */}
+          <div className="lg:col-span-2 space-y-4">
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+              Kirmya
+            </span>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
+              Kirmya. Sanskrit for <em>the instrument of purposeful action</em>. 
+              The AI career operating system designed to guide you through transition and come back stronger.
+            </p>
           </div>
-          <p
-            style={{
-              fontSize: "15px",
-              lineHeight: 1.6,
-              color: "#9C958A",
-              margin: 0,
-              maxWidth: "320px",
-            }}
-          >
-            Kirmya. Sanskrit for{" "}
-            <em>the instrument of purposeful action</em>. Built for your
-            comeback.
-          </p>
+
+          {/* Links columns */}
+          {groups.map((group) => (
+            <div key={group.heading} className="space-y-4">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                {group.heading}
+              </h4>
+              <ul className="space-y-2">
+                {group.links.map((link, idx) => (
+                  <li key={idx}>
+                    <Link 
+                      href={link.href} 
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        {groups.map((group) => (
-          <div key={group.heading}>
-            <div
-              style={{
-                fontSize: "13px",
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "#fff",
-                marginBottom: "16px",
-              }}
+
+        {/* Footer Bottom */}
+        <div className="border-t border-border/40 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-muted-foreground">
+            &copy; {new Date().getFullYear()} Kirmya. Built for your comeback.
+          </p>
+          <div className="flex gap-6">
+            <Link 
+              href="/" 
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              {group.heading}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "11px",
-                fontSize: "15px",
-              }}
+              Privacy Policy
+            </Link>
+            <Link 
+              href="/" 
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              {group.links.map((link, j) => (
-                <Link key={j} href={link.href} style={{ color: "#C9C2B8" }}>
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+              Terms of Service
+            </Link>
           </div>
-        ))}
-      </div>
-      <div
-        style={{
-          borderTop: "1px solid #3D362F",
-          maxWidth: "1240px",
-          margin: "0 auto",
-          padding: "22px 40px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "16px",
-          flexWrap: "wrap",
-          fontSize: "14px",
-          color: "#8A8175",
-        }}
-      >
-        <span>© 2026 Kirmya. Built for your comeback.</span>
-        <div style={{ display: "flex", gap: "24px" }}>
-          <Link href="/" style={{ color: "#8A8175" }}>
-            Privacy
-          </Link>
-          <Link href="/" style={{ color: "#8A8175" }}>
-            Terms
-          </Link>
         </div>
       </div>
     </footer>
