@@ -66,6 +66,36 @@ func TestRegisterSucceedsWhenMailerFails(t *testing.T) {
 	}
 }
 
+// TestRegisterPersistsVerificationToken locks in that a successful register
+// persists an email-verification token keyed to the newly created user. This
+// guards the regression where the verification-token write ran outside the
+// registration transaction (against a separate pooled connection), so the
+// just-created — still uncommitted — user row was invisible and the insert
+// failed the email_verification_tokens_user_id_fkey foreign key. Because email
+// delivery is best-effort, that failure was only logged, silently leaving
+// accounts with no verification token. See VerificationRepository in
+// infrastructure/postgres (now transaction-aware via tx.NewTxDB).
+func TestRegisterPersistsVerificationToken(t *testing.T) {
+	s := newTestService(t)
+	ctx := context.Background()
+
+	reg, err := s.Register(ctx, RegisterInput{Email: "vera@example.com", Password: "supersecret", FullName: "Vera"})
+	if err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	if reg.User.ID == "" {
+		t.Fatal("expected a created user id")
+	}
+
+	gotID, ok := s.verif.(*fakeVerif).emailTokenUserID()
+	if !ok {
+		t.Fatal("expected a verification token to be persisted on register")
+	}
+	if gotID != reg.User.ID {
+		t.Fatalf("verification token stored for user %q, want created user %q", gotID, reg.User.ID)
+	}
+}
+
 func TestLoginWrongPassword(t *testing.T) {
 	s := newTestService(t)
 	ctx := context.Background()

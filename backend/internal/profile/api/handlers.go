@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"workspace-app/internal/common"
@@ -147,6 +148,8 @@ func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		common.WriteValidationError(w, "invalid request payload")
 		return
 	}
+
+	log.Printf("[UpdateMe Debug] uid=%s, career_status=%q, transition_reason=%q, headline=%q", uid, req.CareerStatus, req.TransitionReason, req.Headline)
 
 	// 1. Update scalar fields
 	_, err := h.svc.UpdateScalars(r.Context(), uid, toScalars(req))

@@ -260,6 +260,17 @@ func (f *fakeVerif) StoreEmailToken(_ context.Context, userID, hash string, _ ti
 	return nil
 }
 
+// emailTokenUserID returns the user ID a stored email-verification token maps
+// to, if any. Test helper used to assert a token was persisted on register.
+func (f *fakeVerif) emailTokenUserID() (string, bool) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, id := range f.email {
+		return id, true
+	}
+	return "", false
+}
+
 func (f *fakeVerif) ConsumeEmailToken(_ context.Context, hash string) (string, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()

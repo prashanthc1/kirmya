@@ -112,8 +112,8 @@ func (p *Profile) Validate() error {
 	}
 
 	// Transition reason condition
-	if p.TransitionReason != "" && p.CareerStatus != "career_break" && p.CareerStatus != "open_to_opportunities" {
-		return errors.New("transition reason requires career status to be career_break or open_to_opportunities")
+	if p.TransitionReason != "" && p.CareerStatus != "career_break" && p.CareerStatus != "open_to_opportunities" && p.CareerStatus != "actively_looking" {
+		return errors.New("transition reason requires career status to be career_break, open_to_opportunities, or actively_looking")
 	}
 
 	// Date range validations in experiences

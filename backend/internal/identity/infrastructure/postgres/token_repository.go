@@ -76,10 +76,10 @@ func (r *RefreshTokenRepository) RevokeAllForUser(ctx context.Context, userID st
 }
 
 // VerificationRepository implements domain.VerificationRepository.
-type VerificationRepository struct{ db *sql.DB }
+type VerificationRepository struct{ db tx.DBTX }
 
 func NewVerificationRepository(db *sql.DB) *VerificationRepository {
-	return &VerificationRepository{db: db}
+	return &VerificationRepository{db: tx.NewTxDB(db)}
 }
 
 func (r *VerificationRepository) StoreEmailToken(ctx context.Context, userID, hash string, expiresAt time.Time) error {
