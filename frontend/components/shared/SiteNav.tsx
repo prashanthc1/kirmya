@@ -21,7 +21,8 @@ import {
   GraduationCap, 
   Sparkles, 
   Compass,
-  Bell
+  Bell,
+  Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -257,6 +258,18 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                             Settings
                           </Link>
 
+                          {user?.roles?.includes("admin") && (
+                            <Link
+                              href="/admin"
+                              role="link"
+                              onClick={() => setProfileMenuOpen(false)}
+                              className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-primary hover:bg-primary/10 transition-colors"
+                            >
+                              <Shield className="h-4 w-4" />
+                              Admin
+                            </Link>
+                          )}
+
                           <button
                             onClick={handleSignOut}
                             role="menuitem"
@@ -349,6 +362,16 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                     <Settings className="h-4.5 w-4.5" />
                     Settings
                   </Link>
+                  {user?.roles?.includes("admin") && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-primary hover:bg-primary/10"
+                    >
+                      <Shield className="h-4.5 w-4.5" />
+                      Admin
+                    </Link>
+                  )}
                   <button
                     onClick={handleSignOut}
                     className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10"
