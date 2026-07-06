@@ -125,6 +125,20 @@ func hasAccess(vis string, viewerRole string, isOwner bool) bool {
 	}
 }
 
+func isValidUUID(uuid string) bool {
+	if len(uuid) != 36 {
+		return false
+	}
+	for i, c := range uuid {
+		if i == 8 || i == 13 || i == 18 || i == 23 {
+			if c != '-' {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // UpdateMe handles PUT /profiles/me.
 func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
@@ -133,8 +147,176 @@ func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		common.WriteValidationError(w, "invalid request payload")
 		return
 	}
-	p, err := h.svc.UpdateScalars(r.Context(), uid, toScalars(req))
-	h.write(w, p, err)
+
+	// 1. Update scalar fields
+	_, err := h.svc.UpdateScalars(r.Context(), uid, toScalars(req))
+	if err != nil {
+		h.write(w, nil, err)
+		return
+	}
+
+	// 2. Load current profile state to compare/reconcile lists
+	currentProfile, err := h.svc.Get(r.Context(), uid)
+	if err != nil {
+		h.write(w, nil, err)
+		return
+	}
+
+	// 3. Reconcile Experiences
+	if req.Experiences != nil {
+		incomingIDs := make(map[string]bool)
+		for _, exp := range *req.Experiences {
+			domExp := exp.toDomain()
+			if exp.ID != "" && isValidUUID(exp.ID) {
+				incomingIDs[exp.ID] = true
+				if _, err = h.svc.UpdateExperience(r.Context(), uid, domExp); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			} else {
+				domExp.ID = "" // Clear temporary/mock ID
+				if _, err = h.svc.AddExperience(r.Context(), uid, &domExp); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			}
+		}
+		for _, existing := range currentProfile.Experiences {
+			if !incomingIDs[existing.ID] {
+				if _, err = h.svc.DeleteExperience(r.Context(), uid, existing.ID); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			}
+		}
+	}
+
+	// 4. Reconcile Educations
+	if req.Educations != nil {
+		incomingIDs := make(map[string]bool)
+		for _, edu := range *req.Educations {
+			domEdu := edu.toDomain()
+			if edu.ID != "" && isValidUUID(edu.ID) {
+				incomingIDs[edu.ID] = true
+				if _, err = h.svc.UpdateEducation(r.Context(), uid, domEdu); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			} else {
+				domEdu.ID = "" // Clear temporary/mock ID
+				if _, err = h.svc.AddEducation(r.Context(), uid, &domEdu); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			}
+		}
+		for _, existing := range currentProfile.Educations {
+			if !incomingIDs[existing.ID] {
+				if _, err = h.svc.DeleteEducation(r.Context(), uid, existing.ID); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			}
+		}
+	}
+
+	// 5. Reconcile Certifications
+	if req.Certifications != nil {
+		incomingIDs := make(map[string]bool)
+		for _, cert := range *req.Certifications {
+			domCert := cert.toDomain()
+			if cert.ID != "" && isValidUUID(cert.ID) {
+				incomingIDs[cert.ID] = true
+				if _, err = h.svc.UpdateCertification(r.Context(), uid, domCert); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			} else {
+				domCert.ID = "" // Clear temporary/mock ID
+				if _, err = h.svc.AddCertification(r.Context(), uid, &domCert); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			}
+		}
+		for _, existing := range currentProfile.Certifications {
+			if !incomingIDs[existing.ID] {
+				if _, err = h.svc.DeleteCertification(r.Context(), uid, existing.ID); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			}
+		}
+	}
+
+	// 6. Reconcile Skills
+	if req.Skills != nil {
+		skills := make([]domain.ProfileSkill, 0, len(*req.Skills))
+		for _, sk := range *req.Skills {
+			skills = append(skills, sk.toDomain())
+		}
+		if _, err = h.svc.SetSkills(r.Context(), uid, skills); err != nil {
+			h.write(w, nil, err)
+			return
+		}
+	}
+
+	// 7. Reconcile Languages
+	if req.Languages != nil {
+		langs := make([]domain.Language, 0, len(*req.Languages))
+		for _, l := range *req.Languages {
+			langs = append(langs, domain.Language(l))
+		}
+		if _, err = h.svc.SetLanguages(r.Context(), uid, langs); err != nil {
+			h.write(w, nil, err)
+			return
+		}
+	}
+
+	// 8. Reconcile Portfolio
+	if req.Portfolio != nil {
+		links := make([]domain.PortfolioLink, 0, len(*req.Portfolio))
+		for _, l := range *req.Portfolio {
+			links = append(links, domain.PortfolioLink(l))
+		}
+		if _, err = h.svc.SetPortfolio(r.Context(), uid, links); err != nil {
+			h.write(w, nil, err)
+			return
+		}
+	}
+
+	// 9. Reconcile References
+	if req.References != nil {
+		incomingIDs := make(map[string]bool)
+		for _, ref := range *req.References {
+			domRef := ref.toDomain()
+			if ref.ID != "" && isValidUUID(ref.ID) {
+				incomingIDs[ref.ID] = true
+				if _, err = h.svc.UpdateReference(r.Context(), uid, domRef); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			} else {
+				domRef.ID = "" // Clear temporary/mock ID
+				if _, err = h.svc.AddReference(r.Context(), uid, &domRef); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			}
+		}
+		for _, existing := range currentProfile.References {
+			if !incomingIDs[existing.ID] {
+				if _, err = h.svc.DeleteReference(r.Context(), uid, existing.ID); err != nil {
+					h.write(w, nil, err)
+					return
+				}
+			}
+		}
+	}
+
+	// 10. Load final updated profile and return
+	finalProfile, err := h.svc.Get(r.Context(), uid)
+	h.write(w, finalProfile, err)
 }
 
 // --- experiences ---
