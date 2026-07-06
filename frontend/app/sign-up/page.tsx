@@ -171,6 +171,7 @@ export default function SignUpPage() {
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                   <input
+                    id="name"
                     type="text"
                     placeholder="Jordan Rivera"
                     value={fullName}
@@ -186,6 +187,7 @@ export default function SignUpPage() {
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                   <input
+                    id="email"
                     type="email"
                     placeholder="name@company.com"
                     value={email}
@@ -202,6 +204,7 @@ export default function SignUpPage() {
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                 <input
+                  id="password"
                   type="password"
                   placeholder="Min. 8 characters"
                   value={password}
@@ -252,7 +255,7 @@ export default function SignUpPage() {
               className="w-full py-2.5 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-sm font-bold shadow-sm flex items-center justify-center gap-1.5"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
-              Create Account
+              Create one free
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>

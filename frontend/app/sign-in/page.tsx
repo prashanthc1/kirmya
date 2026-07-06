@@ -128,6 +128,7 @@ export default function SignInPage() {
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                     <input
+                      id="email"
                       type="email"
                       placeholder="name@company.com"
                       value={email}
@@ -148,6 +149,7 @@ export default function SignInPage() {
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                     <input
+                      id="password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
@@ -182,7 +184,7 @@ export default function SignInPage() {
               className="w-full py-2.5 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-sm font-bold shadow-sm flex items-center justify-center gap-1.5"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
-              {mfaRequired ? "Verify Code" : "Sign In"}
+              {mfaRequired ? "Verify Code" : "Sign in"}
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
