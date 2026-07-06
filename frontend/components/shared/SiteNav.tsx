@@ -207,6 +207,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                     className="flex items-center gap-1.5 focus:outline-none"
                     aria-label={formatName(user.full_name)}
+                    aria-haspopup="menu"
                   >
                     <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm select-none">
                       {getInitials(user.full_name)}

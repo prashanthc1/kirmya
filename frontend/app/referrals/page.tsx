@@ -109,7 +109,7 @@ export default function ReferralsPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <span className="text-xs font-bold uppercase tracking-widest text-primary">Warm Connections</span>
-            <h1 className="text-3xl font-extrabold tracking-tight">Referral Requests</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight">Your requests</h1>
             <p className="text-sm text-muted-foreground">Track the referral requests you&apos;ve sent and where each one stands.</p>
           </div>
 
