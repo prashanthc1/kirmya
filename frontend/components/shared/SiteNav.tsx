@@ -61,8 +61,22 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
 
   const handleSignOut = async () => {
     setProfileMenuOpen(false);
-    await signOut();
     router.push("/");
+    
+    // Wait until Next.js has transitioned to the public home page before clearing the auth state,
+    // ensuring the AuthGuard on the protected dashboard has been unmounted.
+    if (typeof window !== "undefined") {
+      let attempts = 0;
+      const interval = setInterval(async () => {
+        attempts++;
+        if (window.location.pathname === "/" || attempts > 20) {
+          clearInterval(interval);
+          await signOut();
+        }
+      }, 50);
+    } else {
+      await signOut();
+    }
   };
 
   const getInitials = (name: string) => {
