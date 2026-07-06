@@ -289,9 +289,7 @@ func (s *Service) reload(ctx context.Context, userID string) (*domain.Profile, e
 
 	// Update calculated fields in repository
 	nowStr := time.Now().UTC().Format(time.RFC3339)
-	if err := s.repo.UpdateCalculatedFields(ctx, userID, score, avgResponse, nowStr); err != nil {
-		// Log error, but proceed
-	}
+	_ = s.repo.UpdateCalculatedFields(ctx, userID, score, avgResponse, nowStr)
 
 	// Fetch again to get the updated calculated fields
 	p, err = s.repo.Get(ctx, userID)

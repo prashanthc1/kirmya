@@ -82,7 +82,7 @@ func (r *repository) CreateAccepted(ctx context.Context, requesterID, receiverID
 func (r *repository) UpdateStatus(ctx context.Context, connectionID string, status domain.ConnectionStatus) error {
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE user_connections
-		SET status = $1, responded_at = CASE WHEN $1 IN ('accepted', 'declined') THEN CURRENT_TIMESTAMP ELSE responded_at END, updated_at = CURRENT_TIMESTAMP
+		SET status = $1::text, responded_at = CASE WHEN $1::text IN ('accepted', 'declined') THEN CURRENT_TIMESTAMP ELSE responded_at END, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $2
 	`, string(status), connectionID)
 	if err != nil {
@@ -171,6 +171,9 @@ func (r *repository) GetConnections(ctx context.Context, userID string) ([]domai
 		}
 		list = append(list, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return list, nil
 }
 
@@ -212,6 +215,9 @@ func (r *repository) GetIncomingRequests(ctx context.Context, userID string) ([]
 			c.RespondedAt = respondedAt.Time.Format(time.RFC3339)
 		}
 		list = append(list, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return list, nil
 }

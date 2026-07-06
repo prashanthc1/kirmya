@@ -273,6 +273,9 @@ func (r *Repository) GetMessageStatuses(ctx context.Context, messageID string) (
 		}
 		list = append(list, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return list, nil
 }
 

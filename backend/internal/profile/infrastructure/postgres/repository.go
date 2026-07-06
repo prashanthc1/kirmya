@@ -324,6 +324,9 @@ func (r *Repository) loadExperiences(ctx context.Context, userID string) ([]doma
 		}
 		achMap[expID] = append(achMap[expID], ach)
 	}
+	if err = achRows.Err(); err != nil {
+		return nil, err
+	}
 
 	for i := range out {
 		if achs, ok := achMap[out[i].ID]; ok {

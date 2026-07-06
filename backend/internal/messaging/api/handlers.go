@@ -88,7 +88,7 @@ func (h *Handler) WebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[ws] upgrade failed for user %s: %v", userID, err)
 		return
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	log.Printf("[ws] user %s connected", userID)
 
@@ -350,7 +350,7 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	convID := r.PathValue("id")
 
 	var content string
-	var contentType string = "text"
+	var contentType string
 	var fileData []byte
 	var fileName string
 
@@ -368,7 +368,7 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 
 		file, header, err := r.FormFile("attachment")
 		if err == nil {
-			defer file.Close()
+			defer func() { _ = file.Close() }()
 			fileName = header.Filename
 			fileData, err = io.ReadAll(file)
 			if err != nil {

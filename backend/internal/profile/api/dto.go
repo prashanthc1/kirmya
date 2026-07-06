@@ -375,8 +375,6 @@ func (d experienceDTO) toDomain() domain.WorkExperience {
 func (d educationDTO) toDomain() domain.Education         { return domain.Education(d) }
 func (d certificationDTO) toDomain() domain.Certification { return domain.Certification(d) }
 func (d skillDTO) toDomain() domain.ProfileSkill          { return domain.ProfileSkill(d) }
-func (d languageDTO) toDomain() domain.Language           { return domain.Language(d) }
-func (d portfolioLinkDTO) toDomain() domain.PortfolioLink { return domain.PortfolioLink(d) }
 func (d endorsementDTO) toDomain() domain.Endorsement     { return domain.Endorsement(d) }
 func (d referenceDTO) toDomain() domain.Reference         { return domain.Reference(d) }
 func (d consentDTO) toDomain() domain.ConsentLog {

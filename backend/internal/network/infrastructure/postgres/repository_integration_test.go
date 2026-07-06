@@ -19,7 +19,7 @@ func TestConnectionLifecycle(t *testing.T) {
 	userB := testsupport.InsertUser(t, db, "user_b@kirmya.test", "User B")
 
 	// 1. Create connection request (A -> B)
-	c, err := repo.Create(ctx, userA, userB)
+	c, err := repo.Create(ctx, userA, userB, domain.OriginManualRequest)
 	if err != nil {
 		t.Fatalf("failed to create connection: %v", err)
 	}
@@ -28,7 +28,7 @@ func TestConnectionLifecycle(t *testing.T) {
 	}
 
 	// 2. Try sending duplicate connection should fail
-	_, err = repo.Create(ctx, userA, userB)
+	_, err = repo.Create(ctx, userA, userB, domain.OriginManualRequest)
 	if err == nil {
 		t.Fatal("expected duplicate request error, got nil")
 	}
