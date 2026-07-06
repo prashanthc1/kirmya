@@ -115,6 +115,10 @@ POST /api/v1/auth/refresh        // refresh_token cookie sent automatically
 | PUT | `/profiles/me/skills` | bearer | Set skills. |
 | PUT | `/profiles/me/languages` | bearer | Set languages. |
 | PUT | `/profiles/me/portfolio` | bearer | Set portfolio links. |
+| POST/PUT/DELETE | `/profiles/me/references[/:id]` | bearer | CRUD professional references. |
+| POST | `/profiles/me/consent` | bearer | Save user consent tracking. |
+| POST | `/profiles/me/endorsements` | bearer | Endorse another user's profile. |
+
 
 > The profile response includes both `about` and `bio` (currently duplicative;
 > `about` is the canonical field) plus `headline`, `photo_url`, `location`,
@@ -224,10 +228,13 @@ implemented.
 | GET | `/conversations` | bearer | List conversations → `{ conversations: [...] }`. |
 | POST | `/conversations` | bearer | Start DM or group (`participant_ids[]`, optional `title`). |
 | GET | `/conversations/stream` | bearer | **SSE** stream of message/typing/read events. |
-| GET | `/conversations/{id}/messages` | bearer | Message history → `{ messages: [...] }`. |
+| GET | `/conversations/{id}/messages` | bearer | Message history → `{ messages: [...] }`. Supports search parameter `?q=`. |
 | POST | `/conversations/{id}/messages` | bearer | Send a message. Emits `MessageSent`. |
+| DELETE | `/conversations/{id}/messages/{messageID}` | bearer | Soft-delete a message. |
 | POST | `/conversations/{id}/read` | bearer | Mark read (receipts). |
 | POST | `/conversations/{id}/typing` | bearer | Broadcast a typing indicator. |
+| POST | `/conversations/{id}/archive` | bearer | Archive or unarchive a conversation. |
+| POST | `/conversations/{id}/pin` | bearer | Pin or unpin a conversation. |
 
 > Real-time transport is **Server-Sent Events**, not WebSocket. There is no
 > `/ws` endpoint. The client uses `fetch`-based SSE so the Bearer token rides the
@@ -319,3 +326,17 @@ returns the full updated settings object. Writes are optimistic-locked on
 - General authenticated: 120 req/min/user.
 - Search: 60 req/min/user.
 - 429 returns `Retry-After`.
+
+## 17. Connections / Network  (`/api/v1/network`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/network/requests` | bearer | Send connection request to a target user (`receiver_id`, optional `origin`). |
+| PUT | `/network/requests/{id}/accept` | bearer | Accept connection request by connection request ID. |
+| PUT | `/network/requests/{id}/reject` | bearer | Reject/decline connection request by connection request ID. |
+| POST | `/network/block` | bearer | Block a user (`target_id`). |
+| DELETE | `/network/connections/{userID}` | bearer | Unconnect/remove a connection with a user. |
+| GET | `/network/connections` | bearer | List accepted connections. |
+| GET | `/network/requests/incoming` | bearer | List incoming connection requests. |
+| GET | `/network/status/{userID}` | bearer | Get connection status between the caller and target user (`status`, `requester_id`, `origin`). |
+
