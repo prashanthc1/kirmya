@@ -44,7 +44,7 @@ interface SiteNavProps {
 }
 
 export default function SiteNav({ breadcrumb }: SiteNavProps) {
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -70,6 +70,13 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
+  const formatName = (name: string) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0];
+    return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+  };
+
   const currentTheme = mounted ? theme : "system";
 
   return (
@@ -86,20 +93,32 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
 
             {/* Breadcrumb section */}
             {breadcrumb && breadcrumb.length > 0 && (
-              <nav className="hidden sm:flex items-center space-x-1 text-sm text-muted-foreground">
+              <nav aria-label="Breadcrumb" className="hidden sm:flex items-center space-x-1 text-sm text-muted-foreground">
                 <ChevronRight className="h-4 w-4" />
-                {breadcrumb.map((item, idx) => (
-                  <React.Fragment key={idx}>
-                    {idx > 0 && <ChevronRight className="h-4 w-4" />}
-                    {item.href ? (
-                      <Link href={item.href} className="hover:text-foreground transition-colors font-medium">
-                        {item.label}
-                      </Link>
-                    ) : (
-                      <span className="text-foreground font-semibold">{item.label}</span>
-                    )}
-                  </React.Fragment>
-                ))}
+                {breadcrumb.map((item, idx) => {
+                  const isLast = idx === breadcrumb.length - 1;
+                  return (
+                    <React.Fragment key={idx}>
+                      {idx > 0 && <ChevronRight className="h-4 w-4" />}
+                      {item.href ? (
+                        <Link 
+                          href={item.href} 
+                          className="hover:text-foreground transition-colors font-medium"
+                          {...(isLast ? { "aria-current": "page" } : {})}
+                        >
+                          {item.label}
+                        </Link>
+                      ) : (
+                        <span 
+                          className="text-foreground font-semibold"
+                          {...(isLast ? { "aria-current": "page" } : {})}
+                        >
+                          {item.label}
+                        </span>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </nav>
             )}
           </div>
@@ -167,7 +186,9 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
               </div>
             )}
 
-            {user ? (
+            {loading ? (
+              <div className="h-8 w-16 bg-secondary animate-pulse rounded-full" />
+            ) : user ? (
               <div className="flex items-center gap-2">
                 {/* Inbox Quick Link */}
                 <Link 
@@ -185,10 +206,14 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                   <button
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                     className="flex items-center gap-1.5 focus:outline-none"
+                    aria-label={formatName(user.full_name)}
                   >
                     <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm select-none">
                       {getInitials(user.full_name)}
                     </div>
+                    <span className="hidden sm:inline text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
+                      {formatName(user.full_name)}
+                    </span>
                   </button>
 
                   <AnimatePresence>
@@ -212,6 +237,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                           
                           <Link
                             href="/profile"
+                            role="menuitem"
                             onClick={() => setProfileMenuOpen(false)}
                             className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
                           >
@@ -221,6 +247,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                           
                           <Link
                             href="/settings"
+                            role="menuitem"
                             onClick={() => setProfileMenuOpen(false)}
                             className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
                           >
@@ -230,10 +257,11 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
 
                           <button
                             onClick={handleSignOut}
+                            role="menuitem"
                             className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                           >
                             <LogOut className="h-4 w-4" />
-                            Log Out
+                            Sign out
                           </button>
                         </motion.div>
                       </>
@@ -247,13 +275,13 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                   href="/sign-in"
                   className="px-4 py-1.5 rounded-full text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
                 >
-                  Sign In
+                  Sign in
                 </Link>
                 <Link
                   href="/sign-up"
                   className="px-4 py-1.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95 transition-all shadow-sm hover:shadow"
                 >
-                  Join Kirmya
+                  Start comeback
                 </Link>
               </div>
             )}

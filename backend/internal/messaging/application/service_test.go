@@ -295,16 +295,26 @@ func TestMarkRead(t *testing.T) {
 func TestTyping(t *testing.T) {
 	repo := newFakeRepo()
 	pub := &recordingPublisher{}
-	svc := NewService(repo, pub, NewHub(nil), &fakeConnectionChecker{})
+	hub := NewHub(nil)
+	svc := NewService(repo, pub, hub, &fakeConnectionChecker{})
 	ctx := context.Background()
 	c, _ := svc.Start(ctx, "alice", []string{"bob"}, "")
+
+	ch, cancel := hub.Subscribe("bob")
+	defer cancel()
 
 	err := svc.Typing(ctx, "alice", c.ID)
 	if err != nil {
 		t.Fatalf("Typing: %v", err)
 	}
-	if pub.lastPayload["event"] != "typing" {
-		t.Fatalf("expected typing event, got %v", pub.lastPayload)
+
+	select {
+	case ev := <-ch:
+		if ev.Kind != EventTyping || ev.ActorID != "alice" {
+			t.Fatalf("expected typing event from alice, got %+v", ev)
+		}
+	case <-time.After(1 * time.Second):
+		t.Fatal("timeout waiting for typing event")
 	}
 }
 
@@ -335,4 +345,3 @@ func TestCrypto(t *testing.T) {
 		t.Fatalf("expected %q, got %q", plain, dec)
 	}
 }
-

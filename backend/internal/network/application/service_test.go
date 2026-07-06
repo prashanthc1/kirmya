@@ -319,4 +319,3 @@ func TestRejectRequest(t *testing.T) {
 		t.Fatalf("expected declined status, got %s", status)
 	}
 }
-
