@@ -195,7 +195,7 @@ Would you like to rewrite this achievement in your profile?`);
                       {/* Action buttons embedded in message */}
                       {m.actions && !appliedText && (
                         <button
-                          onClick={() => handleApplyAction(m.actions)}
+                          onClick={() => m.actions && handleApplyAction(m.actions)}
                           className="mt-3 w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <span>{m.actions.label}</span>

@@ -34,7 +34,7 @@ export default function ProfileWorkspace() {
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         // Calculate completeness score
-        const filledFields = Object.keys(dataToSave).filter(k => !!(dataToSave as Record<string, unknown>)[k]).length;
+        const filledFields = Object.keys(dataToSave).filter(k => !!(dataToSave as unknown as Record<string, unknown>)[k]).length;
         const totalFields = 20; // estimate
         dataToSave.profile_completeness_score = Math.min(98, Math.round((filledFields / totalFields) * 100));
 
