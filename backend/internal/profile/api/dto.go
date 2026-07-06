@@ -247,9 +247,9 @@ type updateScalarsRequest struct {
 	VisibilityReferences       string `json:"visibility_references"`
 
 	// Collections for synchronization
-	Experiences    *[]experienceDTO     `json:"experiences"`
-	Educations     *[]educationDTO      `json:"educations"`
-	Certifications *[]certificationDTO  `json:"certifications"`
+	Experiences    *[]experienceDTO    `json:"experiences"`
+	Educations     *[]educationDTO     `json:"educations"`
+	Certifications *[]certificationDTO `json:"certifications"`
 	Skills         *[]skillDTO         `json:"skills"`
 	Languages      *[]languageDTO      `json:"languages"`
 	Portfolio      *[]portfolioLinkDTO `json:"portfolio"`
