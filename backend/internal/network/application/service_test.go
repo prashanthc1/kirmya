@@ -276,3 +276,47 @@ func TestNetworkConnectionFlow(t *testing.T) {
 		t.Fatalf("expected empty status after unconnecting, got %s", status)
 	}
 }
+
+func TestAutoCreateConnection(t *testing.T) {
+	repo := newFakeNetworkRepo()
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	userA := "user-a"
+	userB := "user-b"
+
+	c, err := svc.AutoCreateConnection(ctx, userA, userB, domain.OriginMentorshipMatch)
+	if err != nil {
+		t.Fatalf("failed to auto-create connection: %v", err)
+	}
+	if c.Status != domain.StatusAccepted || c.Origin != domain.OriginMentorshipMatch {
+		t.Fatalf("invalid auto connection state: %+v", c)
+	}
+}
+
+func TestRejectRequest(t *testing.T) {
+	repo := newFakeNetworkRepo()
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	userA := "user-a"
+	userB := "user-b"
+
+	c, _ := svc.SendRequest(ctx, userA, userB, domain.OriginManualRequest)
+
+	err := svc.RejectRequest(ctx, userA, c.ID)
+	if !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound for wrong receiver rejecting, got: %v", err)
+	}
+
+	err = svc.RejectRequest(ctx, userB, c.ID)
+	if err != nil {
+		t.Fatalf("failed to reject request: %v", err)
+	}
+
+	status, _, _ := svc.GetConnectionStatus(ctx, userA, userB)
+	if status != domain.StatusDeclined {
+		t.Fatalf("expected declined status, got %s", status)
+	}
+}
+

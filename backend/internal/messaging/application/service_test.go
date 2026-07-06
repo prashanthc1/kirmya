@@ -192,3 +192,147 @@ func TestSendRequiresParticipantAndPublishes(t *testing.T) {
 		t.Fatalf("expected bob in recipients, got %v", recips)
 	}
 }
+
+func TestListConversations(t *testing.T) {
+	repo := newFakeRepo()
+	svc := NewService(repo, nil, NewHub(nil), &fakeConnectionChecker{})
+	ctx := context.Background()
+
+	c, _ := svc.Start(ctx, "alice", []string{"bob"}, "")
+	list, err := svc.ListConversations(ctx, "alice")
+	if err != nil {
+		t.Fatalf("ListConversations: %v", err)
+	}
+	if len(list) != 1 || list[0].ID != c.ID {
+		t.Fatalf("expected 1 conversation, got %v", list)
+	}
+}
+
+func TestListMessages(t *testing.T) {
+	repo := newFakeRepo()
+	svc := NewService(repo, nil, NewHub(nil), &fakeConnectionChecker{})
+	ctx := context.Background()
+
+	c, _ := svc.Start(ctx, "alice", []string{"bob"}, "")
+	_, _ = svc.Send(ctx, "alice", c.ID, "hello", "text", nil, "")
+
+	list, err := svc.ListMessages(ctx, "alice", c.ID)
+	if err != nil {
+		t.Fatalf("ListMessages: %v", err)
+	}
+	if len(list) != 1 || list[0].Content != "hello" {
+		t.Fatalf("expected message hello, got %v", list)
+	}
+}
+
+func TestSearchMessages(t *testing.T) {
+	repo := newFakeRepo()
+	svc := NewService(repo, nil, NewHub(nil), &fakeConnectionChecker{})
+	ctx := context.Background()
+
+	c, _ := svc.Start(ctx, "alice", []string{"bob"}, "")
+	_, _ = svc.Send(ctx, "alice", c.ID, "findme", "text", nil, "")
+
+	list, err := svc.SearchMessages(ctx, "alice", c.ID, "find")
+	if err != nil {
+		t.Fatalf("SearchMessages: %v", err)
+	}
+	if len(list) != 1 {
+		t.Fatalf("expected search match, got %d", len(list))
+	}
+}
+
+func TestDeleteMessage(t *testing.T) {
+	repo := newFakeRepo()
+	svc := NewService(repo, nil, NewHub(nil), &fakeConnectionChecker{})
+	ctx := context.Background()
+
+	c, _ := svc.Start(ctx, "alice", []string{"bob"}, "")
+	msg, _ := svc.Send(ctx, "alice", c.ID, "delete me", "text", nil, "")
+
+	err := svc.DeleteMessage(ctx, "alice", msg.ID)
+	if err != nil {
+		t.Fatalf("DeleteMessage: %v", err)
+	}
+
+	dbMsg, _ := repo.GetMessage(ctx, msg.ID)
+	if dbMsg.DeletedAt == nil {
+		t.Fatal("expected DeletedAt to be set")
+	}
+}
+
+func TestArchiveAndPinConversation(t *testing.T) {
+	repo := newFakeRepo()
+	svc := NewService(repo, nil, NewHub(nil), &fakeConnectionChecker{})
+	ctx := context.Background()
+
+	c, _ := svc.Start(ctx, "alice", []string{"bob"}, "")
+
+	err := svc.ArchiveConversation(ctx, "alice", c.ID, true)
+	if err != nil {
+		t.Fatalf("Archive: %v", err)
+	}
+
+	err = svc.PinConversation(ctx, "alice", c.ID, true)
+	if err != nil {
+		t.Fatalf("Pin: %v", err)
+	}
+}
+
+func TestMarkRead(t *testing.T) {
+	repo := newFakeRepo()
+	svc := NewService(repo, nil, NewHub(nil), &fakeConnectionChecker{})
+	ctx := context.Background()
+
+	c, _ := svc.Start(ctx, "alice", []string{"bob"}, "")
+
+	err := svc.MarkRead(ctx, "alice", c.ID)
+	if err != nil {
+		t.Fatalf("MarkRead: %v", err)
+	}
+}
+
+func TestTyping(t *testing.T) {
+	repo := newFakeRepo()
+	pub := &recordingPublisher{}
+	svc := NewService(repo, pub, NewHub(nil), &fakeConnectionChecker{})
+	ctx := context.Background()
+	c, _ := svc.Start(ctx, "alice", []string{"bob"}, "")
+
+	err := svc.Typing(ctx, "alice", c.ID)
+	if err != nil {
+		t.Fatalf("Typing: %v", err)
+	}
+	if pub.lastPayload["event"] != "typing" {
+		t.Fatalf("expected typing event, got %v", pub.lastPayload)
+	}
+}
+
+func TestPresence(t *testing.T) {
+	repo := newFakeRepo()
+	svc := NewService(repo, nil, NewHub(nil), &fakeConnectionChecker{})
+	ctx := context.Background()
+
+	err := svc.UpdateUserPresence(ctx, "alice", true)
+	if err != nil {
+		t.Fatalf("UpdateUserPresence: %v", err)
+	}
+
+	_, _ = svc.GetUserPresence(ctx, "alice", "bob")
+}
+
+func TestCrypto(t *testing.T) {
+	plain := "super secret message"
+	enc, err := encryptAESGCM(plain, "secret")
+	if err != nil {
+		t.Fatalf("encrypt: %v", err)
+	}
+	dec, err := decryptAESGCM(enc, "secret")
+	if err != nil {
+		t.Fatalf("decrypt: %v", err)
+	}
+	if dec != plain {
+		t.Fatalf("expected %q, got %q", plain, dec)
+	}
+}
+
