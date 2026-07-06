@@ -20,7 +20,7 @@ func newFakeNetworkRepo() *fakeNetworkRepo {
 	return &fakeNetworkRepo{connections: make(map[string]*domain.Connection)}
 }
 
-func (r *fakeNetworkRepo) Create(ctx context.Context, requesterID, receiverID string) (*domain.Connection, error) {
+func (r *fakeNetworkRepo) Create(ctx context.Context, requesterID, receiverID string, origin domain.ConnectionOrigin) (*domain.Connection, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -37,6 +37,27 @@ func (r *fakeNetworkRepo) Create(ctx context.Context, requesterID, receiverID st
 		RequesterID: requesterID,
 		ReceiverID:  receiverID,
 		Status:      domain.StatusPending,
+		Origin:      origin,
+		CreatedAt:   "2026-07-06T00:00:00Z",
+		UpdatedAt:   "2026-07-06T00:00:00Z",
+	}
+	r.connections[id] = c
+	return c, nil
+}
+
+func (r *fakeNetworkRepo) CreateAccepted(ctx context.Context, requesterID, receiverID string, origin domain.ConnectionOrigin) (*domain.Connection, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.seq++
+	id := fmt.Sprintf("conn-%d", r.seq)
+	c := &domain.Connection{
+		ID:          id,
+		RequesterID: requesterID,
+		ReceiverID:  receiverID,
+		Status:      domain.StatusAccepted,
+		Origin:      origin,
+		RespondedAt: "2026-07-06T00:00:00Z",
 		CreatedAt:   "2026-07-06T00:00:00Z",
 		UpdatedAt:   "2026-07-06T00:00:00Z",
 	}
@@ -53,8 +74,42 @@ func (r *fakeNetworkRepo) UpdateStatus(ctx context.Context, connectionID string,
 		return domain.ErrNotFound
 	}
 	c.Status = status
+	c.RespondedAt = "2026-07-06T00:00:00Z"
 	c.UpdatedAt = "2026-07-06T00:00:00Z"
 	return nil
+}
+
+func (r *fakeNetworkRepo) Block(ctx context.Context, blockerID, blockedID string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for _, c := range r.connections {
+		if (c.RequesterID == blockerID && c.ReceiverID == blockedID) || (c.RequesterID == blockedID && c.ReceiverID == blockerID) {
+			c.Status = domain.StatusBlocked
+			c.RespondedAt = "2026-07-06T00:00:00Z"
+			c.UpdatedAt = "2026-07-06T00:00:00Z"
+			return nil
+		}
+	}
+
+	r.seq++
+	id := fmt.Sprintf("conn-%d", r.seq)
+	c := &domain.Connection{
+		ID:          id,
+		RequesterID: blockerID,
+		ReceiverID:  blockedID,
+		Status:      domain.StatusBlocked,
+		Origin:      domain.OriginManualRequest,
+		RespondedAt: "2026-07-06T00:00:00Z",
+		CreatedAt:   "2026-07-06T00:00:00Z",
+		UpdatedAt:   "2026-07-06T00:00:00Z",
+	}
+	r.connections[id] = c
+	return nil
+}
+
+func (r *fakeNetworkRepo) Unconnect(ctx context.Context, userA, userB string) error {
+	return r.Delete(ctx, userA, userB)
 }
 
 func (r *fakeNetworkRepo) GetConnections(ctx context.Context, userID string) ([]domain.Connection, error) {
@@ -127,13 +182,13 @@ func TestNetworkConnectionFlow(t *testing.T) {
 	userB := "user-b"
 
 	// 1. Cannot connect to self
-	_, err := svc.SendRequest(ctx, userA, userA)
+	_, err := svc.SendRequest(ctx, userA, userA, domain.OriginManualRequest)
 	if !errors.Is(err, domain.ErrSelfConnection) {
 		t.Fatalf("expected ErrSelfConnection, got %v", err)
 	}
 
 	// 2. Send request from A to B
-	c, err := svc.SendRequest(ctx, userA, userB)
+	c, err := svc.SendRequest(ctx, userA, userB, domain.OriginManualRequest)
 	if err != nil {
 		t.Fatalf("failed to send request: %v", err)
 	}
@@ -142,13 +197,13 @@ func TestNetworkConnectionFlow(t *testing.T) {
 	}
 
 	// 3. Duplicate request should fail
-	_, err = svc.SendRequest(ctx, userA, userB)
+	_, err = svc.SendRequest(ctx, userA, userB, domain.OriginManualRequest)
 	if !errors.Is(err, domain.ErrDuplicateRequest) {
 		t.Fatalf("expected ErrDuplicateRequest, got %v", err)
 	}
 
 	// 4. Reverse duplicate request should also fail
-	_, err = svc.SendRequest(ctx, userB, userA)
+	_, err = svc.SendRequest(ctx, userB, userA, domain.OriginManualRequest)
 	if !errors.Is(err, domain.ErrDuplicateRequest) {
 		t.Fatalf("expected ErrDuplicateRequest, got %v", err)
 	}
@@ -199,5 +254,25 @@ func TestNetworkConnectionFlow(t *testing.T) {
 	}
 	if len(conns) != 1 || conns[0].ID != c.ID {
 		t.Fatalf("expected 1 connection for A, got: %+v", conns)
+	}
+
+	// 11. Block user B
+	err = svc.BlockUser(ctx, userA, userB)
+	if err != nil {
+		t.Fatalf("failed to block user: %v", err)
+	}
+	status, _, _ = svc.GetConnectionStatus(ctx, userA, userB)
+	if status != domain.StatusBlocked {
+		t.Fatalf("expected blocked status, got %s", status)
+	}
+
+	// 12. Unconnect user A and B (removes blocked/existing connection)
+	err = svc.Unconnect(ctx, userA, userB)
+	if err != nil {
+		t.Fatalf("failed to unconnect: %v", err)
+	}
+	status, _, _ = svc.GetConnectionStatus(ctx, userA, userB)
+	if status != "" {
+		t.Fatalf("expected empty status after unconnecting, got %s", status)
 	}
 }

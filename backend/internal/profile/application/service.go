@@ -246,7 +246,7 @@ func (s *Service) AddConsentLog(ctx context.Context, cl *domain.ConsentLog) erro
 				ReferralEligible: p.ReferralEligible, CareerNarrative: p.CareerNarrative, CoachingMetadata: p.CoachingMetadata,
 				WorkAuthStatus: p.WorkAuthStatus, PassportNationality: p.PassportNationality, DrivingLicenseBool: p.DrivingLicenseBool, DrivingLicenseType: p.DrivingLicenseType,
 				PreferredContactChannel: p.PreferredContactChannel, AccessibilityNeeds: p.AccessibilityNeeds, VideoIntroURL: p.VideoIntroURL,
-				WillingToMentor: p.WillingToMentor,
+				WillingToMentor:   p.WillingToMentor,
 				JobAlertFrequency: p.JobAlertFrequency, JobAlertChannel: p.JobAlertChannel,
 				VisibilityProfile: p.VisibilityProfile, VisibilitySalary: p.VisibilitySalary, VisibilityTransitionReason: p.VisibilityTransitionReason,
 				VisibilityExperience: p.VisibilityExperience, VisibilityEducation: p.VisibilityEducation, VisibilityCertifications: p.VisibilityCertifications,

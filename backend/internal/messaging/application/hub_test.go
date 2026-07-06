@@ -12,7 +12,7 @@ func TestMessageHubDeliversToParticipant(t *testing.T) {
 	ch, cancel := h.Subscribe("u1")
 	defer cancel()
 
-	h.Publish("u1", StreamEvent{Kind: EventMessage, ConversationID: "c1", Message: &domain.Message{ID: "m1", Body: "hi"}})
+	h.Publish("u1", StreamEvent{Kind: EventMessage, ConversationID: "c1", Message: &domain.Message{ID: "m1", Content: "hi"}})
 	h.Publish("u2", StreamEvent{Kind: EventMessage, ConversationID: "c9", Message: &domain.Message{ID: "m2"}})
 
 	select {

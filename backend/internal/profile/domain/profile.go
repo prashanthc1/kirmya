@@ -11,63 +11,63 @@ var ErrNotFound = errors.New("profile not found")
 
 // Profile is the aggregate: scalar fields plus child collections.
 type Profile struct {
-	UserID                   string
-	Headline                 string
-	About                    string
-	PhotoURL                 string
-	Bio                      string
-	Location                 string
-	Website                  string
-	Version                  int
+	UserID   string
+	Headline string
+	About    string
+	PhotoURL string
+	Bio      string
+	Location string
+	Website  string
+	Version  int
 
 	// Core Identity
-	Pronouns                 string
-	CareerStatus             string
+	Pronouns     string
+	CareerStatus string
 
 	// Career Recovery
-	TransitionReason         string // Encrypted at rest
-	TargetComebackTimeline   string
-	SupportsNeeded           []string
+	TransitionReason       string // Encrypted at rest
+	TargetComebackTimeline string
+	SupportsNeeded         []string
 
 	// Mobility & Preferences
-	OpenToRemote             bool
-	OpenToRelocation         bool
-	RelocationLocations      []string
-	DesiredRoles             []string
-	DesiredIndustries        []string
-	EmploymentType           string
-	SalaryMin                int    // Encrypted at rest
-	SalaryMax                int    // Encrypted at rest
-	SalaryCurrency           string // Encrypted at rest
-	SalaryVisible            bool
-	WorkMode                 string
-	AvailabilityDate         string
-	NoticePeriod             string
+	OpenToRemote        bool
+	OpenToRelocation    bool
+	RelocationLocations []string
+	DesiredRoles        []string
+	DesiredIndustries   []string
+	EmploymentType      string
+	SalaryMin           int    // Encrypted at rest
+	SalaryMax           int    // Encrypted at rest
+	SalaryCurrency      string // Encrypted at rest
+	SalaryVisible       bool
+	WorkMode            string
+	AvailabilityDate    string
+	NoticePeriod        string
 
 	// Trust & Verification
-	ReferralEligible         bool
-	EmailVerified            bool
-	PhoneVerified            bool
-	LinkedinVerified         bool
-	IdVerified               bool
+	ReferralEligible bool
+	EmailVerified    bool
+	PhoneVerified    bool
+	LinkedinVerified bool
+	IdVerified       bool
 
 	// AI Coach
-	CareerNarrative          string
-	CoachingMetadata         string
+	CareerNarrative  string
+	CoachingMetadata string
 
 	// Work Auth
-	WorkAuthStatus           string
-	PassportNationality      string
-	DrivingLicenseBool       bool
-	DrivingLicenseType       string
+	WorkAuthStatus      string
+	PassportNationality string
+	DrivingLicenseBool  bool
+	DrivingLicenseType  string
 
 	// Communication & Accessibility
-	PreferredContactChannel  string
-	AccessibilityNeeds       string
-	VideoIntroURL            string
+	PreferredContactChannel string
+	AccessibilityNeeds      string
+	VideoIntroURL           string
 
 	// Mentorship
-	WillingToMentor          bool
+	WillingToMentor bool
 
 	// Calculated Fields
 	AvgResponseTimeHours     float64
@@ -79,8 +79,8 @@ type Profile struct {
 	BackgroundCheckConsentAt string
 
 	// Job Alerts
-	JobAlertFrequency        string
-	JobAlertChannel          string
+	JobAlertFrequency string
+	JobAlertChannel   string
 
 	// Privacy settings
 	VisibilityProfile          string
@@ -94,14 +94,14 @@ type Profile struct {
 	VisibilityReferences       string
 
 	// Child collections
-	Experiences              []WorkExperience
-	Educations               []Education
-	Certifications           []Certification
-	Skills                   []ProfileSkill
-	Languages                []Language
-	Portfolio                []PortfolioLink
-	Endorsements             []Endorsement
-	References               []Reference
+	Experiences    []WorkExperience
+	Educations     []Education
+	Certifications []Certification
+	Skills         []ProfileSkill
+	Languages      []Language
+	Portfolio      []PortfolioLink
+	Endorsements   []Endorsement
+	References     []Reference
 }
 
 // Validate checks profile business rules.
@@ -135,65 +135,65 @@ func (p *Profile) Validate() error {
 
 // Scalars carries the editable top-level fields.
 type Scalars struct {
-	Headline                 string
-	About                    string
-	PhotoURL                 string
-	Bio                      string
-	Location                 string
-	Website                  string
+	Headline string
+	About    string
+	PhotoURL string
+	Bio      string
+	Location string
+	Website  string
 
 	// Core Identity
-	Pronouns                 string
-	CareerStatus             string
+	Pronouns     string
+	CareerStatus string
 
 	// Career Recovery
-	TransitionReason         string
-	TargetComebackTimeline   string
-	SupportsNeeded           []string
+	TransitionReason       string
+	TargetComebackTimeline string
+	SupportsNeeded         []string
 
 	// Mobility & Preferences
-	OpenToRemote             bool
-	OpenToRelocation         bool
-	RelocationLocations      []string
-	DesiredRoles             []string
-	DesiredIndustries        []string
-	EmploymentType           string
-	SalaryMin                int
-	SalaryMax                int
-	SalaryCurrency           string
-	SalaryVisible            bool
-	WorkMode                 string
-	AvailabilityDate         string
-	NoticePeriod             string
+	OpenToRemote        bool
+	OpenToRelocation    bool
+	RelocationLocations []string
+	DesiredRoles        []string
+	DesiredIndustries   []string
+	EmploymentType      string
+	SalaryMin           int
+	SalaryMax           int
+	SalaryCurrency      string
+	SalaryVisible       bool
+	WorkMode            string
+	AvailabilityDate    string
+	NoticePeriod        string
 
 	// Trust
-	ReferralEligible         bool
+	ReferralEligible bool
 
 	// AI Coach
-	CareerNarrative          string
-	CoachingMetadata         string
+	CareerNarrative  string
+	CoachingMetadata string
 
 	// Work Auth
-	WorkAuthStatus           string
-	PassportNationality      string
-	DrivingLicenseBool       bool
-	DrivingLicenseType       string
+	WorkAuthStatus      string
+	PassportNationality string
+	DrivingLicenseBool  bool
+	DrivingLicenseType  string
 
 	// Communication & Accessibility
-	PreferredContactChannel  string
-	AccessibilityNeeds       string
-	VideoIntroURL            string
+	PreferredContactChannel string
+	AccessibilityNeeds      string
+	VideoIntroURL           string
 
 	// Mentorship
-	WillingToMentor          bool
+	WillingToMentor bool
 
 	// Background Check Consent
 	BackgroundCheckConsent   bool
 	BackgroundCheckConsentAt string
 
 	// Job Alerts
-	JobAlertFrequency        string
-	JobAlertChannel          string
+	JobAlertFrequency string
+	JobAlertChannel   string
 
 	// Privacy settings
 	VisibilityProfile          string

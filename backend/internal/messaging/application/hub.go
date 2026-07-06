@@ -1,23 +1,110 @@
 package application
 
 import (
+	"context"
 	"encoding/json"
 	"log"
+	"os"
 	"sync"
 	"time"
+
+	"github.com/redis/go-redis/v9"
 
 	"workspace-app/internal/messaging/domain"
 )
 
-const fanoutSubject = "sse.messages"
+const (
+	redisFanoutChannel = "kirmya:messaging:events"
+	presencePrefix     = "presence:"
+)
 
-// Broadcaster is the cross-instance fanout transport (the platform event bus
-// satisfies it). When NATS is available, conversation events are broadcast so
-// whichever backend instance holds a participant's SSE connection delivers them.
+type StreamEvent struct {
+	Kind           string          `json:"kind"`
+	ConversationID string          `json:"conversation_id"`
+	ActorID        string          `json:"actor_id"`
+	Message        *domain.Message `json:"message,omitempty"`
+	At             time.Time       `json:"at"`
+}
+
+const (
+	EventMessage = "message"
+	EventTyping  = "typing"
+	EventRead    = "read"
+)
+
 type Broadcaster interface {
 	HasNATS() bool
 	BroadcastFanout(subject string, data []byte)
 	SubscribeFanout(subject string, handler func([]byte))
+}
+
+type Hub struct {
+	mu          sync.RWMutex
+	subs        map[string]map[chan StreamEvent]struct{}
+	rdb         *redis.Client
+	bcast       Broadcaster
+	pubsubClose func() error
+}
+
+func NewHub(bcast Broadcaster) *Hub {
+	h := &Hub{
+		subs:  map[string]map[chan StreamEvent]struct{}{},
+		bcast: bcast,
+	}
+
+	// Initialize Redis client if REDIS_URL or REDIS_ADDR is present
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		if addr := os.Getenv("REDIS_ADDR"); addr != "" {
+			redisURL = "redis://" + addr
+		}
+	}
+
+	if redisURL != "" {
+		opts, err := redis.ParseURL(redisURL)
+		if err == nil {
+			h.rdb = redis.NewClient(opts)
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			if err := h.rdb.Ping(ctx).Err(); err == nil {
+				log.Printf("[messaging] Redis pub/sub and presence enabled")
+				h.startRedisSubscription()
+			} else {
+				log.Printf("[messaging] Redis unreachable (%v); falling back to local-only", err)
+				h.rdb = nil
+			}
+		} else {
+			log.Printf("[messaging] invalid REDIS_URL (%v); falling back to local-only", err)
+		}
+	}
+
+	// Fallback to NATS if Redis is not configured but NATS is available
+	if h.rdb == nil && bcast != nil && bcast.HasNATS() {
+		bcast.SubscribeFanout("sse.messages", func(data []byte) {
+			var env fanoutEnvelope
+			if json.Unmarshal(data, &env) == nil {
+				h.localPublish(env.UserID, env.Event)
+			}
+		})
+		log.Printf("[messaging] cross-instance NATS fanout enabled")
+	}
+
+	return h
+}
+
+func (h *Hub) startRedisSubscription() {
+	pubsub := h.rdb.Subscribe(context.Background(), redisFanoutChannel)
+	h.pubsubClose = pubsub.Close
+
+	go func() {
+		ch := pubsub.Channel()
+		for msg := range ch {
+			var env fanoutEnvelope
+			if err := json.Unmarshal([]byte(msg.Payload), &env); err == nil {
+				h.localPublish(env.UserID, env.Event)
+			}
+		}
+	}()
 }
 
 type fanoutEnvelope struct {
@@ -25,52 +112,8 @@ type fanoutEnvelope struct {
 	Event  StreamEvent `json:"event"`
 }
 
-// Stream event kinds delivered over the conversation SSE stream.
-const (
-	EventMessage = "message"
-	EventTyping  = "typing"
-	EventRead    = "read"
-)
-
-// StreamEvent is the envelope pushed to a participant's live conversation
-// stream. ActorID is the message sender, the typing user, or the reader,
-// depending on Kind. Message is set only for Kind == EventMessage.
-type StreamEvent struct {
-	Kind           string
-	ConversationID string
-	ActorID        string
-	Message        *domain.Message
-	At             time.Time
-}
-
-// Hub fans conversation events out to a participant's connected SSE subscribers,
-// keyed by user id. With a NATS-backed Broadcaster it works across instances;
-// otherwise it is a single-instance in-memory hub. Delivery is best-effort and
-// non-blocking (drops on a full buffer; the client re-syncs on reload).
-type Hub struct {
-	mu    sync.RWMutex
-	subs  map[string]map[chan StreamEvent]struct{}
-	bcast Broadcaster
-}
-
-func NewHub(bcast Broadcaster) *Hub {
-	h := &Hub{subs: map[string]map[chan StreamEvent]struct{}{}, bcast: bcast}
-	if bcast != nil && bcast.HasNATS() {
-		bcast.SubscribeFanout(fanoutSubject, func(data []byte) {
-			var env fanoutEnvelope
-			if json.Unmarshal(data, &env) == nil {
-				h.localPublish(env.UserID, env.Event)
-			}
-		})
-		log.Printf("[messaging] cross-instance SSE fanout enabled")
-	}
-	return h
-}
-
-// Subscribe registers a subscriber for a user and returns its channel plus a
-// cancel func that must be called when the subscriber goes away.
 func (h *Hub) Subscribe(userID string) (<-chan StreamEvent, func()) {
-	ch := make(chan StreamEvent, 32)
+	ch := make(chan StreamEvent, 64)
 	h.mu.Lock()
 	if h.subs[userID] == nil {
 		h.subs[userID] = map[chan StreamEvent]struct{}{}
@@ -95,26 +138,73 @@ func (h *Hub) Subscribe(userID string) (<-chan StreamEvent, func()) {
 	return ch, cancel
 }
 
-// Publish delivers an event to a user. With NATS it broadcasts to every instance
-// (each delivers to its own local subscribers); otherwise it delivers locally.
 func (h *Hub) Publish(userID string, ev StreamEvent) {
-	if h.bcast != nil && h.bcast.HasNATS() {
-		if data, err := json.Marshal(fanoutEnvelope{UserID: userID, Event: ev}); err == nil {
-			h.bcast.BroadcastFanout(fanoutSubject, data)
+	// 1. Publish to Redis if configured
+	if h.rdb != nil {
+		env := fanoutEnvelope{UserID: userID, Event: ev}
+		data, err := json.Marshal(env)
+		if err == nil {
+			h.rdb.Publish(context.Background(), redisFanoutChannel, string(data))
 		}
 		return
 	}
+
+	// 2. Publish to NATS if configured
+	if h.bcast != nil && h.bcast.HasNATS() {
+		env := fanoutEnvelope{UserID: userID, Event: ev}
+		if data, err := json.Marshal(env); err == nil {
+			h.bcast.BroadcastFanout("sse.messages", data)
+		}
+		return
+	}
+
+	// 3. Fallback to local publish
 	h.localPublish(userID, ev)
 }
 
-// localPublish delivers to this instance's subscribers (non-blocking).
 func (h *Hub) localPublish(userID string, ev StreamEvent) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	for ch := range h.subs[userID] {
 		select {
 		case ch <- ev:
-		default: // buffer full — drop; the client re-syncs on reload
+		default: // Buffer full, drop event
 		}
+	}
+}
+
+// SetPresence records user online/offline status in Redis.
+func (h *Hub) SetPresence(ctx context.Context, userID string, online bool) error {
+	if h.rdb == nil {
+		return nil
+	}
+
+	key := presencePrefix + userID
+	if online {
+		return h.rdb.Set(ctx, key, "online", 60*time.Second).Err()
+	}
+
+	return h.rdb.Del(ctx, key).Err()
+}
+
+// GetPresence checks user presence status in Redis.
+func (h *Hub) GetPresence(ctx context.Context, userID string) (string, error) {
+	if h.rdb == nil {
+		return "offline", nil
+	}
+
+	val, err := h.rdb.Get(ctx, presencePrefix+userID).Result()
+	if err == redis.Nil {
+		return "offline", nil
+	}
+	if err != nil {
+		return "offline", err
+	}
+	return val, nil
+}
+
+func (h *Hub) Close() {
+	if h.pubsubClose != nil {
+		_ = h.pubsubClose()
 	}
 }

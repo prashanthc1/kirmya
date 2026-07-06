@@ -3,97 +3,97 @@ package api
 import "workspace-app/internal/profile/domain"
 
 type profileResponse struct {
-	UserID                   string             `json:"user_id"`
-	Headline                 string             `json:"headline"`
-	About                    string             `json:"about"`
-	PhotoURL                 string             `json:"photo_url"`
-	Bio                      string             `json:"bio"`
-	Location                 string             `json:"location"`
-	Website                  string             `json:"website"`
-	Version                  int                `json:"version"`
+	UserID   string `json:"user_id"`
+	Headline string `json:"headline"`
+	About    string `json:"about"`
+	PhotoURL string `json:"photo_url"`
+	Bio      string `json:"bio"`
+	Location string `json:"location"`
+	Website  string `json:"website"`
+	Version  int    `json:"version"`
 
 	// Core Identity
-	Pronouns                 string             `json:"pronouns"`
-	CareerStatus             string             `json:"career_status"`
+	Pronouns     string `json:"pronouns"`
+	CareerStatus string `json:"career_status"`
 
 	// Career Recovery
-	TransitionReason         string             `json:"transition_reason,omitempty"`
-	TargetComebackTimeline   string             `json:"target_comeback_timeline"`
-	SupportsNeeded           []string           `json:"supports_needed"`
+	TransitionReason       string   `json:"transition_reason,omitempty"`
+	TargetComebackTimeline string   `json:"target_comeback_timeline"`
+	SupportsNeeded         []string `json:"supports_needed"`
 
 	// Mobility & Preferences
-	OpenToRemote             bool               `json:"open_to_remote"`
-	OpenToRelocation         bool               `json:"open_to_relocation"`
-	RelocationLocations      []string           `json:"relocation_locations"`
-	DesiredRoles             []string           `json:"desired_roles"`
-	DesiredIndustries        []string           `json:"desired_industries"`
-	EmploymentType           string             `json:"employment_type"`
-	SalaryMin                int                `json:"salary_min,omitempty"`
-	SalaryMax                int                `json:"salary_max,omitempty"`
-	SalaryCurrency           string             `json:"salary_currency,omitempty"`
-	SalaryVisible            bool               `json:"salary_visible"`
-	WorkMode                 string             `json:"work_mode"`
-	AvailabilityDate         string             `json:"availability_date"`
-	NoticePeriod             string             `json:"notice_period"`
+	OpenToRemote        bool     `json:"open_to_remote"`
+	OpenToRelocation    bool     `json:"open_to_relocation"`
+	RelocationLocations []string `json:"relocation_locations"`
+	DesiredRoles        []string `json:"desired_roles"`
+	DesiredIndustries   []string `json:"desired_industries"`
+	EmploymentType      string   `json:"employment_type"`
+	SalaryMin           int      `json:"salary_min,omitempty"`
+	SalaryMax           int      `json:"salary_max,omitempty"`
+	SalaryCurrency      string   `json:"salary_currency,omitempty"`
+	SalaryVisible       bool     `json:"salary_visible"`
+	WorkMode            string   `json:"work_mode"`
+	AvailabilityDate    string   `json:"availability_date"`
+	NoticePeriod        string   `json:"notice_period"`
 
 	// Trust & Verification
-	ReferralEligible         bool               `json:"referral_eligible"`
-	EmailVerified            bool               `json:"email_verified"`
-	PhoneVerified            bool               `json:"phone_verified"`
-	LinkedinVerified         bool               `json:"linkedin_verified"`
-	IdVerified               bool               `json:"id_verified"`
+	ReferralEligible bool `json:"referral_eligible"`
+	EmailVerified    bool `json:"email_verified"`
+	PhoneVerified    bool `json:"phone_verified"`
+	LinkedinVerified bool `json:"linkedin_verified"`
+	IdVerified       bool `json:"id_verified"`
 
 	// AI Coach
-	CareerNarrative          string             `json:"career_narrative"`
-	CoachingMetadata         string             `json:"coaching_metadata"`
+	CareerNarrative  string `json:"career_narrative"`
+	CoachingMetadata string `json:"coaching_metadata"`
 
 	// Work Auth
-	WorkAuthStatus           string             `json:"work_auth_status"`
-	PassportNationality      string             `json:"passport_nationality"`
-	DrivingLicenseBool       bool               `json:"driving_license_bool"`
-	DrivingLicenseType       string             `json:"driving_license_type"`
+	WorkAuthStatus      string `json:"work_auth_status"`
+	PassportNationality string `json:"passport_nationality"`
+	DrivingLicenseBool  bool   `json:"driving_license_bool"`
+	DrivingLicenseType  string `json:"driving_license_type"`
 
 	// Communication & Accessibility
-	PreferredContactChannel  string             `json:"preferred_contact_channel"`
-	AccessibilityNeeds       string             `json:"accessibility_needs,omitempty"`
-	VideoIntroURL            string             `json:"video_intro_url"`
+	PreferredContactChannel string `json:"preferred_contact_channel"`
+	AccessibilityNeeds      string `json:"accessibility_needs,omitempty"`
+	VideoIntroURL           string `json:"video_intro_url"`
 
 	// Mentorship
-	WillingToMentor          bool               `json:"willing_to_mentor"`
+	WillingToMentor bool `json:"willing_to_mentor"`
 
 	// Calculated Fields
-	AvgResponseTimeHours     float64            `json:"avg_response_time_hours"`
-	ProfileCompletenessScore int                `json:"profile_completeness_score"`
-	LastActiveAt             string             `json:"last_active_at"`
+	AvgResponseTimeHours     float64 `json:"avg_response_time_hours"`
+	ProfileCompletenessScore int     `json:"profile_completeness_score"`
+	LastActiveAt             string  `json:"last_active_at"`
 
 	// Background Check Consent
-	BackgroundCheckConsent   bool               `json:"background_check_consent"`
-	BackgroundCheckConsentAt string             `json:"background_check_consent_at"`
+	BackgroundCheckConsent   bool   `json:"background_check_consent"`
+	BackgroundCheckConsentAt string `json:"background_check_consent_at"`
 
 	// Job Alerts
-	JobAlertFrequency        string             `json:"job_alert_frequency"`
-	JobAlertChannel          string             `json:"job_alert_channel"`
+	JobAlertFrequency string `json:"job_alert_frequency"`
+	JobAlertChannel   string `json:"job_alert_channel"`
 
 	// Privacy settings
-	VisibilityProfile          string           `json:"visibility_profile"`
-	VisibilitySalary           string           `json:"visibility_salary"`
-	VisibilityTransitionReason string           `json:"visibility_transition_reason"`
-	VisibilityExperience       string           `json:"visibility_experience"`
-	VisibilityEducation        string           `json:"visibility_education"`
-	VisibilityCertifications   string           `json:"visibility_certifications"`
-	VisibilitySkills           string           `json:"visibility_skills"`
-	VisibilityPortfolio        string           `json:"visibility_portfolio"`
-	VisibilityReferences       string           `json:"visibility_references"`
+	VisibilityProfile          string `json:"visibility_profile"`
+	VisibilitySalary           string `json:"visibility_salary"`
+	VisibilityTransitionReason string `json:"visibility_transition_reason"`
+	VisibilityExperience       string `json:"visibility_experience"`
+	VisibilityEducation        string `json:"visibility_education"`
+	VisibilityCertifications   string `json:"visibility_certifications"`
+	VisibilitySkills           string `json:"visibility_skills"`
+	VisibilityPortfolio        string `json:"visibility_portfolio"`
+	VisibilityReferences       string `json:"visibility_references"`
 
 	// Collections
-	Experiences              []experienceDTO    `json:"experiences"`
-	Educations               []educationDTO     `json:"educations"`
-	Certifications           []certificationDTO `json:"certifications"`
-	Skills                   []skillDTO         `json:"skills"`
-	Languages                []languageDTO      `json:"languages"`
-	Portfolio                []portfolioLinkDTO `json:"portfolio"`
-	Endorsements             []endorsementDTO   `json:"endorsements,omitempty"`
-	References               []referenceDTO     `json:"references,omitempty"`
+	Experiences    []experienceDTO    `json:"experiences"`
+	Educations     []educationDTO     `json:"educations"`
+	Certifications []certificationDTO `json:"certifications"`
+	Skills         []skillDTO         `json:"skills"`
+	Languages      []languageDTO      `json:"languages"`
+	Portfolio      []portfolioLinkDTO `json:"portfolio"`
+	Endorsements   []endorsementDTO   `json:"endorsements,omitempty"`
+	References     []referenceDTO     `json:"references,omitempty"`
 }
 
 type experienceDTO struct {
@@ -175,65 +175,65 @@ type consentDTO struct {
 }
 
 type updateScalarsRequest struct {
-	Headline                 string   `json:"headline"`
-	About                    string   `json:"about"`
-	PhotoURL                 string   `json:"photo_url"`
-	Bio                      string   `json:"bio"`
-	Location                 string   `json:"location"`
-	Website                  string   `json:"website"`
+	Headline string `json:"headline"`
+	About    string `json:"about"`
+	PhotoURL string `json:"photo_url"`
+	Bio      string `json:"bio"`
+	Location string `json:"location"`
+	Website  string `json:"website"`
 
 	// Core Identity
-	Pronouns                 string   `json:"pronouns"`
-	CareerStatus             string   `json:"career_status"`
+	Pronouns     string `json:"pronouns"`
+	CareerStatus string `json:"career_status"`
 
 	// Career Recovery
-	TransitionReason         string   `json:"transition_reason"`
-	TargetComebackTimeline   string   `json:"target_comeback_timeline"`
-	SupportsNeeded           []string `json:"supports_needed"`
+	TransitionReason       string   `json:"transition_reason"`
+	TargetComebackTimeline string   `json:"target_comeback_timeline"`
+	SupportsNeeded         []string `json:"supports_needed"`
 
 	// Mobility & Preferences
-	OpenToRemote             bool     `json:"open_to_remote"`
-	OpenToRelocation         bool     `json:"open_to_relocation"`
-	RelocationLocations      []string `json:"relocation_locations"`
-	DesiredRoles             []string `json:"desired_roles"`
-	DesiredIndustries        []string `json:"desired_industries"`
-	EmploymentType           string   `json:"employment_type"`
-	SalaryMin                int      `json:"salary_min"`
-	SalaryMax                int      `json:"salary_max"`
-	SalaryCurrency           string   `json:"salary_currency"`
-	SalaryVisible            bool     `json:"salary_visible"`
-	WorkMode                 string   `json:"work_mode"`
-	AvailabilityDate         string   `json:"availability_date"`
-	NoticePeriod             string   `json:"notice_period"`
+	OpenToRemote        bool     `json:"open_to_remote"`
+	OpenToRelocation    bool     `json:"open_to_relocation"`
+	RelocationLocations []string `json:"relocation_locations"`
+	DesiredRoles        []string `json:"desired_roles"`
+	DesiredIndustries   []string `json:"desired_industries"`
+	EmploymentType      string   `json:"employment_type"`
+	SalaryMin           int      `json:"salary_min"`
+	SalaryMax           int      `json:"salary_max"`
+	SalaryCurrency      string   `json:"salary_currency"`
+	SalaryVisible       bool     `json:"salary_visible"`
+	WorkMode            string   `json:"work_mode"`
+	AvailabilityDate    string   `json:"availability_date"`
+	NoticePeriod        string   `json:"notice_period"`
 
 	// Trust
-	ReferralEligible         bool     `json:"referral_eligible"`
+	ReferralEligible bool `json:"referral_eligible"`
 
 	// AI Coach
-	CareerNarrative          string   `json:"career_narrative"`
-	CoachingMetadata         string   `json:"coaching_metadata"`
+	CareerNarrative  string `json:"career_narrative"`
+	CoachingMetadata string `json:"coaching_metadata"`
 
 	// Work Auth
-	WorkAuthStatus           string   `json:"work_auth_status"`
-	PassportNationality      string   `json:"passport_nationality"`
-	DrivingLicenseBool       bool     `json:"driving_license_bool"`
-	DrivingLicenseType       string   `json:"driving_license_type"`
+	WorkAuthStatus      string `json:"work_auth_status"`
+	PassportNationality string `json:"passport_nationality"`
+	DrivingLicenseBool  bool   `json:"driving_license_bool"`
+	DrivingLicenseType  string `json:"driving_license_type"`
 
 	// Communication & Accessibility
-	PreferredContactChannel  string   `json:"preferred_contact_channel"`
-	AccessibilityNeeds       string   `json:"accessibility_needs"`
-	VideoIntroURL            string   `json:"video_intro_url"`
+	PreferredContactChannel string `json:"preferred_contact_channel"`
+	AccessibilityNeeds      string `json:"accessibility_needs"`
+	VideoIntroURL           string `json:"video_intro_url"`
 
 	// Mentorship
-	WillingToMentor          bool     `json:"willing_to_mentor"`
+	WillingToMentor bool `json:"willing_to_mentor"`
 
 	// Background Check Consent
-	BackgroundCheckConsent   bool     `json:"background_check_consent"`
-	BackgroundCheckConsentAt string   `json:"background_check_consent_at"`
+	BackgroundCheckConsent   bool   `json:"background_check_consent"`
+	BackgroundCheckConsentAt string `json:"background_check_consent_at"`
 
 	// Job Alerts
-	JobAlertFrequency        string   `json:"job_alert_frequency"`
-	JobAlertChannel          string   `json:"job_alert_channel"`
+	JobAlertFrequency string `json:"job_alert_frequency"`
+	JobAlertChannel   string `json:"job_alert_channel"`
 
 	// Privacy settings
 	VisibilityProfile          string `json:"visibility_profile"`
@@ -374,7 +374,7 @@ func (d experienceDTO) toDomain() domain.WorkExperience {
 
 func (d educationDTO) toDomain() domain.Education         { return domain.Education(d) }
 func (d certificationDTO) toDomain() domain.Certification { return domain.Certification(d) }
-func (d skillDTO) toDomain() domain.ProfileSkill         { return domain.ProfileSkill(d) }
+func (d skillDTO) toDomain() domain.ProfileSkill          { return domain.ProfileSkill(d) }
 func (d languageDTO) toDomain() domain.Language           { return domain.Language(d) }
 func (d portfolioLinkDTO) toDomain() domain.PortfolioLink { return domain.PortfolioLink(d) }
 func (d endorsementDTO) toDomain() domain.Endorsement     { return domain.Endorsement(d) }

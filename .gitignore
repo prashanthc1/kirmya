@@ -20,3 +20,6 @@ backend/uploads/
 /backend/-p
 /backend/workspace-app
 /backend/workspace-app.exe
+
+# Gemini/Antigravity local cache and brain artifacts
+.gemini/

@@ -16,10 +16,11 @@ import (
 	"workspace-app/internal/jobs"
 	"workspace-app/internal/mentorship"
 	"workspace-app/internal/messaging"
-	"workspace-app/internal/notifications"
 	"workspace-app/internal/network"
+	"workspace-app/internal/notifications"
 	platformcache "workspace-app/internal/platform/cache"
 	"workspace-app/internal/platform/eventbus"
+	platformmiddleware "workspace-app/internal/platform/middleware"
 	"workspace-app/internal/platform/observability"
 	"workspace-app/internal/platform/outbox"
 	platformsearch "workspace-app/internal/platform/search"
@@ -74,13 +75,16 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 	identityMod := identity.NewModule(db, outboxBus)
 	identityMod.RegisterRoutes(mux)
 
+	// Redis-backed token bucket rate limiter for connections and messaging
+	redisLimiter := platformmiddleware.NewRedisRateLimiter(db)
+
 	// Feature modules — all on Postgres/DDD, sharing identity's auth middleware.
 	profile.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus, cache, settingsReader)
 	jobs.RegisterRoutes(mux, db, identityMod.AuthMiddleware, identityMod.RoleMiddleware(identitydomain.RoleRecruiter), outboxBus, cache)
 	referrals.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	resume.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	ai.RegisterRoutes(mux, db, identityMod.AuthMiddleware)
-	messaging.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus, settingsReader)
+	messaging.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus, settingsReader, redisLimiter.Limit)
 	mentorship.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	community.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	notifications.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, settingsReader)
@@ -89,7 +93,7 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 	search.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, searchEngine)
 	dashboard.RegisterRoutes(mux, db, identityMod.AuthMiddleware)
 	career.RegisterRoutes(mux, identityMod.AuthMiddleware)
-	network.RegisterRoutes(mux, db, identityMod.AuthMiddleware)
+	network.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, redisLimiter.Limit)
 
 	mux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("web/swagger-ui"))))
 	mux.Handle("/openapi.yaml", http.FileServer(http.Dir("docs")))

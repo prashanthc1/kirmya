@@ -42,7 +42,12 @@ func (h *Handler) SendRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c, err := h.svc.SendRequest(r.Context(), uid, req.ReceiverID)
+	origin := domain.ConnectionOrigin(req.Origin)
+	if origin == "" {
+		origin = domain.OriginManualRequest
+	}
+
+	c, err := h.svc.SendRequest(r.Context(), uid, req.ReceiverID, origin)
 	if err != nil {
 		h.writeErr(w, err)
 		return
@@ -74,7 +79,35 @@ func (h *Handler) RejectRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.WriteSuccess(w, http.StatusOK, map[string]string{"status": "rejected"})
+	common.WriteSuccess(w, http.StatusOK, map[string]string{"status": "declined"})
+}
+
+func (h *Handler) Block(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	var req blockRequest
+	if !decode(r, &req) || req.TargetID == "" {
+		common.WriteValidationError(w, "target_id is required")
+		return
+	}
+
+	if err := h.svc.BlockUser(r.Context(), uid, req.TargetID); err != nil {
+		h.writeErr(w, err)
+		return
+	}
+
+	common.WriteSuccess(w, http.StatusOK, map[string]string{"status": "blocked"})
+}
+
+func (h *Handler) Unconnect(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	targetID := r.PathValue("userID")
+
+	if err := h.svc.Unconnect(r.Context(), uid, targetID); err != nil {
+		h.writeErr(w, err)
+		return
+	}
+
+	common.WriteSuccess(w, http.StatusOK, map[string]bool{"unconnected": true})
 }
 
 func (h *Handler) ListConnections(w http.ResponseWriter, r *http.Request) {

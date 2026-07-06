@@ -28,30 +28,61 @@ func isUniqueViolation(err error) bool {
 	return strings.Contains(err.Error(), "23505") || strings.Contains(strings.ToLower(err.Error()), "duplicate key")
 }
 
-func (r *repository) Create(ctx context.Context, requesterID, receiverID string) (*domain.Connection, error) {
-	var c domain.Connection
+func scanConnection(row interface{ Scan(...any) error }, c *domain.Connection) error {
 	var createdAt, updatedAt time.Time
-	err := r.db.QueryRowContext(ctx, `
-		INSERT INTO user_connections (requester_id, receiver_id, status)
-		VALUES ($1, $2, 'pending')
-		RETURNING id, requester_id, receiver_id, status, created_at, updated_at
-	`, requesterID, receiverID).Scan(&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &createdAt, &updatedAt)
-
+	var respondedAt sql.NullTime
+	err := row.Scan(&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &c.Origin, &respondedAt, &createdAt, &updatedAt)
 	if err != nil {
+		return err
+	}
+	c.CreatedAt = createdAt.Format(time.RFC3339)
+	c.UpdatedAt = updatedAt.Format(time.RFC3339)
+	if respondedAt.Valid {
+		c.RespondedAt = respondedAt.Time.Format(time.RFC3339)
+	} else {
+		c.RespondedAt = ""
+	}
+	return nil
+}
+
+func (r *repository) Create(ctx context.Context, requesterID, receiverID string, origin domain.ConnectionOrigin) (*domain.Connection, error) {
+	var c domain.Connection
+	row := r.db.QueryRowContext(ctx, `
+		INSERT INTO user_connections (requester_id, receiver_id, status, origin)
+		VALUES ($1, $2, 'pending', $3)
+		RETURNING id, requester_id, receiver_id, status, origin, responded_at, created_at, updated_at
+	`, requesterID, receiverID, string(origin))
+
+	if err := scanConnection(row, &c); err != nil {
 		if isUniqueViolation(err) {
 			return nil, domain.ErrDuplicateRequest
 		}
 		return nil, err
 	}
-	c.CreatedAt = createdAt.Format(time.RFC3339)
-	c.UpdatedAt = updatedAt.Format(time.RFC3339)
+	return &c, nil
+}
+
+func (r *repository) CreateAccepted(ctx context.Context, requesterID, receiverID string, origin domain.ConnectionOrigin) (*domain.Connection, error) {
+	var c domain.Connection
+	row := r.db.QueryRowContext(ctx, `
+		INSERT INTO user_connections (requester_id, receiver_id, status, origin, responded_at)
+		VALUES ($1, $2, 'accepted', $3, CURRENT_TIMESTAMP)
+		RETURNING id, requester_id, receiver_id, status, origin, responded_at, created_at, updated_at
+	`, requesterID, receiverID, string(origin))
+
+	if err := scanConnection(row, &c); err != nil {
+		if isUniqueViolation(err) {
+			return nil, domain.ErrDuplicateRequest
+		}
+		return nil, err
+	}
 	return &c, nil
 }
 
 func (r *repository) UpdateStatus(ctx context.Context, connectionID string, status domain.ConnectionStatus) error {
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE user_connections
-		SET status = $1, updated_at = CURRENT_TIMESTAMP
+		SET status = $1, responded_at = CASE WHEN $1 IN ('accepted', 'declined') THEN CURRENT_TIMESTAMP ELSE responded_at END, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $2
 	`, string(status), connectionID)
 	if err != nil {
@@ -67,10 +98,44 @@ func (r *repository) UpdateStatus(ctx context.Context, connectionID string, stat
 	return nil
 }
 
+func (r *repository) Block(ctx context.Context, blockerID, blockedID string) error {
+	// Check if a connection already exists in either direction
+	var id string
+	err := r.db.QueryRowContext(ctx, `
+		SELECT id FROM user_connections
+		WHERE (requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1)
+	`, blockerID, blockedID).Scan(&id)
+
+	if err == nil {
+		// Update existing connection status to blocked
+		_, err = r.db.ExecContext(ctx, `
+			UPDATE user_connections
+			SET status = 'blocked', responded_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+			WHERE id = $1
+		`, id)
+		return err
+	}
+
+	if errors.Is(err, sql.ErrNoRows) {
+		// Create new blocked connection
+		_, err = r.db.ExecContext(ctx, `
+			INSERT INTO user_connections (requester_id, receiver_id, status, origin, responded_at)
+			VALUES ($1, $2, 'blocked', 'manual_request', CURRENT_TIMESTAMP)
+		`, blockerID, blockedID)
+		return err
+	}
+
+	return err
+}
+
+func (r *repository) Unconnect(ctx context.Context, userA, userB string) error {
+	return r.Delete(ctx, userA, userB)
+}
+
 func (r *repository) GetConnections(ctx context.Context, userID string) ([]domain.Connection, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT 
-			c.id, c.requester_id, c.receiver_id, c.status, c.created_at, c.updated_at,
+			c.id, c.requester_id, c.receiver_id, c.status, c.origin, c.responded_at, c.created_at, c.updated_at,
 			u1.full_name as req_name, COALESCE(p1.headline, '') as req_hl, COALESCE(p1.photo_url, '') as req_photo,
 			u2.full_name as rec_name, COALESCE(p2.headline, '') as rec_hl, COALESCE(p2.photo_url, '') as rec_photo
 		FROM user_connections c
@@ -90,8 +155,9 @@ func (r *repository) GetConnections(ctx context.Context, userID string) ([]domai
 	for rows.Next() {
 		var c domain.Connection
 		var createdAt, updatedAt time.Time
+		var respondedAt sql.NullTime
 		err := rows.Scan(
-			&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &createdAt, &updatedAt,
+			&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &c.Origin, &respondedAt, &createdAt, &updatedAt,
 			&c.RequesterName, &c.RequesterHeadline, &c.RequesterPhotoURL,
 			&c.ReceiverName, &c.ReceiverHeadline, &c.ReceiverPhotoURL,
 		)
@@ -100,6 +166,9 @@ func (r *repository) GetConnections(ctx context.Context, userID string) ([]domai
 		}
 		c.CreatedAt = createdAt.Format(time.RFC3339)
 		c.UpdatedAt = updatedAt.Format(time.RFC3339)
+		if respondedAt.Valid {
+			c.RespondedAt = respondedAt.Time.Format(time.RFC3339)
+		}
 		list = append(list, c)
 	}
 	return list, nil
@@ -108,7 +177,7 @@ func (r *repository) GetConnections(ctx context.Context, userID string) ([]domai
 func (r *repository) GetIncomingRequests(ctx context.Context, userID string) ([]domain.Connection, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT 
-			c.id, c.requester_id, c.receiver_id, c.status, c.created_at, c.updated_at,
+			c.id, c.requester_id, c.receiver_id, c.status, c.origin, c.responded_at, c.created_at, c.updated_at,
 			u1.full_name as req_name, COALESCE(p1.headline, '') as req_hl, COALESCE(p1.photo_url, '') as req_photo,
 			u2.full_name as rec_name, COALESCE(p2.headline, '') as rec_hl, COALESCE(p2.photo_url, '') as rec_photo
 		FROM user_connections c
@@ -128,8 +197,9 @@ func (r *repository) GetIncomingRequests(ctx context.Context, userID string) ([]
 	for rows.Next() {
 		var c domain.Connection
 		var createdAt, updatedAt time.Time
+		var respondedAt sql.NullTime
 		err := rows.Scan(
-			&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &createdAt, &updatedAt,
+			&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &c.Origin, &respondedAt, &createdAt, &updatedAt,
 			&c.RequesterName, &c.RequesterHeadline, &c.RequesterPhotoURL,
 			&c.ReceiverName, &c.ReceiverHeadline, &c.ReceiverPhotoURL,
 		)
@@ -138,6 +208,9 @@ func (r *repository) GetIncomingRequests(ctx context.Context, userID string) ([]
 		}
 		c.CreatedAt = createdAt.Format(time.RFC3339)
 		c.UpdatedAt = updatedAt.Format(time.RFC3339)
+		if respondedAt.Valid {
+			c.RespondedAt = respondedAt.Time.Format(time.RFC3339)
+		}
 		list = append(list, c)
 	}
 	return list, nil
@@ -162,20 +235,17 @@ func (r *repository) GetConnectionStatus(ctx context.Context, userA, userB strin
 
 func (r *repository) GetByID(ctx context.Context, id string) (*domain.Connection, error) {
 	var c domain.Connection
-	var createdAt, updatedAt time.Time
-	err := r.db.QueryRowContext(ctx, `
-		SELECT id, requester_id, receiver_id, status, created_at, updated_at
+	row := r.db.QueryRowContext(ctx, `
+		SELECT id, requester_id, receiver_id, status, origin, responded_at, created_at, updated_at
 		FROM user_connections
 		WHERE id = $1
-	`, id).Scan(&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &createdAt, &updatedAt)
-	if err != nil {
+	`, id)
+	if err := scanConnection(row, &c); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrNotFound
 		}
 		return nil, err
 	}
-	c.CreatedAt = createdAt.Format(time.RFC3339)
-	c.UpdatedAt = updatedAt.Format(time.RFC3339)
 	return &c, nil
 }
 
@@ -186,4 +256,3 @@ func (r *repository) Delete(ctx context.Context, requesterID, receiverID string)
 	`, requesterID, receiverID)
 	return err
 }
-

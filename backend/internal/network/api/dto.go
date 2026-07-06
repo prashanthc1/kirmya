@@ -4,6 +4,11 @@ import "workspace-app/internal/network/domain"
 
 type sendRequest struct {
 	ReceiverID string `json:"receiver_id"`
+	Origin     string `json:"origin"`
+}
+
+type blockRequest struct {
+	TargetID string `json:"target_id"`
 }
 
 type connectionResponse struct {
@@ -11,6 +16,8 @@ type connectionResponse struct {
 	RequesterID       string `json:"requester_id"`
 	ReceiverID        string `json:"receiver_id"`
 	Status            string `json:"status"`
+	Origin            string `json:"origin"`
+	RespondedAt       string `json:"responded_at,omitempty"`
 	CreatedAt         string `json:"created_at"`
 	UpdatedAt         string `json:"updated_at"`
 	RequesterName     string `json:"requester_name,omitempty"`
@@ -32,6 +39,8 @@ func toResponse(c domain.Connection) connectionResponse {
 		RequesterID:       c.RequesterID,
 		ReceiverID:        c.ReceiverID,
 		Status:            string(c.Status),
+		Origin:            string(c.Origin),
+		RespondedAt:       c.RespondedAt,
 		CreatedAt:         c.CreatedAt,
 		UpdatedAt:         c.UpdatedAt,
 		RequesterName:     c.RequesterName,
