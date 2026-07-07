@@ -89,41 +89,7 @@ const PREVIEW_JOBS = [
   },
 ];
 
-const PRICING_PLANS = [
-  {
-    name: "Comeback Tier",
-    price: "$0",
-    period: "forever",
-    desc: "Designed for job seekers navigating career recovery. The core operating features remain accessible.",
-    features: [
-      "Access to all basic job searches",
-      "5 AI Resume reviews per month",
-      "Request up to 3 active referrals",
-      "Join 2 community circles",
-      "Weekly AI Career coaching session",
-    ],
-    cta: "Start Your Comeback",
-    href: "/sign-up",
-    highlight: false,
-  },
-  {
-    name: "Accelerator",
-    price: "$19",
-    period: "per month",
-    desc: "For candidates looking to scale their outreach, optimize materials daily, and land placements faster.",
-    features: [
-      "Unlimited AI Resume optimizations",
-      "Unlimited referral requests",
-      "Full interactive Career Roadmap",
-      "Join unlimited community circles",
-      "On-demand AI Coach & interview mockups",
-      "Salary prediction metrics",
-    ],
-    cta: "Upgrade to Accelerator",
-    href: "/sign-up",
-    highlight: true,
-  },
-];
+
 
 const FAQS = [
   {
@@ -470,84 +436,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Pricing Tiers */}
-      <section className="py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight">
-              Flexible plans for every recovery phase
-            </h2>
-            <p className="text-muted-foreground text-sm mt-2">
-              Get access to community groups, AI co-pilots, and verified
-              referrers.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {PRICING_PLANS.map((plan, idx) => (
-              <div
-                key={idx}
-                className={`bg-card border p-8 rounded-3xl flex flex-col justify-between relative hover:shadow-lg transition-all ${
-                  plan.highlight
-                    ? "border-primary shadow-lg shadow-blue-500/5 ring-1 ring-primary/20"
-                    : "border-border/60"
-                }`}
-              >
-                {plan.highlight && (
-                  <span className="absolute top-4 right-4 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
-                    Recommended
-                  </span>
-                )}
-
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground">
-                      {plan.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1.5 min-h-[40px]">
-                      {plan.desc}
-                    </p>
-                  </div>
-
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold tracking-tight">
-                      {plan.price}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      / {plan.period}
-                    </span>
-                  </div>
-
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, fIdx) => (
-                      <li
-                        key={fIdx}
-                        className="flex items-center gap-2.5 text-sm"
-                      >
-                        <div className="h-4 w-4 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-primary">
-                          <Check className="h-3 w-3" />
-                        </div>
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <Link
-                  href={plan.href}
-                  className={`mt-8 w-full text-center py-2.5 rounded-full text-sm font-semibold transition-all ${
-                    plan.highlight
-                      ? "bg-primary text-primary-foreground hover:bg-primary/95 shadow-sm"
-                      : "border border-border hover:bg-secondary text-foreground"
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* FAQ Accordions */}
       <section className="py-20 bg-secondary/15 border-t border-border/40">
