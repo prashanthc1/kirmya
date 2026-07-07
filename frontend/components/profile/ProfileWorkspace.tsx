@@ -88,6 +88,9 @@ export default function ProfileWorkspace() {
               const fresh = await profileClient.getMe();
               if (fresh) {
                 const merged = { ...MOCK_PROFILE, ...fresh } as ExtendedProfile;
+                if (!merged.career_status) {
+                  merged.transition_reason = "";
+                }
                 setProfile(merged);
                 localStorage.setItem(
                   "kirmya_profile_data",
@@ -144,6 +147,9 @@ export default function ProfileWorkspace() {
         if (active && response) {
           // Merge response into extended structure
           const extended = { ...MOCK_PROFILE, ...response } as ExtendedProfile;
+          if (!extended.career_status) {
+            extended.transition_reason = "";
+          }
           setProfile(extended);
           setIsCloudSynced(true);
           setSaveStatus("saved");
