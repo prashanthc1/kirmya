@@ -233,25 +233,6 @@ type updateProfileRequest struct {
 	VisibilityReferences       string `json:"visibility_references"`
 }
 
-type consentRequest struct {
-	ConsentType  string `json:"consent_type"`
-	TargetEntity string `json:"target_entity"`
-	Consented    bool   `json:"consented"`
-}
-
-type endorsementRequest struct {
-	ToUserID     string `json:"to_user_id"`
-	Relationship string `json:"relationship"`
-	Text         string `json:"text"`
-}
-
-type referenceRequest struct {
-	Name                string `json:"name"`
-	Relationship        string `json:"relationship"`
-	ContactInfo         string `json:"contact_info"`
-	PermissionToContact bool   `json:"permission_to_contact"`
-}
-
 type skillsRequest struct {
 	Skills []skillDTO `json:"skills"`
 }
@@ -299,7 +280,7 @@ func toResponse(p *domain.Profile) profileResponse {
 		Languages:      make([]languageDTO, 0, len(p.Identity.Languages)),
 		Portfolio:      make([]portfolioLinkDTO, 0, len(p.Projects)),
 		Endorsements:   make([]endorsementDTO, 0, len(p.Networking.Recommendations)),
-		References:     make([]referenceDTO, 0, 0),
+		References:     make([]referenceDTO, 0),
 	}
 
 	for _, e := range p.Experiences {
@@ -406,16 +387,16 @@ func (d experienceDTO) toDomain() domain.WorkExperience {
 		end, _ = time.Parse("2006-01-02", d.EndDate)
 	}
 	return domain.WorkExperience{
-		ID:             d.ID,
-		Position:       d.Title,
-		Company:        d.Company,
-		Location:       d.Location,
-		EmploymentType: d.EmploymentType,
-		StartDate:      start,
-		EndDate:        end,
-		IsCurrent:      d.IsCurrent,
+		ID:               d.ID,
+		Position:         d.Title,
+		Company:          d.Company,
+		Location:         d.Location,
+		EmploymentType:   d.EmploymentType,
+		StartDate:        start,
+		EndDate:          end,
+		IsCurrent:        d.IsCurrent,
 		Responsibilities: d.Description,
-		Achievements:   d.Achievements,
+		Achievements:     d.Achievements,
 	}
 }
 
@@ -503,26 +484,26 @@ func (r updateProfileRequest) toDomain() domain.AggregateUpdate {
 	isDraft := true
 	return domain.AggregateUpdate{
 		Identity: &domain.IdentitySection{
-			Headline:                  r.Headline,
-			Bio:                       r.Bio,
-			PhotoURL:                  r.PhotoURL,
-			Location:                  r.Location,
-			PreferredContactChannel:   r.PreferredContactChannel,
-			WorkAuthorization:         r.WorkAuthStatus,
-			Nationality:               r.PassportNationality,
+			Headline:                r.Headline,
+			Bio:                     r.Bio,
+			PhotoURL:                r.PhotoURL,
+			Location:                r.Location,
+			PreferredContactChannel: r.PreferredContactChannel,
+			WorkAuthorization:       r.WorkAuthStatus,
+			Nationality:             r.PassportNationality,
 		},
 		Summary: &domain.SummarySection{
 			ExecutiveSummary: r.About,
 		},
 		Preferences: &domain.CareerPreferences{
-			DesiredRoles:       r.DesiredRoles,
-			DesiredIndustries:  r.DesiredIndustries,
-			OpenToRelocation:   r.OpenToRelocation,
-			NoticePeriod:       r.NoticePeriod,
-			RemotePreference:   r.WorkMode,
-			SalaryMin:          r.SalaryMin,
-			SalaryMax:          r.SalaryMax,
-			SalaryCurrency:     r.SalaryCurrency,
+			DesiredRoles:      r.DesiredRoles,
+			DesiredIndustries: r.DesiredIndustries,
+			OpenToRelocation:  r.OpenToRelocation,
+			NoticePeriod:      r.NoticePeriod,
+			RemotePreference:  r.WorkMode,
+			SalaryMin:         r.SalaryMin,
+			SalaryMax:         r.SalaryMax,
+			SalaryCurrency:    r.SalaryCurrency,
 		},
 		Privacy: &domain.PrivacySecuritySettings{
 			FieldVisibility: map[string]string{

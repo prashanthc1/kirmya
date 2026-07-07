@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"workspace-app/internal/profile/domain"
 )
@@ -234,54 +233,4 @@ func (r *fakeRepo) SetVerificationStatus(ctx context.Context, userID string, fie
 		p.Verification.CertificationVerified = verified
 	}
 	return nil
-}
-
-// fakeEvents mock
-type fakeEvents struct {
-	mu     sync.Mutex
-	Events []pubEvent
-}
-
-type pubEvent struct {
-	Type        string
-	AggregateID string
-	Payload     map[string]any
-}
-
-func newFakeEvents() *fakeEvents { return &fakeEvents{} }
-
-func (f *fakeEvents) Publish(ctx context.Context, eventType, aggregateID string, payload map[string]any) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.Events = append(f.Events, pubEvent{Type: eventType, AggregateID: aggregateID, Payload: payload})
-	return nil
-}
-
-// fakeCache mock
-type fakeCache struct {
-	mu    sync.Mutex
-	store map[string][]byte
-}
-
-func newFakeCache() *fakeCache { return &fakeCache{store: map[string][]byte{}} }
-
-func (c *fakeCache) Get(ctx context.Context, key string) ([]byte, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	v, ok := c.store[key]
-	return v, ok
-}
-
-func (c *fakeCache) Set(ctx context.Context, key string, value []byte, ttl time.Duration) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.store[key] = value
-}
-
-func (c *fakeCache) Delete(ctx context.Context, keys ...string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	for _, k := range keys {
-		delete(c.store, k)
-	}
 }

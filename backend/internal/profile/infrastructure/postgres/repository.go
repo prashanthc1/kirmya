@@ -25,33 +25,6 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
-const dateLayout = "2006-01-02"
-
-func dateStr(nt sql.NullTime) string {
-	if !nt.Valid {
-		return ""
-	}
-	return nt.Time.Format(dateLayout)
-}
-
-func parseDate(s string) time.Time {
-	if s == "" {
-		return time.Time{}
-	}
-	t, err := time.Parse(dateLayout, s)
-	if err != nil {
-		t, err = time.Parse(time.RFC3339, s)
-		if err != nil {
-			return time.Time{}
-		}
-	}
-	return t
-}
-
-func timeStr(t time.Time) string {
-	return t.Format(time.RFC3339)
-}
-
 func (r *Repository) ensureRow(ctx context.Context, userID string) error {
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`, userID)
@@ -112,30 +85,30 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 		       COALESCE(p.travel_willingness, '')
 		FROM profiles p
 		WHERE p.user_id = $1 AND p.deleted_at IS NULL`, userID).Scan(
-			&p.Identity.Headline, &p.Identity.Bio, &p.Identity.PhotoURL,
-			&p.Identity.Bio, &p.Identity.Location, &p.Identity.SocialLinks.Website, &p.Version,
-			&p.Identity.VisaStatus, &p.Identity.Availability, &transReasonEnc, // Pronouns, CareerStatus mapped dynamically
-			&p.Identity.Availability, &p.Preferences.OpenToRelocation, &p.Preferences.OpenToRelocation,
-			&p.Preferences.NoticePeriod, &salMinEnc, &salMaxEnc,
-			&salCurrEnc, &p.Preferences.OpenToRelocation, &p.Preferences.RemotePreference,
-			&availability, &p.Preferences.NoticePeriod, &p.Verification.IdentityVerified,
-			&p.AICareerAssistant.GapAnalysis, &p.AICareerAssistant.InterviewPrep, &p.Identity.WorkAuthorization,
-			&p.Identity.Nationality, &p.Verification.IdentityVerified, &p.Identity.VisaStatus,
-			&p.Identity.PreferredContactChannel, &p.Identity.VisaStatus, &p.Identity.CoverURL,
-			&p.Identity.VisaStatus, &p.Analytics.ProfileViews, &p.ProfileCompletenessScore,
-			&lastActive, &p.Verification.IdentityVerified, &consentAt,
-			&p.Identity.VisaStatus, &p.Identity.VisaStatus,
-			&visProfile, &visSalary, &visTransReason,
-			&visExp, &visEdu, &visCert,
-			&visSkills, &visPortfolio, &visRef,
-			&p.Verification.PhoneVerified, &p.Verification.IdentityVerified, &p.Verification.IdentityVerified,
-			&p.IsDraft, &p.TrustScore,
-			&p.Identity.PreferredName, &p.Identity.TimeZone, &p.Identity.Nationality,
-			&p.Identity.Bio, &p.Summary.ExecutiveSummary, &p.Summary.CareerObjectives,
-			&p.Summary.PersonalBrandStatement, &p.Summary.ElevatorPitch,
-			&p.Verification.EmailVerified, &p.Verification.EmploymentVerified, &p.Verification.EducationVerified, &p.Verification.CertificationVerified,
-			&p.Preferences.TravelWillingness,
-		)
+		&p.Identity.Headline, &p.Identity.Bio, &p.Identity.PhotoURL,
+		&p.Identity.Bio, &p.Identity.Location, &p.Identity.SocialLinks.Website, &p.Version,
+		&p.Identity.VisaStatus, &p.Identity.Availability, &transReasonEnc, // Pronouns, CareerStatus mapped dynamically
+		&p.Identity.Availability, &p.Preferences.OpenToRelocation, &p.Preferences.OpenToRelocation,
+		&p.Preferences.NoticePeriod, &salMinEnc, &salMaxEnc,
+		&salCurrEnc, &p.Preferences.OpenToRelocation, &p.Preferences.RemotePreference,
+		&availability, &p.Preferences.NoticePeriod, &p.Verification.IdentityVerified,
+		&p.AICareerAssistant.GapAnalysis, &p.AICareerAssistant.InterviewPrep, &p.Identity.WorkAuthorization,
+		&p.Identity.Nationality, &p.Verification.IdentityVerified, &p.Identity.VisaStatus,
+		&p.Identity.PreferredContactChannel, &p.Identity.VisaStatus, &p.Identity.CoverURL,
+		&p.Identity.VisaStatus, &p.Analytics.ProfileViews, &p.ProfileCompletenessScore,
+		&lastActive, &p.Verification.IdentityVerified, &consentAt,
+		&p.Identity.VisaStatus, &p.Identity.VisaStatus,
+		&visProfile, &visSalary, &visTransReason,
+		&visExp, &visEdu, &visCert,
+		&visSkills, &visPortfolio, &visRef,
+		&p.Verification.PhoneVerified, &p.Verification.IdentityVerified, &p.Verification.IdentityVerified,
+		&p.IsDraft, &p.TrustScore,
+		&p.Identity.PreferredName, &p.Identity.TimeZone, &p.Identity.Nationality,
+		&p.Identity.Bio, &p.Summary.ExecutiveSummary, &p.Summary.CareerObjectives,
+		&p.Summary.PersonalBrandStatement, &p.Summary.ElevatorPitch,
+		&p.Verification.EmailVerified, &p.Verification.EmploymentVerified, &p.Verification.EducationVerified, &p.Verification.CertificationVerified,
+		&p.Preferences.TravelWillingness,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -259,6 +232,9 @@ func (r *Repository) loadExperiences(ctx context.Context, userID string) ([]doma
 
 		out = append(out, e)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
@@ -292,6 +268,9 @@ func (r *Repository) loadEducations(ctx context.Context, userID string) ([]domai
 		}
 		out = append(out, e)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
@@ -322,6 +301,9 @@ func (r *Repository) loadCertifications(ctx context.Context, userID string) ([]d
 		_ = json.Unmarshal(skills, &c.SkillsCovered)
 		out = append(out, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
@@ -343,6 +325,9 @@ func (r *Repository) loadSkills(ctx context.Context, userID string) ([]domain.Sk
 			return nil, err
 		}
 		out = append(out, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
@@ -373,6 +358,9 @@ func (r *Repository) loadProjects(ctx context.Context, userID string) ([]domain.
 		_ = json.Unmarshal(techs, &p.Technologies)
 		out = append(out, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
@@ -396,6 +384,9 @@ func (r *Repository) loadAchievements(ctx context.Context, userID string) ([]dom
 			a.Date = d.Time
 		}
 		out = append(out, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
@@ -422,36 +413,49 @@ func (r *Repository) loadResumes(ctx context.Context, userID string) ([]domain.R
 		rv.KeywordAnalysis = sug
 		out = append(out, rv)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
 // Slice loaders
 func (r *Repository) loadHighlights(ctx context.Context, userID string) ([]string, error) {
-	var out []string
 	rows, err := r.db.QueryContext(ctx, `SELECT unnest(career_highlights) FROM profiles WHERE user_id = $1`, userID)
-	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var s string
-			if rows.Scan(&s) == nil {
-				out = append(out, s)
-			}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var s string
+		if err := rows.Scan(&s); err != nil {
+			return nil, err
 		}
+		out = append(out, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
 
 func (r *Repository) loadFunctionalAreas(ctx context.Context, userID string) ([]string, error) {
-	var out []string
 	rows, err := r.db.QueryContext(ctx, `SELECT unnest(functional_areas) FROM profiles WHERE user_id = $1`, userID)
-	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var s string
-			if rows.Scan(&s) == nil {
-				out = append(out, s)
-			}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var s string
+		if err := rows.Scan(&s); err != nil {
+			return nil, err
 		}
+		out = append(out, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
@@ -466,44 +470,59 @@ func (r *Repository) loadDesiredIndustries(ctx context.Context, userID string) (
 	return r.loadStringTable(ctx, `profile_desired_industries`, `industry`, userID)
 }
 func (r *Repository) loadPreferredCountries(ctx context.Context, userID string) ([]string, error) {
-	var out []string
 	rows, err := r.db.QueryContext(ctx, `SELECT unnest(preferred_countries) FROM profiles WHERE user_id = $1`, userID)
-	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var s string
-			if rows.Scan(&s) == nil {
-				out = append(out, s)
-			}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var s string
+		if err := rows.Scan(&s); err != nil {
+			return nil, err
 		}
+		out = append(out, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
 func (r *Repository) loadPreferredCities(ctx context.Context, userID string) ([]string, error) {
-	var out []string
 	rows, err := r.db.QueryContext(ctx, `SELECT unnest(preferred_cities) FROM profiles WHERE user_id = $1`, userID)
-	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var s string
-			if rows.Scan(&s) == nil {
-				out = append(out, s)
-			}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var s string
+		if err := rows.Scan(&s); err != nil {
+			return nil, err
 		}
+		out = append(out, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
 func (r *Repository) loadCompanySizePreferences(ctx context.Context, userID string) ([]string, error) {
-	var out []string
 	rows, err := r.db.QueryContext(ctx, `SELECT unnest(company_size_preferences) FROM profiles WHERE user_id = $1`, userID)
-	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var s string
-			if rows.Scan(&s) == nil {
-				out = append(out, s)
-			}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var s string
+		if err := rows.Scan(&s); err != nil {
+			return nil, err
 		}
+		out = append(out, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
@@ -520,6 +539,9 @@ func (r *Repository) loadStringTable(ctx context.Context, table, col, userID str
 		if err := rows.Scan(&s); err == nil {
 			out = append(out, s)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
@@ -556,6 +578,9 @@ func (r *Repository) loadRecommendations(ctx context.Context, userID string) ([]
 		if err := rows.Scan(&sum.FromUserName, &sum.Relationship, &sum.Text, &sum.CreatedAt); err == nil {
 			out = append(out, sum)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }

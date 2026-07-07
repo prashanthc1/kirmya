@@ -18,12 +18,12 @@ var (
 
 // Profile represents the full Career Operating System profile aggregate.
 type Profile struct {
-	UserID                   string                  `json:"user_id"`
-	Version                  int                     `json:"version"`
-	IsDraft                  bool                    `json:"is_draft"`
-	ProfileCompletenessScore int                     `json:"profile_completeness_score"`
-	TrustScore               int                     `json:"trust_score"`
-	LastActiveAt             time.Time               `json:"last_active_at"`
+	UserID                   string    `json:"user_id"`
+	Version                  int       `json:"version"`
+	IsDraft                  bool      `json:"is_draft"`
+	ProfileCompletenessScore int       `json:"profile_completeness_score"`
+	TrustScore               int       `json:"trust_score"`
+	LastActiveAt             time.Time `json:"last_active_at"`
 
 	// 15 Sections
 	Identity          IdentitySection         `json:"identity"`
@@ -99,23 +99,23 @@ type SummarySection struct {
 
 // Section 3 - Work Experience
 type WorkExperience struct {
-	ID              string    `json:"id"`
-	Company         string    `json:"company"`
-	CompanyLogo     string    `json:"company_logo"`
-	Position        string    `json:"position"`
-	EmploymentType  string    `json:"employment_type"`
-	Location        string    `json:"location"`
-	RemoteType      string    `json:"remote_type"` // remote, hybrid, onsite
-	StartDate       time.Time `json:"start_date"`
-	EndDate         time.Time `json:"end_date"`
-	IsCurrent       bool      `json:"is_current"`
-	Responsibilities string   `json:"responsibilities"`
-	Achievements    []string  `json:"achievements"`
-	KPIs            []string  `json:"kpis"`
-	Technologies    []string  `json:"technologies"`
-	SkillsUsed      []string  `json:"skills_used"`
-	TeamSize        int       `json:"team_size"`
-	Attachments     []string  `json:"attachments"`
+	ID               string    `json:"id"`
+	Company          string    `json:"company"`
+	CompanyLogo      string    `json:"company_logo"`
+	Position         string    `json:"position"`
+	EmploymentType   string    `json:"employment_type"`
+	Location         string    `json:"location"`
+	RemoteType       string    `json:"remote_type"` // remote, hybrid, onsite
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	IsCurrent        bool      `json:"is_current"`
+	Responsibilities string    `json:"responsibilities"`
+	Achievements     []string  `json:"achievements"`
+	KPIs             []string  `json:"kpis"`
+	Technologies     []string  `json:"technologies"`
+	SkillsUsed       []string  `json:"skills_used"`
+	TeamSize         int       `json:"team_size"`
+	Attachments      []string  `json:"attachments"`
 }
 
 // Section 4 - Education
@@ -138,14 +138,14 @@ type Education struct {
 
 // Section 5 - Skills
 type SkillItem struct {
-	Name                   string  `json:"name"`
-	Category               string  `json:"category"`
-	Level                  string  `json:"level"` // beginner, intermediate, advanced, expert
-	YearsOfExperience      float64 `json:"years_of_experience"`
-	LastUsed               int     `json:"last_used"`
-	Verified               bool    `json:"verified"`
-	RecruiterDemandScore   float64 `json:"recruiter_demand_score"`
-	AIRecommendationScore  float64 `json:"ai_recommendation_score"`
+	Name                  string  `json:"name"`
+	Category              string  `json:"category"`
+	Level                 string  `json:"level"` // beginner, intermediate, advanced, expert
+	YearsOfExperience     float64 `json:"years_of_experience"`
+	LastUsed              int     `json:"last_used"`
+	Verified              bool    `json:"verified"`
+	RecruiterDemandScore  float64 `json:"recruiter_demand_score"`
+	AIRecommendationScore float64 `json:"ai_recommendation_score"`
 }
 
 // Section 6 - Projects
@@ -169,15 +169,15 @@ type ProjectItem struct {
 
 // Section 7 - Certifications
 type CertificationItem struct {
-	ID             string    `json:"id"`
-	Name           string    `json:"name"`
-	Issuer         string    `json:"issuer"`
-	CredentialID   string    `json:"credential_id"`
-	VerificationURL string   `json:"verification_url"`
-	SkillsCovered  []string  `json:"skills_covered"`
-	IssueDate      time.Time `json:"issue_date"`
-	ExpirationDate time.Time `json:"expiration_date"`
-	Status         string    `json:"status"`
+	ID              string    `json:"id"`
+	Name            string    `json:"name"`
+	Issuer          string    `json:"issuer"`
+	CredentialID    string    `json:"credential_id"`
+	VerificationURL string    `json:"verification_url"`
+	SkillsCovered   []string  `json:"skills_covered"`
+	IssueDate       time.Time `json:"issue_date"`
+	ExpirationDate  time.Time `json:"expiration_date"`
+	Status          string    `json:"status"`
 }
 
 // Section 8 - Achievements
@@ -225,8 +225,8 @@ type VerificationStatus struct {
 	EmailVerified         bool `json:"email_verified"`
 	PhoneVerified         bool `json:"phone_verified"`
 	IdentityVerified      bool `json:"identity_verified"`
-	EmploymentVerified   bool `json:"employment_verified"`
-	EducationVerified    bool `json:"education_verified"`
+	EmploymentVerified    bool `json:"employment_verified"`
+	EducationVerified     bool `json:"education_verified"`
 	CertificationVerified bool `json:"certification_verified"`
 }
 
