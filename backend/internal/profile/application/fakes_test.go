@@ -2,20 +2,32 @@ package application
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"workspace-app/internal/profile/domain"
 )
 
 // fakeRepo is an in-memory domain.Repository for unit tests.
 type fakeRepo struct {
-	mu    sync.Mutex
-	seq   int
-	store map[string]*domain.Profile
+	mu        sync.Mutex
+	seq       int
+	store     map[string]*domain.Profile
+	snapshots map[string]map[int]*domain.Profile
+	auditLogs []*domain.AuditLogEntry
+	analytics map[string][]string
 }
 
-func newFakeRepo() *fakeRepo { return &fakeRepo{store: map[string]*domain.Profile{}} }
+func newFakeRepo() *fakeRepo {
+	return &fakeRepo{
+		store:     map[string]*domain.Profile{},
+		snapshots: map[string]map[int]*domain.Profile{},
+		analytics: map[string][]string{},
+	}
+}
 
 func (r *fakeRepo) get(userID string) *domain.Profile {
 	p, ok := r.store[userID]
@@ -26,341 +38,250 @@ func (r *fakeRepo) get(userID string) *domain.Profile {
 	return p
 }
 
+func clone(p *domain.Profile) *domain.Profile {
+	b, _ := json.Marshal(p)
+	var c domain.Profile
+	_ = json.Unmarshal(b, &c)
+	return &c
+}
+
+func (r *fakeRepo) Get(_ context.Context, userID string, includeDraft bool) (*domain.Profile, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if !includeDraft {
+		snaps, ok := r.snapshots[userID]
+		if !ok || len(snaps) == 0 {
+			return nil, errors.New("no published version")
+		}
+		maxVer := 0
+		for v := range snaps {
+			if v > maxVer {
+				maxVer = v
+			}
+		}
+		return clone(snaps[maxVer]), nil
+	}
+
+	return clone(r.get(userID)), nil
+}
+
 func (r *fakeRepo) id(prefix string) string {
 	r.seq++
 	return fmt.Sprintf("%s-%d", prefix, r.seq)
 }
 
-func clone(p *domain.Profile) *domain.Profile {
-	c := *p
-	c.Experiences = append([]domain.WorkExperience(nil), p.Experiences...)
-	c.Educations = append([]domain.Education(nil), p.Educations...)
-	c.Certifications = append([]domain.Certification(nil), p.Certifications...)
-	c.Skills = append([]domain.ProfileSkill(nil), p.Skills...)
-	c.Languages = append([]domain.Language(nil), p.Languages...)
-	c.Portfolio = append([]domain.PortfolioLink(nil), p.Portfolio...)
-	c.SupportsNeeded = append([]string(nil), p.SupportsNeeded...)
-	c.RelocationLocations = append([]string(nil), p.RelocationLocations...)
-	c.DesiredRoles = append([]string(nil), p.DesiredRoles...)
-	c.DesiredIndustries = append([]string(nil), p.DesiredIndustries...)
-	c.Endorsements = append([]domain.Endorsement(nil), p.Endorsements...)
-	c.References = append([]domain.Reference(nil), p.References...)
-	return &c
-}
-
-func (r *fakeRepo) Get(_ context.Context, userID string) (*domain.Profile, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return clone(r.get(userID)), nil
-}
-
-func (r *fakeRepo) UpdateScalars(_ context.Context, userID string, s domain.Scalars) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	p := r.get(userID)
-	p.Headline, p.About, p.PhotoURL = s.Headline, s.About, s.PhotoURL
-	p.Bio, p.Location, p.Website = s.Bio, s.Location, s.Website
-	p.Pronouns, p.CareerStatus = s.Pronouns, s.CareerStatus
-	p.TransitionReason, p.TargetComebackTimeline = s.TransitionReason, s.TargetComebackTimeline
-	p.SupportsNeeded = s.SupportsNeeded
-	p.OpenToRemote, p.OpenToRelocation = s.OpenToRemote, s.OpenToRelocation
-	p.RelocationLocations = s.RelocationLocations
-	p.DesiredRoles, p.DesiredIndustries = s.DesiredRoles, s.DesiredIndustries
-	p.EmploymentType = s.EmploymentType
-	p.SalaryMin, p.SalaryMax, p.SalaryCurrency = s.SalaryMin, s.SalaryMax, s.SalaryCurrency
-	p.SalaryVisible = s.SalaryVisible
-	p.WorkMode = s.WorkMode
-	p.AvailabilityDate, p.NoticePeriod = s.AvailabilityDate, s.NoticePeriod
-	p.ReferralEligible = s.ReferralEligible
-	p.CareerNarrative, p.CoachingMetadata = s.CareerNarrative, s.CoachingMetadata
-	p.WorkAuthStatus, p.PassportNationality = s.WorkAuthStatus, s.PassportNationality
-	p.DrivingLicenseBool, p.DrivingLicenseType = s.DrivingLicenseBool, s.DrivingLicenseType
-	p.PreferredContactChannel, p.AccessibilityNeeds = s.PreferredContactChannel, s.AccessibilityNeeds
-	p.VideoIntroURL = s.VideoIntroURL
-	p.WillingToMentor = s.WillingToMentor
-	p.BackgroundCheckConsent, p.BackgroundCheckConsentAt = s.BackgroundCheckConsent, s.BackgroundCheckConsentAt
-	p.JobAlertFrequency, p.JobAlertChannel = s.JobAlertFrequency, s.JobAlertChannel
-	p.VisibilityProfile = s.VisibilityProfile
-	p.VisibilitySalary = s.VisibilitySalary
-	p.VisibilityTransitionReason = s.VisibilityTransitionReason
-	p.VisibilityExperience = s.VisibilityExperience
-	p.VisibilityEducation = s.VisibilityEducation
-	p.VisibilityCertifications = s.VisibilityCertifications
-	p.VisibilitySkills = s.VisibilitySkills
-	p.VisibilityPortfolio = s.VisibilityPortfolio
-	p.VisibilityReferences = s.VisibilityReferences
-	return nil
-}
-
 func (r *fakeRepo) UpdateAggregate(ctx context.Context, userID string, expectedVersion int, u domain.AggregateUpdate) error {
 	r.mu.Lock()
-	if p := r.get(userID); expectedVersion > 0 && p.Version != expectedVersion {
-		r.mu.Unlock()
+	defer r.mu.Unlock()
+
+	p := r.get(userID)
+	if expectedVersion > 0 && p.Version != expectedVersion {
 		return domain.ErrOptimisticLock
 	}
-	r.mu.Unlock()
 
-	if err := r.UpdateScalars(ctx, userID, u.Scalars); err != nil {
-		return err
+	if u.Identity != nil {
+		p.Identity = *u.Identity
 	}
-
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	p := r.get(userID)
-	p.Version++
-
+	if u.Summary != nil {
+		p.Summary = *u.Summary
+	}
 	if u.Experiences != nil {
-		out := make([]domain.WorkExperience, 0, len(*u.Experiences))
-		for _, e := range *u.Experiences {
+		for i, e := range *u.Experiences {
 			if e.ID == "" {
-				e.ID = r.id("exp")
+				(*u.Experiences)[i].ID = r.id("exp")
 			}
-			out = append(out, e)
 		}
-		p.Experiences = out
+		p.Experiences = *u.Experiences
 	}
 	if u.Educations != nil {
-		out := make([]domain.Education, 0, len(*u.Educations))
-		for _, e := range *u.Educations {
+		for i, e := range *u.Educations {
 			if e.ID == "" {
-				e.ID = r.id("edu")
+				(*u.Educations)[i].ID = r.id("edu")
 			}
-			out = append(out, e)
 		}
-		p.Educations = out
-	}
-	if u.Certifications != nil {
-		out := make([]domain.Certification, 0, len(*u.Certifications))
-		for _, c := range *u.Certifications {
-			if c.ID == "" {
-				c.ID = r.id("cert")
-			}
-			out = append(out, c)
-		}
-		p.Certifications = out
+		p.Educations = *u.Educations
 	}
 	if u.Skills != nil {
-		p.Skills = append([]domain.ProfileSkill(nil), *u.Skills...)
+		p.Skills = *u.Skills
 	}
-	if u.Languages != nil {
-		p.Languages = append([]domain.Language(nil), *u.Languages...)
-	}
-	if u.Portfolio != nil {
-		p.Portfolio = append([]domain.PortfolioLink(nil), *u.Portfolio...)
-	}
-	if u.References != nil {
-		out := make([]domain.Reference, 0, len(*u.References))
-		for _, rf := range *u.References {
-			if rf.ID == "" {
-				rf.ID = r.id("ref")
+	if u.Projects != nil {
+		for i, pr := range *u.Projects {
+			if pr.ID == "" {
+				(*u.Projects)[i].ID = r.id("proj")
 			}
-			out = append(out, rf)
 		}
-		p.References = out
+		p.Projects = *u.Projects
 	}
+	if u.Certifications != nil {
+		for i, c := range *u.Certifications {
+			if c.ID == "" {
+				(*u.Certifications)[i].ID = r.id("cert")
+			}
+		}
+		p.Certifications = *u.Certifications
+	}
+	if u.Achievements != nil {
+		for i, a := range *u.Achievements {
+			if a.ID == "" {
+				(*u.Achievements)[i].ID = r.id("ach")
+			}
+		}
+		p.Achievements = *u.Achievements
+	}
+	if u.Preferences != nil {
+		p.Preferences = *u.Preferences
+	}
+	if u.Privacy != nil {
+		p.Privacy = *u.Privacy
+	}
+	if u.IsDraft != nil {
+		p.IsDraft = *u.IsDraft
+	}
+
+	p.Version++
 	return nil
 }
 
-func (r *fakeRepo) AddExperience(_ context.Context, userID string, e *domain.WorkExperience) error {
+func (r *fakeRepo) CreateVersionSnapshot(ctx context.Context, userID string, version int, p *domain.Profile) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	e.ID = r.id("exp")
-	p := r.get(userID)
-	p.Experiences = append(p.Experiences, *e)
+
+	if r.snapshots[userID] == nil {
+		r.snapshots[userID] = map[int]*domain.Profile{}
+	}
+	r.snapshots[userID][version] = clone(p)
 	return nil
 }
 
-func (r *fakeRepo) UpdateExperience(_ context.Context, userID string, e domain.WorkExperience) error {
+func (r *fakeRepo) GetVersionSnapshot(ctx context.Context, userID string, version int) (*domain.Profile, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	p := r.get(userID)
-	for i := range p.Experiences {
-		if p.Experiences[i].ID == e.ID {
-			p.Experiences[i] = e
-			return nil
-		}
+
+	snaps, ok := r.snapshots[userID]
+	if !ok {
+		return nil, domain.ErrNotFound
 	}
-	return domain.ErrNotFound
+	p, ok := snaps[version]
+	if !ok {
+		return nil, domain.ErrNotFound
+	}
+	return clone(p), nil
 }
 
-func (r *fakeRepo) DeleteExperience(_ context.Context, userID, id string) error {
+func (r *fakeRepo) ListVersions(ctx context.Context, userID string) ([]int, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	p := r.get(userID)
-	for i := range p.Experiences {
-		if p.Experiences[i].ID == id {
-			p.Experiences = append(p.Experiences[:i], p.Experiences[i+1:]...)
-			return nil
-		}
+
+	var out []int
+	for v := range r.snapshots[userID] {
+		out = append(out, v)
 	}
-	return domain.ErrNotFound
+	return out, nil
 }
 
-func (r *fakeRepo) AddEducation(_ context.Context, userID string, e *domain.Education) error {
+func (r *fakeRepo) WriteAuditLog(ctx context.Context, log *domain.AuditLogEntry) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	e.ID = r.id("edu")
-	p := r.get(userID)
-	p.Educations = append(p.Educations, *e)
+	r.auditLogs = append(r.auditLogs, log)
 	return nil
 }
 
-func (r *fakeRepo) UpdateEducation(_ context.Context, userID string, e domain.Education) error {
+func (r *fakeRepo) RecordAnalyticsEvent(ctx context.Context, profileID string, eventType string, actorID *string, ip, ua string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	p := r.get(userID)
-	for i := range p.Educations {
-		if p.Educations[i].ID == e.ID {
-			p.Educations[i] = e
-			return nil
-		}
-	}
-	return domain.ErrNotFound
-}
-
-func (r *fakeRepo) DeleteEducation(_ context.Context, userID, id string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	p := r.get(userID)
-	for i := range p.Educations {
-		if p.Educations[i].ID == id {
-			p.Educations = append(p.Educations[:i], p.Educations[i+1:]...)
-			return nil
-		}
-	}
-	return domain.ErrNotFound
-}
-
-func (r *fakeRepo) AddCertification(_ context.Context, userID string, c *domain.Certification) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	c.ID = r.id("cert")
-	p := r.get(userID)
-	p.Certifications = append(p.Certifications, *c)
+	r.analytics[profileID] = append(r.analytics[profileID], eventType)
 	return nil
 }
 
-func (r *fakeRepo) UpdateCertification(_ context.Context, userID string, c domain.Certification) error {
+func (r *fakeRepo) GetAnalytics(ctx context.Context, profileID string) (*domain.AnalyticsSummary, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	p := r.get(userID)
-	for i := range p.Certifications {
-		if p.Certifications[i].ID == c.ID {
-			p.Certifications[i] = c
-			return nil
-		}
-	}
-	return domain.ErrNotFound
-}
 
-func (r *fakeRepo) DeleteCertification(_ context.Context, userID, id string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	p := r.get(userID)
-	for i := range p.Certifications {
-		if p.Certifications[i].ID == id {
-			p.Certifications = append(p.Certifications[:i], p.Certifications[i+1:]...)
-			return nil
+	var sum domain.AnalyticsSummary
+	for _, t := range r.analytics[profileID] {
+		switch t {
+		case "view":
+			sum.ProfileViews++
+		case "search_appearance":
+			sum.SearchAppearances++
+		case "recruiter_view":
+			sum.RecruiterViews++
+		case "resume_download":
+			sum.ResumeDownloads++
 		}
 	}
-	return domain.ErrNotFound
+	return &sum, nil
 }
 
-func (r *fakeRepo) SetSkills(_ context.Context, userID string, skills []domain.ProfileSkill) error {
+func (r *fakeRepo) SetVerificationStatus(ctx context.Context, userID string, field string, verified bool) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.get(userID).Skills = append([]domain.ProfileSkill(nil), skills...)
-	return nil
-}
 
-func (r *fakeRepo) SetLanguages(_ context.Context, userID string, langs []domain.Language) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.get(userID).Languages = append([]domain.Language(nil), langs...)
-	return nil
-}
-
-func (r *fakeRepo) SetPortfolio(_ context.Context, userID string, links []domain.PortfolioLink) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.get(userID).Portfolio = append([]domain.PortfolioLink(nil), links...)
-	return nil
-}
-
-func (r *fakeRepo) AddEndorsement(_ context.Context, toUserID string, e *domain.Endorsement) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	e.ID = r.id("end")
-	e.CreatedAt = "2026-07-06T00:00:00Z"
-	p := r.get(toUserID)
-	p.Endorsements = append(p.Endorsements, *e)
-	return nil
-}
-
-func (r *fakeRepo) AddReference(_ context.Context, userID string, rf *domain.Reference) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	rf.ID = r.id("ref")
-	p := r.get(userID)
-	p.References = append(p.References, *rf)
-	return nil
-}
-
-func (r *fakeRepo) UpdateReference(_ context.Context, userID string, rf domain.Reference) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	p := r.get(userID)
-	for i := range p.References {
-		if p.References[i].ID == rf.ID {
-			p.References[i] = rf
-			return nil
-		}
-	}
-	return domain.ErrNotFound
-}
-
-func (r *fakeRepo) DeleteReference(_ context.Context, userID, id string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	p := r.get(userID)
-	for i := range p.References {
-		if p.References[i].ID == id {
-			p.References = append(p.References[:i], p.References[i+1:]...)
-			return nil
-		}
-	}
-	return domain.ErrNotFound
-}
-
-func (r *fakeRepo) AddConsentLog(_ context.Context, cl *domain.ConsentLog) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	cl.ID = r.id("con")
-	cl.CreatedAt = "2026-07-06T00:00:00Z"
-	return nil
-}
-
-func (r *fakeRepo) SetVerificationStatus(_ context.Context, userID string, field string, verified bool) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
 	p := r.get(userID)
 	switch field {
+	case "email_verified":
+		p.Verification.EmailVerified = verified
 	case "phone_verified":
-		p.PhoneVerified = verified
-	case "linkedin_verified":
-		p.LinkedinVerified = verified
-	case "id_verified":
-		p.IdVerified = verified
+		p.Verification.PhoneVerified = verified
+	case "identity_verified":
+		p.Verification.IdentityVerified = verified
+	case "employment_verified":
+		p.Verification.EmploymentVerified = verified
+	case "education_verified":
+		p.Verification.EducationVerified = verified
+	case "certification_verified":
+		p.Verification.CertificationVerified = verified
 	}
 	return nil
 }
 
-func (r *fakeRepo) UpdateCalculatedFields(_ context.Context, userID string, completeness int, avgResponse float64, lastActive string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	p := r.get(userID)
-	p.ProfileCompletenessScore = completeness
-	p.AvgResponseTimeHours = avgResponse
-	p.LastActiveAt = lastActive
+// fakeEvents mock
+type fakeEvents struct {
+	mu     sync.Mutex
+	Events []pubEvent
+}
+
+type pubEvent struct {
+	Type        string
+	AggregateID string
+	Payload     map[string]any
+}
+
+func newFakeEvents() *fakeEvents { return &fakeEvents{} }
+
+func (f *fakeEvents) Publish(ctx context.Context, eventType, aggregateID string, payload map[string]any) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.Events = append(f.Events, pubEvent{Type: eventType, AggregateID: aggregateID, Payload: payload})
 	return nil
+}
+
+// fakeCache mock
+type fakeCache struct {
+	mu    sync.Mutex
+	store map[string][]byte
+}
+
+func newFakeCache() *fakeCache { return &fakeCache{store: map[string][]byte{}} }
+
+func (c *fakeCache) Get(ctx context.Context, key string) ([]byte, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	v, ok := c.store[key]
+	return v, ok
+}
+
+func (c *fakeCache) Set(ctx context.Context, key string, value []byte, ttl time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.store[key] = value
+}
+
+func (c *fakeCache) Delete(ctx context.Context, keys ...string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, k := range keys {
+		delete(c.store, k)
+	}
 }

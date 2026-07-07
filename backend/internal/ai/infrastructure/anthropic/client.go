@@ -73,3 +73,41 @@ func (c *Client) Complete(ctx context.Context, system string, messages []domain.
 		OutputTokens: int(resp.Usage.OutputTokens),
 	}, nil
 }
+
+func (c *Client) StreamComplete(ctx context.Context, system string, messages []domain.LLMMessage, maxTokens int) (chan string, error) {
+	if !c.ready {
+		return nil, domain.ErrLLMNotReady
+	}
+
+	msgs := make([]sdk.MessageParam, 0, len(messages))
+	for _, m := range messages {
+		block := sdk.NewTextBlock(m.Content)
+		if m.Role == domain.RoleAssistant {
+			msgs = append(msgs, sdk.NewAssistantMessage(block))
+		} else {
+			msgs = append(msgs, sdk.NewUserMessage(block))
+		}
+	}
+
+	stream := c.client.Messages.NewStreaming(ctx, sdk.MessageNewParams{
+		Model:     model,
+		MaxTokens: int64(maxTokens),
+		System:    []sdk.TextBlockParam{{Text: system}},
+		Messages:  msgs,
+	})
+
+	out := make(chan string, 10)
+	go func() {
+		defer close(out)
+		for stream.Next() {
+			event := stream.Current()
+			if delta, ok := event.AsAny().(sdk.ContentBlockDeltaEvent); ok {
+				if textDelta, ok := delta.Delta.AsAny().(sdk.TextDelta); ok {
+					out <- textDelta.Text
+				}
+			}
+		}
+	}()
+
+	return out, nil
+}

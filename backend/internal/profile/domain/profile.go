@@ -3,8 +3,10 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 )
 
 var (
@@ -14,352 +16,425 @@ var (
 	ErrOptimisticLock = errors.New("profile was modified by another request")
 )
 
-// Profile is the aggregate: scalar fields plus child collections.
+// Profile represents the full Career Operating System profile aggregate.
 type Profile struct {
-	UserID   string
-	Headline string
-	About    string
-	PhotoURL string
-	Bio      string
-	Location string
-	Website  string
-	Version  int
+	UserID                   string                  `json:"user_id"`
+	Version                  int                     `json:"version"`
+	IsDraft                  bool                    `json:"is_draft"`
+	ProfileCompletenessScore int                     `json:"profile_completeness_score"`
+	TrustScore               int                     `json:"trust_score"`
+	LastActiveAt             time.Time               `json:"last_active_at"`
 
-	// Core Identity
-	Pronouns     string
-	CareerStatus string
+	// 15 Sections
+	Identity          IdentitySection         `json:"identity"`
+	Summary           SummarySection          `json:"summary"`
+	Experiences       []WorkExperience        `json:"experiences"`
+	Educations        []Education             `json:"educations"`
+	Skills            []SkillItem             `json:"skills"`
+	Projects          []ProjectItem           `json:"projects"`
+	Certifications    []CertificationItem     `json:"certifications"`
+	Achievements      []AchievementItem       `json:"achievements"`
+	Resumes           []ResumeVersion         `json:"resumes"`
+	Preferences       CareerPreferences       `json:"preferences"`
+	Verification      VerificationStatus      `json:"verification"`
+	Networking        NetworkingSummary       `json:"networking"`
+	Analytics         AnalyticsSummary        `json:"analytics"`
+	Privacy           PrivacySecuritySettings `json:"privacy"`
+	AICareerAssistant AICareerState           `json:"ai_career_assistant"`
+}
 
-	// Career Recovery
-	TransitionReason       string // Encrypted at rest
-	TargetComebackTimeline string
-	SupportsNeeded         []string
+// Section 1 - Identity & Personal Information
+type IdentitySection struct {
+	PhotoURL                string         `json:"photo_url"`
+	CoverURL                string         `json:"cover_url"`
+	FullName                string         `json:"full_name"`
+	PreferredName           string         `json:"preferred_name"`
+	Headline                string         `json:"headline"`
+	CurrentTitle            string         `json:"current_title"`
+	CurrentEmployer         string         `json:"current_employer"`
+	Bio                     string         `json:"bio"`
+	Location                string         `json:"location"`
+	Country                 string         `json:"country"`
+	TimeZone                string         `json:"timezone"`
+	Nationality             string         `json:"nationality"`
+	Languages               []LanguageItem `json:"languages"`
+	Phone                   string         `json:"phone"`
+	Email                   string         `json:"email"`
+	SocialLinks             SocialLinks    `json:"social_links"`
+	Availability            string         `json:"availability"`
+	WorkAuthorization       string         `json:"work_authorization"`
+	VisaStatus              string         `json:"visa_status"`
+	PreferredContactChannel string         `json:"preferred_contact_channel"`
+}
 
-	// Mobility & Preferences
-	OpenToRemote        bool
-	OpenToRelocation    bool
-	RelocationLocations []string
-	DesiredRoles        []string
-	DesiredIndustries   []string
-	EmploymentType      string
-	SalaryMin           int    // Encrypted at rest
-	SalaryMax           int    // Encrypted at rest
-	SalaryCurrency      string // Encrypted at rest
-	SalaryVisible       bool
-	WorkMode            string
-	AvailabilityDate    string
-	NoticePeriod        string
+type SocialLinks struct {
+	Website       string `json:"website"`
+	LinkedIn      string `json:"linkedin"`
+	GitHub        string `json:"github"`
+	Portfolio     string `json:"portfolio"`
+	Behance       string `json:"behance"`
+	Dribbble      string `json:"dribbble"`
+	Medium        string `json:"medium"`
+	StackOverflow string `json:"stack_overflow"`
+	GoogleScholar string `json:"google_scholar"`
+	ResearchGate  string `json:"research_gate"`
+	ORCID         string `json:"orcid"`
+}
 
-	// Trust & Verification
-	ReferralEligible bool
-	EmailVerified    bool
-	PhoneVerified    bool
-	LinkedinVerified bool
-	IdVerified       bool
+type LanguageItem struct {
+	Name        string `json:"name"`
+	Proficiency string `json:"proficiency"`
+}
 
-	// AI Coach
-	CareerNarrative  string
-	CoachingMetadata string
+// Section 2 - Professional Summary
+type SummarySection struct {
+	ExecutiveSummary       string   `json:"executive_summary"`
+	CareerObjectives       string   `json:"career_objectives"`
+	CareerHighlights       []string `json:"career_highlights"`
+	Industries             []string `json:"industries"`
+	FunctionalAreas        []string `json:"functional_areas"`
+	PersonalBrandStatement string   `json:"personal_brand_statement"`
+	ElevatorPitch          string   `json:"elevator_pitch"`
+}
 
-	// Work Auth
-	WorkAuthStatus      string
-	PassportNationality string
-	DrivingLicenseBool  bool
-	DrivingLicenseType  string
+// Section 3 - Work Experience
+type WorkExperience struct {
+	ID              string    `json:"id"`
+	Company         string    `json:"company"`
+	CompanyLogo     string    `json:"company_logo"`
+	Position        string    `json:"position"`
+	EmploymentType  string    `json:"employment_type"`
+	Location        string    `json:"location"`
+	RemoteType      string    `json:"remote_type"` // remote, hybrid, onsite
+	StartDate       time.Time `json:"start_date"`
+	EndDate         time.Time `json:"end_date"`
+	IsCurrent       bool      `json:"is_current"`
+	Responsibilities string   `json:"responsibilities"`
+	Achievements    []string  `json:"achievements"`
+	KPIs            []string  `json:"kpis"`
+	Technologies    []string  `json:"technologies"`
+	SkillsUsed      []string  `json:"skills_used"`
+	TeamSize        int       `json:"team_size"`
+	Attachments     []string  `json:"attachments"`
+}
 
-	// Communication & Accessibility
-	PreferredContactChannel string
-	AccessibilityNeeds      string
-	VideoIntroURL           string
+// Section 4 - Education
+type Education struct {
+	ID                 string    `json:"id"`
+	Institution        string    `json:"institution"`
+	Degree             string    `json:"degree"`
+	FieldOfStudy       string    `json:"field_of_study"`
+	Major              string    `json:"major"`
+	Minor              string    `json:"minor"`
+	GPA                float64   `json:"gpa"`
+	Honors             string    `json:"honors"`
+	Activities         string    `json:"activities"`
+	Projects           string    `json:"projects"`
+	Research           string    `json:"research"`
+	Thesis             string    `json:"thesis"`
+	GraduationDate     time.Time `json:"graduation_date"`
+	VerificationStatus string    `json:"verification_status"`
+}
 
-	// Mentorship
-	WillingToMentor bool
+// Section 5 - Skills
+type SkillItem struct {
+	Name                   string  `json:"name"`
+	Category               string  `json:"category"`
+	Level                  string  `json:"level"` // beginner, intermediate, advanced, expert
+	YearsOfExperience      float64 `json:"years_of_experience"`
+	LastUsed               int     `json:"last_used"`
+	Verified               bool    `json:"verified"`
+	RecruiterDemandScore   float64 `json:"recruiter_demand_score"`
+	AIRecommendationScore  float64 `json:"ai_recommendation_score"`
+}
 
-	// Calculated Fields
-	AvgResponseTimeHours     float64
-	ProfileCompletenessScore int
-	LastActiveAt             string
+// Section 6 - Projects
+type ProjectItem struct {
+	ID             string   `json:"id"`
+	Title          string   `json:"title"`
+	Description    string   `json:"description"`
+	RepositoryURL  string   `json:"repository_url"`
+	LiveDemoURL    string   `json:"live_demo_url"`
+	VideoURL       string   `json:"video_url"`
+	Images         []string `json:"images"`
+	Videos         []string `json:"videos"`
+	Documents      []string `json:"documents"`
+	Technologies   []string `json:"technologies"`
+	Timeline       string   `json:"timeline"`
+	TeamMembers    []string `json:"team_members"`
+	Metrics        string   `json:"metrics"`
+	Awards         string   `json:"awards"`
+	BusinessImpact string   `json:"business_impact"`
+}
 
-	// Background Check Consent
-	BackgroundCheckConsent   bool
-	BackgroundCheckConsentAt string
+// Section 7 - Certifications
+type CertificationItem struct {
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	Issuer         string    `json:"issuer"`
+	CredentialID   string    `json:"credential_id"`
+	VerificationURL string   `json:"verification_url"`
+	SkillsCovered  []string  `json:"skills_covered"`
+	IssueDate      time.Time `json:"issue_date"`
+	ExpirationDate time.Time `json:"expiration_date"`
+	Status         string    `json:"status"`
+}
 
-	// Job Alerts
-	JobAlertFrequency string
-	JobAlertChannel   string
+// Section 8 - Achievements
+type AchievementItem struct {
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	IssuerOrOrg string    `json:"issuer_or_org"`
+	Date        time.Time `json:"date"`
+	Category    string    `json:"category"` // award, patent, publication, conference, etc.
+	Description string    `json:"description"`
+	EvidenceURL string    `json:"evidence_url"`
+}
 
-	// Privacy settings
-	VisibilityProfile          string
-	VisibilitySalary           string
-	VisibilityTransitionReason string
-	VisibilityExperience       string
-	VisibilityEducation        string
-	VisibilityCertifications   string
-	VisibilitySkills           string
-	VisibilityPortfolio        string
-	VisibilityReferences       string
+// Section 9 - Resume
+type ResumeVersion struct {
+	ID              string    `json:"id"`
+	Name            string    `json:"name"`
+	FileURL         string    `json:"file_url"`
+	FileSize        int       `json:"file_size"`
+	ATSScore        int       `json:"ats_score"`
+	KeywordAnalysis []byte    `json:"keyword_analysis"`
+	IsPrimary       bool      `json:"is_primary"`
+	UploadedAt      time.Time `json:"uploaded_at"`
+}
 
-	// Child collections
-	Experiences    []WorkExperience
-	Educations     []Education
-	Certifications []Certification
-	Skills         []ProfileSkill
-	Languages      []Language
-	Portfolio      []PortfolioLink
-	Endorsements   []Endorsement
-	References     []Reference
+// Section 10 - Career Preferences
+type CareerPreferences struct {
+	DesiredRoles           []string `json:"desired_roles"`
+	DesiredIndustries      []string `json:"desired_industries"`
+	EmploymentTypes        []string `json:"employment_types"`
+	SalaryMin              int      `json:"salary_min"`
+	SalaryMax              int      `json:"salary_max"`
+	SalaryCurrency         string   `json:"salary_currency"`
+	NoticePeriod           string   `json:"notice_period"`
+	RemotePreference       string   `json:"remote_preference"`
+	OpenToRelocation       bool     `json:"open_to_relocation"`
+	PreferredCountries     []string `json:"preferred_countries"`
+	PreferredCities        []string `json:"preferred_cities"`
+	TravelWillingness      string   `json:"travel_willingness"`
+	CompanySizePreferences []string `json:"company_size_preferences"`
+}
+
+// Section 11 - Verification & Trust
+type VerificationStatus struct {
+	EmailVerified         bool `json:"email_verified"`
+	PhoneVerified         bool `json:"phone_verified"`
+	IdentityVerified      bool `json:"identity_verified"`
+	EmploymentVerified   bool `json:"employment_verified"`
+	EducationVerified    bool `json:"education_verified"`
+	CertificationVerified bool `json:"certification_verified"`
+}
+
+// Section 12 - Networking
+type NetworkingSummary struct {
+	ConnectionsCount int                  `json:"connections_count"`
+	FollowersCount   int                  `json:"followers_count"`
+	FollowingCount   int                  `json:"following_count"`
+	MentorsCount     int                  `json:"mentors_count"`
+	ReferralsCount   int                  `json:"referrals_count"`
+	Recommendations  []EndorsementSummary `json:"recommendations"`
+}
+
+type EndorsementSummary struct {
+	FromUserName string    `json:"from_user_name"`
+	Relationship string    `json:"relationship"`
+	Text         string    `json:"text"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+// Section 13 - Analytics
+type AnalyticsSummary struct {
+	ProfileViews       int   `json:"profile_views"`
+	SearchAppearances  int   `json:"search_appearances"`
+	RecruiterViews     int   `json:"recruiter_views"`
+	ResumeDownloads    int   `json:"resume_downloads"`
+	PortfolioViews     int   `json:"portfolio_views"`
+	WeeklyProfileViews []int `json:"weekly_profile_views"`
+}
+
+// Section 14 - Privacy & Security
+type PrivacySecuritySettings struct {
+	FieldVisibility  map[string]string `json:"field_visibility"` // key: section, value: public, recruiter_only, connections_only, private
+	TwoFactorEnabled bool              `json:"two_factor_enabled"`
+	ActiveSessions   []ActiveSession   `json:"active_sessions"`
+}
+
+type ActiveSession struct {
+	SessionID  string    `json:"session_id"`
+	Device     string    `json:"device"`
+	IPAddress  string    `json:"ip_address"`
+	LastActive time.Time `json:"last_active"`
+}
+
+// Section 15 - AI Career Assistant
+type AICareerState struct {
+	GapAnalysis     []byte    `json:"gap_analysis"`
+	Roadmap         []byte    `json:"roadmap"`
+	InterviewPrep   []byte    `json:"interview_prep"`
+	LastRefreshedAt time.Time `json:"last_refreshed_at"`
 }
 
 // Validate checks profile business rules.
 func (p *Profile) Validate() error {
 	// Salary range validation
-	if p.SalaryMin > 0 && p.SalaryMax > 0 && p.SalaryMin > p.SalaryMax {
+	if p.Preferences.SalaryMin > 0 && p.Preferences.SalaryMax > 0 && p.Preferences.SalaryMin > p.Preferences.SalaryMax {
 		return errors.New("minimum salary cannot be greater than maximum salary")
-	}
-
-	// Transition reason condition
-	if p.TransitionReason != "" && p.CareerStatus != "career_break" && p.CareerStatus != "open_to_opportunities" && p.CareerStatus != "actively_looking" {
-		return errors.New("transition reason requires career status to be career_break, open_to_opportunities, or actively_looking")
 	}
 
 	// Date range validations in experiences
 	for _, exp := range p.Experiences {
-		if exp.StartDate != "" && exp.EndDate != "" && exp.StartDate > exp.EndDate {
-			return fmt.Errorf("experience start date %s cannot be after end date %s", exp.StartDate, exp.EndDate)
-		}
-	}
-
-	// Date range validations in educations
-	for _, edu := range p.Educations {
-		if edu.StartDate != "" && edu.EndDate != "" && edu.StartDate > edu.EndDate {
-			return fmt.Errorf("education start date %s cannot be after end date %s", edu.StartDate, edu.EndDate)
+		if !exp.StartDate.IsZero() && !exp.EndDate.IsZero() && exp.StartDate.After(exp.EndDate) {
+			return fmt.Errorf("experience start date %s cannot be after end date %s", exp.StartDate.Format("2006-01-02"), exp.EndDate.Format("2006-01-02"))
 		}
 	}
 
 	return nil
 }
 
-// AggregateUpdate carries a full profile update: the scalar fields plus any
-// child collections that should be replaced. A nil collection pointer means
-// "leave unchanged"; a non-nil (possibly empty) slice replaces the stored
-// collection. It is applied atomically by Repository.UpdateAggregate.
-type AggregateUpdate struct {
-	Scalars        Scalars
-	Experiences    *[]WorkExperience
-	Educations     *[]Education
-	Certifications *[]Certification
-	Skills         *[]ProfileSkill
-	Languages      *[]Language
-	Portfolio      *[]PortfolioLink
-	References     *[]Reference
+// CalculateCompleteness returns the profile completion percentage based on filled sections.
+func (p *Profile) CalculateCompleteness() int {
+	score := 0
+	totalFields := 15
+
+	if p.Identity.FullName != "" && p.Identity.Email != "" {
+		score++
+	}
+	if p.Summary.ExecutiveSummary != "" {
+		score++
+	}
+	if len(p.Experiences) > 0 {
+		score++
+	}
+	if len(p.Educations) > 0 {
+		score++
+	}
+	if len(p.Skills) > 0 {
+		score++
+	}
+	if len(p.Projects) > 0 {
+		score++
+	}
+	if len(p.Certifications) > 0 {
+		score++
+	}
+	if len(p.Achievements) > 0 {
+		score++
+	}
+	if len(p.Resumes) > 0 {
+		score++
+	}
+	if len(p.Preferences.DesiredRoles) > 0 {
+		score++
+	}
+	if p.Verification.EmailVerified {
+		score++
+	}
+	if p.Networking.ConnectionsCount > 0 {
+		score++
+	}
+	if p.Analytics.ProfileViews > 0 {
+		score++
+	}
+	if len(p.Privacy.FieldVisibility) > 0 {
+		score++
+	}
+	if len(p.AICareerAssistant.Roadmap) > 0 {
+		score++
+	}
+
+	return int(float64(score) / float64(totalFields) * 100)
 }
 
-// Validate runs the aggregate's business-rule checks over the assembled update
-// (salary range, transition-reason precondition, experience/education dates).
+// AggregateUpdate carries a partial update to the aggregate.
+type AggregateUpdate struct {
+	Identity       *IdentitySection         `json:"identity,omitempty"`
+	Summary        *SummarySection          `json:"summary,omitempty"`
+	Experiences    *[]WorkExperience        `json:"experiences,omitempty"`
+	Educations     *[]Education             `json:"educations,omitempty"`
+	Skills         *[]SkillItem             `json:"skills,omitempty"`
+	Projects       *[]ProjectItem           `json:"projects,omitempty"`
+	Certifications *[]CertificationItem     `json:"certifications,omitempty"`
+	Achievements   *[]AchievementItem       `json:"achievements,omitempty"`
+	Preferences    *CareerPreferences       `json:"preferences,omitempty"`
+	Privacy        *PrivacySecuritySettings `json:"privacy,omitempty"`
+	IsDraft        *bool                    `json:"is_draft,omitempty"`
+}
+
+// Validate runs aggregate checks over the update fields.
 func (u AggregateUpdate) Validate() error {
-	p := &Profile{
-		SalaryMin:        u.Scalars.SalaryMin,
-		SalaryMax:        u.Scalars.SalaryMax,
-		TransitionReason: u.Scalars.TransitionReason,
-		CareerStatus:     u.Scalars.CareerStatus,
+	p := &Profile{}
+	if u.Preferences != nil {
+		p.Preferences = *u.Preferences
 	}
 	if u.Experiences != nil {
 		p.Experiences = *u.Experiences
 	}
-	if u.Educations != nil {
-		p.Educations = *u.Educations
-	}
 	return p.Validate()
-}
-
-// Scalars carries the editable top-level fields.
-type Scalars struct {
-	Headline string
-	About    string
-	PhotoURL string
-	Bio      string
-	Location string
-	Website  string
-
-	// Core Identity
-	Pronouns     string
-	CareerStatus string
-
-	// Career Recovery
-	TransitionReason       string
-	TargetComebackTimeline string
-	SupportsNeeded         []string
-
-	// Mobility & Preferences
-	OpenToRemote        bool
-	OpenToRelocation    bool
-	RelocationLocations []string
-	DesiredRoles        []string
-	DesiredIndustries   []string
-	EmploymentType      string
-	SalaryMin           int
-	SalaryMax           int
-	SalaryCurrency      string
-	SalaryVisible       bool
-	WorkMode            string
-	AvailabilityDate    string
-	NoticePeriod        string
-
-	// Trust
-	ReferralEligible bool
-
-	// AI Coach
-	CareerNarrative  string
-	CoachingMetadata string
-
-	// Work Auth
-	WorkAuthStatus      string
-	PassportNationality string
-	DrivingLicenseBool  bool
-	DrivingLicenseType  string
-
-	// Communication & Accessibility
-	PreferredContactChannel string
-	AccessibilityNeeds      string
-	VideoIntroURL           string
-
-	// Mentorship
-	WillingToMentor bool
-
-	// Background Check Consent
-	BackgroundCheckConsent   bool
-	BackgroundCheckConsentAt string
-
-	// Job Alerts
-	JobAlertFrequency string
-	JobAlertChannel   string
-
-	// Privacy settings
-	VisibilityProfile          string
-	VisibilitySalary           string
-	VisibilityTransitionReason string
-	VisibilityExperience       string
-	VisibilityEducation        string
-	VisibilityCertifications   string
-	VisibilitySkills           string
-	VisibilityPortfolio        string
-	VisibilityReferences       string
-}
-
-type WorkExperience struct {
-	ID             string
-	Title          string
-	Company        string
-	Location       string
-	EmploymentType string
-	StartDate      string
-	EndDate        string
-	IsCurrent      bool
-	Description    string
-	Achievements   []string
-}
-
-type Education struct {
-	ID           string
-	School       string
-	Degree       string
-	FieldOfStudy string
-	StartDate    string
-	EndDate      string
-	Grade        string
-	Description  string
-}
-
-type Certification struct {
-	ID            string
-	Name          string
-	Issuer        string
-	IssueDate     string
-	ExpiryDate    string
-	CredentialID  string
-	CredentialURL string
-}
-
-type ProfileSkill struct {
-	Name             string
-	ProficiencyLevel string
-	EndorsedCount    int
-}
-
-type Language struct {
-	Name        string
-	Proficiency string
-}
-
-type PortfolioLink struct {
-	ID       string
-	Platform string
-	URL      string
-}
-
-type Endorsement struct {
-	ID           string
-	ToUserID     string
-	FromUserID   string
-	Relationship string
-	Text         string
-	CreatedAt    string
-}
-
-type Reference struct {
-	ID                  string
-	Name                string
-	Relationship        string
-	ContactInfo         string
-	PermissionToContact bool
-}
-
-type ConsentLog struct {
-	ID           string
-	UserID       string
-	ConsentType  string // e.g. background_check, data_sharing
-	TargetEntity string // e.g. recruiter/employer, empty for background check
-	Consented    bool
-	IPAddress    string
-	UserAgent    string
-	CreatedAt    string
 }
 
 // Repository is the persistence port for the profile aggregate.
 type Repository interface {
-	// Get returns the full aggregate. A profile row is created lazily if absent.
-	Get(ctx context.Context, userID string) (*Profile, error)
-	UpdateScalars(ctx context.Context, userID string, s Scalars) error
-
-	// UpdateAggregate applies scalar fields and any provided child collections in
-	// a single transaction. When expectedVersion > 0 it performs an optimistic
-	// version check and returns ErrOptimisticLock on a stale write.
+	Get(ctx context.Context, userID string, includeDraft bool) (*Profile, error)
 	UpdateAggregate(ctx context.Context, userID string, expectedVersion int, u AggregateUpdate) error
 
-	AddExperience(ctx context.Context, userID string, e *WorkExperience) error
-	UpdateExperience(ctx context.Context, userID string, e WorkExperience) error
-	DeleteExperience(ctx context.Context, userID, id string) error
+	// Version Snapshots
+	CreateVersionSnapshot(ctx context.Context, userID string, version int, p *Profile) error
+	GetVersionSnapshot(ctx context.Context, userID string, version int) (*Profile, error)
+	ListVersions(ctx context.Context, userID string) ([]int, error)
 
-	AddEducation(ctx context.Context, userID string, e *Education) error
-	UpdateEducation(ctx context.Context, userID string, e Education) error
-	DeleteEducation(ctx context.Context, userID, id string) error
+	// Auditing
+	WriteAuditLog(ctx context.Context, log *AuditLogEntry) error
 
-	AddCertification(ctx context.Context, userID string, c *Certification) error
-	UpdateCertification(ctx context.Context, userID string, c Certification) error
-	DeleteCertification(ctx context.Context, userID, id string) error
+	// Analytics
+	RecordAnalyticsEvent(ctx context.Context, profileID string, eventType string, actorID *string, ip, ua string) error
+	GetAnalytics(ctx context.Context, profileID string) (*AnalyticsSummary, error)
 
-	SetSkills(ctx context.Context, userID string, skills []ProfileSkill) error
-	SetLanguages(ctx context.Context, userID string, langs []Language) error
-	SetPortfolio(ctx context.Context, userID string, links []PortfolioLink) error
-
-	AddEndorsement(ctx context.Context, toUserID string, e *Endorsement) error
-	AddReference(ctx context.Context, userID string, r *Reference) error
-	UpdateReference(ctx context.Context, userID string, r Reference) error
-	DeleteReference(ctx context.Context, userID, id string) error
-	AddConsentLog(ctx context.Context, cl *ConsentLog) error
-
-	// Verification updates (internally triggered)
+	// Verification
 	SetVerificationStatus(ctx context.Context, userID string, field string, verified bool) error
+}
 
-	// Calculated Fields updates
-	UpdateCalculatedFields(ctx context.Context, userID string, completeness int, avgResponse float64, lastActive string) error
+type AuditLogEntry struct {
+	ID        string          `json:"id"`
+	UserID    string          `json:"user_id"`
+	Section   string          `json:"section"`
+	Action    string          `json:"action"`
+	ActorID   string          `json:"actor_id"`
+	OldValue  json.RawMessage `json:"old_value"`
+	NewValue  json.RawMessage `json:"new_value"`
+	IPAddress string          `json:"ip_address"`
+	UserAgent string          `json:"user_agent"`
+	CreatedAt time.Time       `json:"created_at"`
+}
+
+type Reference struct {
+	ID                  string `json:"id"`
+	Name                string `json:"name"`
+	Relationship        string `json:"relationship"`
+	ContactInfo         string `json:"contact_info"`
+	PermissionToContact bool   `json:"permission_to_contact"`
+}
+
+type ConsentLog struct {
+	ID           string `json:"id"`
+	UserID       string `json:"user_id"`
+	ConsentType  string `json:"consent_type"`
+	TargetEntity string `json:"target_entity"`
+	Consented    bool   `json:"consented"`
+	IPAddress    string `json:"ip_address"`
+	UserAgent    string `json:"user_agent"`
+	CreatedAt    string `json:"created_at"`
+}
+
+type Endorsement struct {
+	ID           string `json:"id"`
+	ToUserID     string `json:"to_user_id"`
+	FromUserID   string `json:"from_user_id"`
+	Relationship string `json:"relationship"`
+	Text         string `json:"text"`
+	CreatedAt    string `json:"created_at"`
 }

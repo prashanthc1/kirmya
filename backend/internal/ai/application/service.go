@@ -235,3 +235,31 @@ func makeTitle(message string) string {
 	}
 	return title
 }
+
+// StreamOptimizeHeadline stream-optimizes professional headlines using prompt versioning and tone guidance.
+func (s *Service) StreamOptimizeHeadline(ctx context.Context, currentHeadline, tone string) (chan string, error) {
+	if err := s.ensureReady(); err != nil {
+		return nil, err
+	}
+	systemPrompt := "You are a professional brand manager. Write a concise, 1-line professional headline. " +
+		"Tone requirement: " + tone + ". Return ONLY the headline."
+	return s.llm.StreamComplete(ctx, systemPrompt, []domain.LLMMessage{
+		{Role: domain.RoleUser, Content: "Current headline: " + currentHeadline},
+	}, 100)
+}
+
+// OptimizeSummary re-writes career summary profiles using professional, technical, or leadership tones.
+func (s *Service) OptimizeSummary(ctx context.Context, execSummary, objectives, tone string) (string, error) {
+	if err := s.ensureReady(); err != nil {
+		return "", err
+	}
+	systemPrompt := "You are Kirmya's AI Career Assistant. Re-write the user's career executive summary and objectives. " +
+		"Optimize for ATS readability and align to a " + tone + " tone. Return ONLY the rewritten text."
+	c, err := s.llm.Complete(ctx, systemPrompt, []domain.LLMMessage{
+		{Role: domain.RoleUser, Content: fmt.Sprintf("Executive Summary: %s\nObjectives: %s", execSummary, objectives)},
+	}, 1000)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(c.Text), nil
+}

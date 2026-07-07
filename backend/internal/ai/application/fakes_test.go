@@ -26,6 +26,17 @@ func (f *fakeLLM) Complete(_ context.Context, _ string, msgs []domain.LLMMessage
 	return domain.Completion{Text: f.resp, Model: "test-model", InputTokens: 10, OutputTokens: 20}, nil
 }
 
+func (f *fakeLLM) StreamComplete(_ context.Context, _ string, msgs []domain.LLMMessage, _ int) (chan string, error) {
+	f.lastMsgs = msgs
+	if f.err != nil {
+		return nil, f.err
+	}
+	out := make(chan string, 1)
+	out <- f.resp
+	close(out)
+	return out, nil
+}
+
 // fakeRepo is an in-memory ai/domain.Repository.
 type fakeRepo struct {
 	mu       sync.Mutex

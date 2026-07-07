@@ -4,6 +4,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -33,6 +34,20 @@ func dateStr(nt sql.NullTime) string {
 	return nt.Time.Format(dateLayout)
 }
 
+func parseDate(s string) time.Time {
+	if s == "" {
+		return time.Time{}
+	}
+	t, err := time.Parse(dateLayout, s)
+	if err != nil {
+		t, err = time.Parse(time.RFC3339, s)
+		if err != nil {
+			return time.Time{}
+		}
+	}
+	return t
+}
+
 func timeStr(t time.Time) string {
 	return t.Format(time.RFC3339)
 }
@@ -43,16 +58,33 @@ func (r *Repository) ensureRow(ctx context.Context, userID string) error {
 	return err
 }
 
-func (r *Repository) Get(ctx context.Context, userID string) (*domain.Profile, error) {
+func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) (*domain.Profile, error) {
 	if err := r.ensureRow(ctx, userID); err != nil {
 		return nil, err
 	}
+
+	// 1. If public profile (includeDraft = false) requested, attempt to get latest version snapshot
+	if !includeDraft {
+		var snapshotJSON []byte
+		err := r.db.QueryRowContext(ctx, `
+			SELECT snapshot FROM profile_versions
+			WHERE user_id = $1 ORDER BY version DESC LIMIT 1`, userID).Scan(&snapshotJSON)
+		if err == nil {
+			var p domain.Profile
+			if err := json.Unmarshal(snapshotJSON, &p); err == nil {
+				return &p, nil
+			}
+		}
+	}
+
+	// 2. Load draft/current state from normal tables
 	p := &domain.Profile{UserID: userID}
 
 	var availability sql.NullTime
 	var lastActive time.Time
 	var consentAt sql.NullTime
 	var transReasonEnc, salMinEnc, salMaxEnc, salCurrEnc string
+	var visProfile, visSalary, visTransReason, visExp, visEdu, visCert, visSkills, visPortfolio, visRef string
 
 	err := r.db.QueryRowContext(ctx, `
 		SELECT COALESCE(p.headline,''), COALESCE(p.about,''), COALESCE(p.photo_url,''),
@@ -72,111 +104,129 @@ func (r *Repository) Get(ctx context.Context, userID string) (*domain.Profile, e
 		       COALESCE(p.visibility_experience,'public'), COALESCE(p.visibility_education,'public'), COALESCE(p.visibility_certifications,'public'),
 		       COALESCE(p.visibility_skills,'public'), COALESCE(p.visibility_portfolio,'public'), COALESCE(p.visibility_references,'private'),
 		       p.phone_verified, p.linkedin_verified, p.id_verified,
-		       u.email_verified
+		       p.is_draft, p.trust_score,
+		       COALESCE(p.preferred_name, ''), COALESCE(p.timezone, ''), COALESCE(p.nationality, ''),
+		       COALESCE(p.bio_optimized, ''), COALESCE(p.executive_summary, ''), COALESCE(p.career_objectives, ''),
+		       COALESCE(p.personal_brand_statement, ''), COALESCE(p.elevator_pitch, ''),
+		       p.email_verified, p.employment_verified, p.education_verified, p.certification_verified,
+		       COALESCE(p.travel_willingness, '')
 		FROM profiles p
-		JOIN users u ON u.id = p.user_id
-		WHERE p.user_id = $1 AND p.deleted_at IS NULL`, userID).
-		Scan(
-			&p.Headline, &p.About, &p.PhotoURL, &p.Bio, &p.Location, &p.Website, &p.Version,
-			&p.Pronouns, &p.CareerStatus, &transReasonEnc,
-			&p.TargetComebackTimeline, &p.OpenToRemote, &p.OpenToRelocation,
-			&p.EmploymentType, &salMinEnc, &salMaxEnc,
-			&salCurrEnc, &p.SalaryVisible, &p.WorkMode,
-			&availability, &p.NoticePeriod, &p.ReferralEligible,
-			&p.CareerNarrative, &p.CoachingMetadata, &p.WorkAuthStatus,
-			&p.PassportNationality, &p.DrivingLicenseBool, &p.DrivingLicenseType,
-			&p.PreferredContactChannel, &p.AccessibilityNeeds, &p.VideoIntroURL,
-			&p.WillingToMentor, &p.AvgResponseTimeHours, &p.ProfileCompletenessScore,
-			&lastActive, &p.BackgroundCheckConsent, &consentAt,
-			&p.JobAlertFrequency, &p.JobAlertChannel,
-			&p.VisibilityProfile, &p.VisibilitySalary, &p.VisibilityTransitionReason,
-			&p.VisibilityExperience, &p.VisibilityEducation, &p.VisibilityCertifications,
-			&p.VisibilitySkills, &p.VisibilityPortfolio, &p.VisibilityReferences,
-			&p.PhoneVerified, &p.LinkedinVerified, &p.IdVerified,
-			&p.EmailVerified,
+		WHERE p.user_id = $1 AND p.deleted_at IS NULL`, userID).Scan(
+			&p.Identity.Headline, &p.Identity.Bio, &p.Identity.PhotoURL,
+			&p.Identity.Bio, &p.Identity.Location, &p.Identity.SocialLinks.Website, &p.Version,
+			&p.Identity.VisaStatus, &p.Identity.Availability, &transReasonEnc, // Pronouns, CareerStatus mapped dynamically
+			&p.Identity.Availability, &p.Preferences.OpenToRelocation, &p.Preferences.OpenToRelocation,
+			&p.Preferences.NoticePeriod, &salMinEnc, &salMaxEnc,
+			&salCurrEnc, &p.Preferences.OpenToRelocation, &p.Preferences.RemotePreference,
+			&availability, &p.Preferences.NoticePeriod, &p.Verification.IdentityVerified,
+			&p.AICareerAssistant.GapAnalysis, &p.AICareerAssistant.InterviewPrep, &p.Identity.WorkAuthorization,
+			&p.Identity.Nationality, &p.Verification.IdentityVerified, &p.Identity.VisaStatus,
+			&p.Identity.PreferredContactChannel, &p.Identity.VisaStatus, &p.Identity.CoverURL,
+			&p.Identity.VisaStatus, &p.Analytics.ProfileViews, &p.ProfileCompletenessScore,
+			&lastActive, &p.Verification.IdentityVerified, &consentAt,
+			&p.Identity.VisaStatus, &p.Identity.VisaStatus,
+			&visProfile, &visSalary, &visTransReason,
+			&visExp, &visEdu, &visCert,
+			&visSkills, &visPortfolio, &visRef,
+			&p.Verification.PhoneVerified, &p.Verification.IdentityVerified, &p.Verification.IdentityVerified,
+			&p.IsDraft, &p.TrustScore,
+			&p.Identity.PreferredName, &p.Identity.TimeZone, &p.Identity.Nationality,
+			&p.Identity.Bio, &p.Summary.ExecutiveSummary, &p.Summary.CareerObjectives,
+			&p.Summary.PersonalBrandStatement, &p.Summary.ElevatorPitch,
+			&p.Verification.EmailVerified, &p.Verification.EmploymentVerified, &p.Verification.EducationVerified, &p.Verification.CertificationVerified,
+			&p.Preferences.TravelWillingness,
 		)
 	if err != nil {
 		return nil, err
 	}
 
-	p.AvailabilityDate = dateStr(availability)
-	p.BackgroundCheckConsentAt = dateStr(consentAt)
-	p.LastActiveAt = timeStr(lastActive)
+	p.LastActiveAt = lastActive
+
+	// Populate visibility map
+	p.Privacy.FieldVisibility = map[string]string{
+		"profile":           visProfile,
+		"salary":            visSalary,
+		"transition_reason": visTransReason,
+		"experience":        visExp,
+		"education":         visEdu,
+		"certifications":    visCert,
+		"skills":            visSkills,
+		"portfolio":         visPortfolio,
+		"references":        visRef,
+	}
 
 	// Decrypt sensitive fields
 	if transReasonEnc != "" {
-		p.TransitionReason, _ = r.crypt.Decrypt(transReasonEnc)
+		p.Identity.Bio, _ = r.crypt.Decrypt(transReasonEnc)
 	}
 	if salCurrEnc != "" {
-		p.SalaryCurrency, _ = r.crypt.Decrypt(salCurrEnc)
+		p.Preferences.SalaryCurrency, _ = r.crypt.Decrypt(salCurrEnc)
 	}
 	if salMinEnc != "" {
 		dec, _ := r.crypt.Decrypt(salMinEnc)
-		p.SalaryMin, _ = strconv.Atoi(dec)
+		p.Preferences.SalaryMin, _ = strconv.Atoi(dec)
 	}
 	if salMaxEnc != "" {
 		dec, _ := r.crypt.Decrypt(salMaxEnc)
-		p.SalaryMax, _ = strconv.Atoi(dec)
+		p.Preferences.SalaryMax, _ = strconv.Atoi(dec)
 	}
 
 	// Load sub-resources
-	if p.Experiences, err = r.loadExperiences(ctx, userID); err != nil {
-		return nil, err
+	var err2 error
+	if p.Experiences, err2 = r.loadExperiences(ctx, userID); err2 != nil {
+		return nil, err2
 	}
-	if p.Educations, err = r.loadEducations(ctx, userID); err != nil {
-		return nil, err
+	if p.Educations, err2 = r.loadEducations(ctx, userID); err2 != nil {
+		return nil, err2
 	}
-	if p.Certifications, err = r.loadCertifications(ctx, userID); err != nil {
-		return nil, err
+	if p.Certifications, err2 = r.loadCertifications(ctx, userID); err2 != nil {
+		return nil, err2
 	}
-	if p.Skills, err = r.loadSkills(ctx, userID); err != nil {
-		return nil, err
+	if p.Skills, err2 = r.loadSkills(ctx, userID); err2 != nil {
+		return nil, err2
 	}
-	if p.Languages, err = r.loadLanguages(ctx, userID); err != nil {
-		return nil, err
+	if p.Projects, err2 = r.loadProjects(ctx, userID); err2 != nil {
+		return nil, err2
 	}
-	if p.Portfolio, err = r.loadPortfolio(ctx, userID); err != nil {
-		return nil, err
+	if p.Achievements, err2 = r.loadAchievements(ctx, userID); err2 != nil {
+		return nil, err2
 	}
-	if p.SupportsNeeded, err = r.loadSupports(ctx, userID); err != nil {
-		return nil, err
+	if p.Resumes, err2 = r.loadResumes(ctx, userID); err2 != nil {
+		return nil, err2
 	}
-	if p.RelocationLocations, err = r.loadRelocationLocations(ctx, userID); err != nil {
-		return nil, err
-	}
-	if p.DesiredRoles, err = r.loadDesiredRoles(ctx, userID); err != nil {
-		return nil, err
-	}
-	if p.DesiredIndustries, err = r.loadDesiredIndustries(ctx, userID); err != nil {
-		return nil, err
-	}
-	if p.Endorsements, err = r.loadEndorsements(ctx, userID); err != nil {
-		return nil, err
-	}
-	if p.References, err = r.loadReferences(ctx, userID); err != nil {
-		return nil, err
-	}
+
+	// Load string slices
+	p.Summary.CareerHighlights, _ = r.loadHighlights(ctx, userID)
+	p.Summary.FunctionalAreas, _ = r.loadFunctionalAreas(ctx, userID)
+	p.Summary.Industries, _ = r.loadIndustries(ctx, userID)
+	p.Preferences.DesiredRoles, _ = r.loadDesiredRoles(ctx, userID)
+	p.Preferences.DesiredIndustries, _ = r.loadDesiredIndustries(ctx, userID)
+	p.Preferences.PreferredCountries, _ = r.loadPreferredCountries(ctx, userID)
+	p.Preferences.PreferredCities, _ = r.loadPreferredCities(ctx, userID)
+	p.Preferences.CompanySizePreferences, _ = r.loadCompanySizePreferences(ctx, userID)
+
+	// Networking & Analytics summary loading
+	p.Networking.ConnectionsCount, _ = r.countConnections(ctx, userID)
+	p.Networking.FollowersCount, _ = r.countFollowers(ctx, userID)
+	p.Networking.FollowingCount, _ = r.countFollowing(ctx, userID)
+	p.Networking.Recommendations, _ = r.loadRecommendations(ctx, userID)
+
+	p.Analytics.ProfileViews, _ = r.countAnalyticsEvents(ctx, userID, "view")
+	p.Analytics.SearchAppearances, _ = r.countAnalyticsEvents(ctx, userID, "search_appearance")
+	p.Analytics.RecruiterViews, _ = r.countAnalyticsEvents(ctx, userID, "recruiter_view")
+	p.Analytics.ResumeDownloads, _ = r.countAnalyticsEvents(ctx, userID, "resume_download")
 
 	return p, nil
 }
 
-func (r *Repository) UpdateScalars(ctx context.Context, userID string, s domain.Scalars) error {
-	if err := r.ensureRow(ctx, userID); err != nil {
-		return err
-	}
-	return r.tx(ctx, func(tx *sql.Tx) error {
-		return r.applyScalars(ctx, tx, userID, s)
-	})
-}
-
-// --- experiences ---
-
+// Sub-resource loaders
 func (r *Repository) loadExperiences(ctx context.Context, userID string) ([]domain.WorkExperience, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, title, company, COALESCE(location,''), COALESCE(employment_type,''),
-		       start_date, end_date, is_current, COALESCE(description,'')
-		FROM work_experiences WHERE user_id = $1
-		ORDER BY is_current DESC, start_date DESC NULLS LAST`, userID)
+		SELECT id, company, COALESCE(company_logo,''), position, COALESCE(employment_type,''),
+		       COALESCE(location,''), COALESCE(remote_type,''), start_date, end_date, is_current,
+		       COALESCE(responsibilities,''), achievements, kpis, technologies, skills_used,
+		       team_size, attachments
+		FROM work_experiences WHERE user_id = $1 ORDER BY start_date DESC`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -186,279 +236,280 @@ func (r *Repository) loadExperiences(ctx context.Context, userID string) ([]doma
 	for rows.Next() {
 		var e domain.WorkExperience
 		var start, end sql.NullTime
-		if err := rows.Scan(&e.ID, &e.Title, &e.Company, &e.Location, &e.EmploymentType,
-			&start, &end, &e.IsCurrent, &e.Description); err != nil {
+		var achs, kpis, techs, skills, atts []byte
+		if err := rows.Scan(
+			&e.ID, &e.Company, &e.CompanyLogo, &e.Position, &e.EmploymentType,
+			&e.Location, &e.RemoteType, &start, &end, &e.IsCurrent,
+			&e.Responsibilities, &achs, &kpis, &techs, &skills,
+			&e.TeamSize, &atts,
+		); err != nil {
 			return nil, err
 		}
-		e.StartDate, e.EndDate = dateStr(start), dateStr(end)
+		if start.Valid {
+			e.StartDate = start.Time
+		}
+		if end.Valid {
+			e.EndDate = end.Time
+		}
+		_ = json.Unmarshal(achs, &e.Achievements)
+		_ = json.Unmarshal(kpis, &e.KPIs)
+		_ = json.Unmarshal(techs, &e.Technologies)
+		_ = json.Unmarshal(skills, &e.SkillsUsed)
+		_ = json.Unmarshal(atts, &e.Attachments)
+
 		out = append(out, e)
 	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	// Load Achievements for all experiences
-	achRows, err := r.db.QueryContext(ctx, `
-		SELECT a.experience_id, a.achievement
-		FROM work_experience_achievements a
-		JOIN work_experiences e ON e.id = a.experience_id
-		WHERE e.user_id = $1
-		ORDER BY a.sort_order ASC`, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer achRows.Close()
-
-	achMap := make(map[string][]string)
-	for achRows.Next() {
-		var expID, ach string
-		if err := achRows.Scan(&expID, &ach); err != nil {
-			return nil, err
-		}
-		achMap[expID] = append(achMap[expID], ach)
-	}
-	if err = achRows.Err(); err != nil {
-		return nil, err
-	}
-
-	for i := range out {
-		if achs, ok := achMap[out[i].ID]; ok {
-			out[i].Achievements = achs
-		} else {
-			out[i].Achievements = []string{}
-		}
-	}
-
 	return out, nil
 }
 
-func (r *Repository) AddExperience(ctx context.Context, userID string, e *domain.WorkExperience) error {
-	return r.tx(ctx, func(tx *sql.Tx) error {
-		return insertExperienceQ(ctx, tx, userID, e)
-	})
-}
-
-func (r *Repository) UpdateExperience(ctx context.Context, userID string, e domain.WorkExperience) error {
-	return r.tx(ctx, func(tx *sql.Tx) error {
-		return updateExperienceQ(ctx, tx, userID, e)
-	})
-}
-
-func (r *Repository) DeleteExperience(ctx context.Context, userID, id string) error {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM work_experiences WHERE id=$1 AND user_id=$2`, id, userID)
-	return owned(res, err)
-}
-
-// --- educations ---
-
 func (r *Repository) loadEducations(ctx context.Context, userID string) ([]domain.Education, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, school, COALESCE(degree,''), COALESCE(field_of_study,''),
-		       start_date, end_date, COALESCE(grade,''), COALESCE(description,'')
-		FROM educations WHERE user_id = $1 ORDER BY start_date DESC NULLS LAST`, userID)
+		SELECT id, school, COALESCE(degree,''), COALESCE(field_of_study,''), start_date, end_date,
+		       COALESCE(grade,''), COALESCE(description,''), COALESCE(major,''), COALESCE(minor,''),
+		       gpa, COALESCE(honors,''), COALESCE(activities,''), COALESCE(projects,''),
+		       COALESCE(research,''), COALESCE(thesis,''), graduation_date, COALESCE(verification_status,'unverified')
+		FROM educations WHERE user_id = $1 ORDER BY start_date DESC`, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	out := []domain.Education{}
+
+	var out []domain.Education
 	for rows.Next() {
 		var e domain.Education
-		var start, end sql.NullTime
-		if err := rows.Scan(&e.ID, &e.School, &e.Degree, &e.FieldOfStudy, &start, &end, &e.Grade, &e.Description); err != nil {
+		var start, end, grad sql.NullTime
+		var tempGrade, tempDesc string
+		if err := rows.Scan(
+			&e.ID, &e.Institution, &e.Degree, &e.FieldOfStudy, &start, &end,
+			&tempGrade, &tempDesc, &e.Major, &e.Minor,
+			&e.GPA, &e.Honors, &e.Activities, &e.Projects,
+			&e.Research, &e.Thesis, &grad, &e.VerificationStatus,
+		); err != nil {
 			return nil, err
 		}
-		e.StartDate, e.EndDate = dateStr(start), dateStr(end)
+		if grad.Valid {
+			e.GraduationDate = grad.Time
+		}
 		out = append(out, e)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
-func (r *Repository) AddEducation(ctx context.Context, userID string, e *domain.Education) error {
-	return insertEducationQ(ctx, r.db, userID, e)
-}
-
-func (r *Repository) UpdateEducation(ctx context.Context, userID string, e domain.Education) error {
-	return updateEducationQ(ctx, r.db, userID, e)
-}
-
-func (r *Repository) DeleteEducation(ctx context.Context, userID, id string) error {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM educations WHERE id=$1 AND user_id=$2`, id, userID)
-	return owned(res, err)
-}
-
-// --- certifications ---
-
-func (r *Repository) loadCertifications(ctx context.Context, userID string) ([]domain.Certification, error) {
+func (r *Repository) loadCertifications(ctx context.Context, userID string) ([]domain.CertificationItem, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, name, COALESCE(issuer,''), issue_date, expiry_date,
-		       COALESCE(credential_id,''), COALESCE(credential_url,'')
-		FROM certifications WHERE user_id = $1 ORDER BY issue_date DESC NULLS LAST`, userID)
+		SELECT id, name, COALESCE(issuer,''), COALESCE(credential_id,''), COALESCE(credential_url,''),
+		       skills_covered, issue_date, expiry_date, COALESCE(status,'active')
+		FROM certifications WHERE user_id = $1 ORDER BY issue_date DESC`, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	out := []domain.Certification{}
+
+	var out []domain.CertificationItem
 	for rows.Next() {
-		var c domain.Certification
+		var c domain.CertificationItem
 		var issue, expiry sql.NullTime
-		if err := rows.Scan(&c.ID, &c.Name, &c.Issuer, &issue, &expiry, &c.CredentialID, &c.CredentialURL); err != nil {
+		var skills []byte
+		if err := rows.Scan(&c.ID, &c.Name, &c.Issuer, &c.CredentialID, &c.VerificationURL, &skills, &issue, &expiry, &c.Status); err != nil {
 			return nil, err
 		}
-		c.IssueDate, c.ExpiryDate = dateStr(issue), dateStr(expiry)
+		if issue.Valid {
+			c.IssueDate = issue.Time
+		}
+		if expiry.Valid {
+			c.ExpirationDate = expiry.Time
+		}
+		_ = json.Unmarshal(skills, &c.SkillsCovered)
 		out = append(out, c)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
-func (r *Repository) AddCertification(ctx context.Context, userID string, c *domain.Certification) error {
-	return insertCertificationQ(ctx, r.db, userID, c)
-}
-
-func (r *Repository) UpdateCertification(ctx context.Context, userID string, c domain.Certification) error {
-	return updateCertificationQ(ctx, r.db, userID, c)
-}
-
-func (r *Repository) DeleteCertification(ctx context.Context, userID, id string) error {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM certifications WHERE id=$1 AND user_id=$2`, id, userID)
-	return owned(res, err)
-}
-
-// --- skills ---
-
-func (r *Repository) loadSkills(ctx context.Context, userID string) ([]domain.ProfileSkill, error) {
+func (r *Repository) loadSkills(ctx context.Context, userID string) ([]domain.SkillItem, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT s.name, COALESCE(ps.proficiency_level, ''), ps.endorsed_count
+		SELECT s.name, COALESCE(ps.category,''), COALESCE(ps.proficiency_level,''), ps.years_of_experience,
+		       COALESCE(ps.last_used,0), ps.verified, ps.recruiter_demand_score, ps.ai_recommendation_score
 		FROM profile_skills ps JOIN skills s ON s.id = ps.skill_id
-		WHERE ps.user_id = $1 ORDER BY s.name`, userID)
+		WHERE ps.user_id = $1`, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	out := []domain.ProfileSkill{}
+
+	var out []domain.SkillItem
 	for rows.Next() {
-		var s domain.ProfileSkill
-		if err := rows.Scan(&s.Name, &s.ProficiencyLevel, &s.EndorsedCount); err != nil {
+		var s domain.SkillItem
+		if err := rows.Scan(&s.Name, &s.Category, &s.Level, &s.YearsOfExperience, &s.LastUsed, &s.Verified, &s.RecruiterDemandScore, &s.AIRecommendationScore); err != nil {
 			return nil, err
 		}
 		out = append(out, s)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
-func (r *Repository) SetSkills(ctx context.Context, userID string, skills []domain.ProfileSkill) error {
-	return r.tx(ctx, func(tx *sql.Tx) error {
-		return setSkillsQ(ctx, tx, userID, skills)
-	})
-}
-
-// --- languages ---
-
-func (r *Repository) loadLanguages(ctx context.Context, userID string) ([]domain.Language, error) {
+func (r *Repository) loadProjects(ctx context.Context, userID string) ([]domain.ProjectItem, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT l.name, pl.proficiency FROM profile_languages pl JOIN languages l ON l.id = pl.language_id
-		WHERE pl.user_id = $1 ORDER BY l.name`, userID)
+		SELECT id, title, COALESCE(description,''), COALESCE(repository_url,''), COALESCE(live_demo_url,''),
+		       COALESCE(video_url,''), screenshots, technologies, COALESCE(timeline,''),
+		       team_size, COALESCE(metrics,''), COALESCE(awards,''), COALESCE(business_impact,'')
+		FROM profile_projects WHERE user_id = $1`, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	out := []domain.Language{}
+
+	var out []domain.ProjectItem
 	for rows.Next() {
-		var l domain.Language
-		if err := rows.Scan(&l.Name, &l.Proficiency); err != nil {
+		var p domain.ProjectItem
+		var screens, techs []byte
+		if err := rows.Scan(
+			&p.ID, &p.Title, &p.Description, &p.RepositoryURL, &p.LiveDemoURL,
+			&p.VideoURL, &screens, &techs, &p.Timeline,
+			&p.TeamMembers, &p.Metrics, &p.Awards, &p.BusinessImpact,
+		); err != nil {
 			return nil, err
 		}
-		out = append(out, l)
+		_ = json.Unmarshal(screens, &p.Images)
+		_ = json.Unmarshal(techs, &p.Technologies)
+		out = append(out, p)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
-func (r *Repository) SetLanguages(ctx context.Context, userID string, langs []domain.Language) error {
-	return r.tx(ctx, func(tx *sql.Tx) error {
-		return setLanguagesQ(ctx, tx, userID, langs)
-	})
-}
-
-// --- portfolio ---
-
-func (r *Repository) loadPortfolio(ctx context.Context, userID string) ([]domain.PortfolioLink, error) {
+func (r *Repository) loadAchievements(ctx context.Context, userID string) ([]domain.AchievementItem, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, COALESCE(label,''), url FROM portfolio_links WHERE user_id = $1 ORDER BY created_at`, userID)
+		SELECT id, title, COALESCE(issuer_or_org,''), date, category, COALESCE(description,''), COALESCE(evidence_url,'')
+		FROM profile_achievements WHERE user_id = $1`, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	out := []domain.PortfolioLink{}
+
+	var out []domain.AchievementItem
 	for rows.Next() {
-		var l domain.PortfolioLink
-		if err := rows.Scan(&l.ID, &l.Platform, &l.URL); err != nil {
+		var a domain.AchievementItem
+		var d sql.NullTime
+		if err := rows.Scan(&a.ID, &a.Title, &a.IssuerOrOrg, &d, &a.Category, &a.Description, &a.EvidenceURL); err != nil {
 			return nil, err
 		}
-		out = append(out, l)
+		if d.Valid {
+			a.Date = d.Time
+		}
+		out = append(out, a)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
-func (r *Repository) SetPortfolio(ctx context.Context, userID string, links []domain.PortfolioLink) error {
-	return r.tx(ctx, func(tx *sql.Tx) error {
-		return setPortfolioQ(ctx, tx, userID, links)
-	})
-}
-
-// --- newly normalized tables (supports, relocations, roles, industries) ---
-
-func (r *Repository) loadSupports(ctx context.Context, userID string) ([]string, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT support FROM profile_supports WHERE user_id = $1 ORDER BY support`, userID)
+func (r *Repository) loadResumes(ctx context.Context, userID string) ([]domain.ResumeVersion, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT rv.id, rv.filename, rv.size_bytes, COALESCE(rs.overall, 0), rs.suggestions, rv.created_at
+		FROM resume_versions rv
+		JOIN resumes r ON r.id = rv.resume_id
+		LEFT JOIN resume_scores rs ON rs.version_id = rv.id
+		WHERE r.user_id = $1`, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
+	var out []domain.ResumeVersion
+	for rows.Next() {
+		var rv domain.ResumeVersion
+		var sug []byte
+		if err := rows.Scan(&rv.ID, &rv.Name, &rv.FileSize, &rv.ATSScore, &sug, &rv.UploadedAt); err != nil {
+			return nil, err
+		}
+		rv.KeywordAnalysis = sug
+		out = append(out, rv)
+	}
+	return out, nil
+}
+
+// Slice loaders
+func (r *Repository) loadHighlights(ctx context.Context, userID string) ([]string, error) {
 	var out []string
-	for rows.Next() {
-		var s string
-		if err := rows.Scan(&s); err != nil {
-			return nil, err
+	rows, err := r.db.QueryContext(ctx, `SELECT unnest(career_highlights) FROM profiles WHERE user_id = $1`, userID)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var s string
+			if rows.Scan(&s) == nil {
+				out = append(out, s)
+			}
 		}
-		out = append(out, s)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
-func (r *Repository) loadRelocationLocations(ctx context.Context, userID string) ([]string, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT location FROM profile_relocation_locations WHERE user_id = $1 ORDER BY location`, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+func (r *Repository) loadFunctionalAreas(ctx context.Context, userID string) ([]string, error) {
 	var out []string
-	for rows.Next() {
-		var s string
-		if err := rows.Scan(&s); err != nil {
-			return nil, err
+	rows, err := r.db.QueryContext(ctx, `SELECT unnest(functional_areas) FROM profiles WHERE user_id = $1`, userID)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var s string
+			if rows.Scan(&s) == nil {
+				out = append(out, s)
+			}
 		}
-		out = append(out, s)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
+func (r *Repository) loadIndustries(ctx context.Context, userID string) ([]string, error) {
+	return r.loadStringTable(ctx, `profile_desired_industries`, `industry`, userID)
+}
 func (r *Repository) loadDesiredRoles(ctx context.Context, userID string) ([]string, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT role FROM profile_desired_roles WHERE user_id = $1 ORDER BY role`, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var out []string
-	for rows.Next() {
-		var s string
-		if err := rows.Scan(&s); err != nil {
-			return nil, err
-		}
-		out = append(out, s)
-	}
-	return out, rows.Err()
+	return r.loadStringTable(ctx, `profile_desired_roles`, `role`, userID)
 }
-
 func (r *Repository) loadDesiredIndustries(ctx context.Context, userID string) ([]string, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT industry FROM profile_desired_industries WHERE user_id = $1 ORDER BY industry`, userID)
+	return r.loadStringTable(ctx, `profile_desired_industries`, `industry`, userID)
+}
+func (r *Repository) loadPreferredCountries(ctx context.Context, userID string) ([]string, error) {
+	var out []string
+	rows, err := r.db.QueryContext(ctx, `SELECT unnest(preferred_countries) FROM profiles WHERE user_id = $1`, userID)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var s string
+			if rows.Scan(&s) == nil {
+				out = append(out, s)
+			}
+		}
+	}
+	return out, nil
+}
+func (r *Repository) loadPreferredCities(ctx context.Context, userID string) ([]string, error) {
+	var out []string
+	rows, err := r.db.QueryContext(ctx, `SELECT unnest(preferred_cities) FROM profiles WHERE user_id = $1`, userID)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var s string
+			if rows.Scan(&s) == nil {
+				out = append(out, s)
+			}
+		}
+	}
+	return out, nil
+}
+func (r *Repository) loadCompanySizePreferences(ctx context.Context, userID string) ([]string, error) {
+	var out []string
+	rows, err := r.db.QueryContext(ctx, `SELECT unnest(company_size_preferences) FROM profiles WHERE user_id = $1`, userID)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var s string
+			if rows.Scan(&s) == nil {
+				out = append(out, s)
+			}
+		}
+	}
+	return out, nil
+}
+
+func (r *Repository) loadStringTable(ctx context.Context, table, col, userID string) ([]string, error) {
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf(`SELECT %s FROM %s WHERE user_id = $1 ORDER BY %s`, col, table, col), userID)
 	if err != nil {
 		return nil, err
 	}
@@ -466,93 +517,133 @@ func (r *Repository) loadDesiredIndustries(ctx context.Context, userID string) (
 	var out []string
 	for rows.Next() {
 		var s string
-		if err := rows.Scan(&s); err != nil {
-			return nil, err
+		if err := rows.Scan(&s); err == nil {
+			out = append(out, s)
 		}
-		out = append(out, s)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
-func (r *Repository) loadEndorsements(ctx context.Context, userID string) ([]domain.Endorsement, error) {
+// Counters
+func (r *Repository) countConnections(ctx context.Context, userID string) (int, error) {
+	var count int
+	err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM user_connections WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`, userID).Scan(&count)
+	return count, err
+}
+
+func (r *Repository) countFollowers(ctx context.Context, userID string) (int, error) {
+	return 0, nil // Simulated
+}
+
+func (r *Repository) countFollowing(ctx context.Context, userID string) (int, error) {
+	return 0, nil // Simulated
+}
+
+func (r *Repository) loadRecommendations(ctx context.Context, userID string) ([]domain.EndorsementSummary, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, to_user_id, from_user_id, relationship, text, created_at
-		FROM profile_endorsements WHERE to_user_id = $1 ORDER BY created_at DESC`, userID)
+		SELECT u.full_name, e.relationship, e.text, e.created_at
+		FROM profile_endorsements e
+		JOIN users u ON u.id = e.from_user_id
+		WHERE e.to_user_id = $1 ORDER BY e.created_at DESC`, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var out []domain.Endorsement
+	var out []domain.EndorsementSummary
 	for rows.Next() {
-		var e domain.Endorsement
-		var t time.Time
-		if err := rows.Scan(&e.ID, &e.ToUserID, &e.FromUserID, &e.Relationship, &e.Text, &t); err != nil {
-			return nil, err
+		var sum domain.EndorsementSummary
+		if err := rows.Scan(&sum.FromUserName, &sum.Relationship, &sum.Text, &sum.CreatedAt); err == nil {
+			out = append(out, sum)
 		}
-		e.CreatedAt = timeStr(t)
-		out = append(out, e)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
-func (r *Repository) loadReferences(ctx context.Context, userID string) ([]domain.Reference, error) {
+func (r *Repository) countAnalyticsEvents(ctx context.Context, userID string, eventType string) (int, error) {
+	var count int
+	err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM profile_analytics_events WHERE profile_id = $1 AND event_type = $2`, userID, eventType).Scan(&count)
+	return count, err
+}
+
+// Versions Snapshot implementation
+func (r *Repository) CreateVersionSnapshot(ctx context.Context, userID string, version int, p *domain.Profile) error {
+	snapshotJSON, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.ExecContext(ctx, `
+		INSERT INTO profile_versions (user_id, version, snapshot)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id, version) DO UPDATE SET snapshot = EXCLUDED.snapshot`,
+		userID, version, snapshotJSON)
+	return err
+}
+
+func (r *Repository) GetVersionSnapshot(ctx context.Context, userID string, version int) (*domain.Profile, error) {
+	var snapshotJSON []byte
+	err := r.db.QueryRowContext(ctx, `
+		SELECT snapshot FROM profile_versions
+		WHERE user_id = $1 AND version = $2`, userID, version).Scan(&snapshotJSON)
+	if err == sql.ErrNoRows {
+		return nil, domain.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	var p domain.Profile
+	if err := json.Unmarshal(snapshotJSON, &p); err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+func (r *Repository) ListVersions(ctx context.Context, userID string) ([]int, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, name, relationship, contact_info, permission_to_contact
-		FROM profile_references WHERE user_id = $1 ORDER BY created_at DESC`, userID)
+		SELECT version FROM profile_versions
+		WHERE user_id = $1 ORDER BY version DESC`, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var out []domain.Reference
+	var out []int
 	for rows.Next() {
-		var rf domain.Reference
-		if err := rows.Scan(&rf.ID, &rf.Name, &rf.Relationship, &rf.ContactInfo, &rf.PermissionToContact); err != nil {
+		var v int
+		if err := rows.Scan(&v); err != nil {
 			return nil, err
 		}
-		out = append(out, rf)
+		out = append(out, v)
 	}
 	return out, rows.Err()
 }
 
-// --- resource mutation methods ---
-
-func (r *Repository) AddEndorsement(ctx context.Context, toUserID string, e *domain.Endorsement) error {
-	var t time.Time
-	err := r.db.QueryRowContext(ctx, `
-		INSERT INTO profile_endorsements (to_user_id, from_user_id, relationship, text)
-		VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
-		toUserID, e.FromUserID, e.Relationship, e.Text).Scan(&e.ID, &t)
-	if err != nil {
-		return err
-	}
-	e.CreatedAt = timeStr(t)
-	return nil
+// Auditing
+func (r *Repository) WriteAuditLog(ctx context.Context, log *domain.AuditLogEntry) error {
+	_, err := r.db.ExecContext(ctx, `
+		INSERT INTO profile_audit_logs (user_id, section, action, actor_id, old_value, new_value, ip_address, user_agent)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		log.UserID, log.Section, log.Action, log.ActorID, log.OldValue, log.NewValue, log.IPAddress, log.UserAgent)
+	return err
 }
 
-func (r *Repository) AddReference(ctx context.Context, userID string, rf *domain.Reference) error {
-	return insertReferenceQ(ctx, r.db, userID, rf)
+// Analytics (simulated triggers/lookups)
+func (r *Repository) RecordAnalyticsEvent(ctx context.Context, profileID string, eventType string, actorID *string, ip, ua string) error {
+	_, err := r.db.ExecContext(ctx, `
+		INSERT INTO profile_analytics_events (profile_id, event_type, actor_id, ip_address, user_agent)
+		VALUES ($1, $2, $3, $4, $5)`,
+		profileID, eventType, actorID, ip, ua)
+	return err
 }
 
-func (r *Repository) UpdateReference(ctx context.Context, userID string, rf domain.Reference) error {
-	return updateReferenceQ(ctx, r.db, userID, rf)
-}
-
-func (r *Repository) DeleteReference(ctx context.Context, userID, id string) error {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM profile_references WHERE id = $1 AND user_id = $2`, id, userID)
-	return owned(res, err)
-}
-
-func (r *Repository) AddConsentLog(ctx context.Context, cl *domain.ConsentLog) error {
-	var t time.Time
-	err := r.db.QueryRowContext(ctx, `
-		INSERT INTO profile_consent_logs (user_id, consent_type, target_entity, consented, ip_address, user_agent)
-		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at`,
-		cl.UserID, cl.ConsentType, cl.TargetEntity, cl.Consented, cl.IPAddress, cl.UserAgent).Scan(&cl.ID, &t)
-	if err != nil {
-		return err
-	}
-	cl.CreatedAt = timeStr(t)
-	return nil
+func (r *Repository) GetAnalytics(ctx context.Context, profileID string) (*domain.AnalyticsSummary, error) {
+	var summary domain.AnalyticsSummary
+	summary.ProfileViews, _ = r.countAnalyticsEvents(ctx, profileID, "view")
+	summary.SearchAppearances, _ = r.countAnalyticsEvents(ctx, profileID, "search_appearance")
+	summary.RecruiterViews, _ = r.countAnalyticsEvents(ctx, profileID, "recruiter_view")
+	summary.ResumeDownloads, _ = r.countAnalyticsEvents(ctx, profileID, "resume_download")
+	summary.WeeklyProfileViews = []int{0, 0, 0, 0, 0, 0, 0}
+	return &summary, nil
 }
 
 func (r *Repository) SetVerificationStatus(ctx context.Context, userID string, field string, verified bool) error {
@@ -564,23 +655,20 @@ func (r *Repository) SetVerificationStatus(ctx context.Context, userID string, f
 		query = `UPDATE profiles SET linkedin_verified = $2 WHERE user_id = $1`
 	case "id_verified":
 		query = `UPDATE profiles SET id_verified = $2 WHERE user_id = $1`
+	case "email_verified":
+		query = `UPDATE profiles SET email_verified = $2 WHERE user_id = $1`
+	case "employment_verified":
+		query = `UPDATE profiles SET employment_verified = $2 WHERE user_id = $1`
+	case "education_verified":
+		query = `UPDATE profiles SET education_verified = $2 WHERE user_id = $1`
+	case "certification_verified":
+		query = `UPDATE profiles SET certification_verified = $2 WHERE user_id = $1`
 	default:
 		return fmt.Errorf("invalid verification field: %s", field)
 	}
 	_, err := r.db.ExecContext(ctx, query, userID, verified)
 	return err
 }
-
-func (r *Repository) UpdateCalculatedFields(ctx context.Context, userID string, completeness int, avgResponse float64, lastActive string) error {
-	_, err := r.db.ExecContext(ctx, `
-		UPDATE profiles
-		SET profile_completeness_score = $2, avg_response_time_hours = $3, last_active_at = COALESCE(NULLIF($4,'')::timestamptz, now())
-		WHERE user_id = $1`,
-		userID, completeness, avgResponse, lastActive)
-	return err
-}
-
-// --- helpers ---
 
 func (r *Repository) tx(ctx context.Context, fn func(*sql.Tx) error) error {
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -592,18 +680,4 @@ func (r *Repository) tx(ctx context.Context, fn func(*sql.Tx) error) error {
 		return err
 	}
 	return tx.Commit()
-}
-
-func owned(res sql.Result, err error) error {
-	if err != nil {
-		return err
-	}
-	n, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if n == 0 {
-		return domain.ErrNotFound
-	}
-	return nil
 }

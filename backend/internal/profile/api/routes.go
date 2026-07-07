@@ -34,6 +34,12 @@ func RegisterRoutes(mux *http.ServeMux, h *Handler, auth func(http.Handler) http
 	reg("PUT /api/v1/profiles/me/references/{id}", h.UpdateReference)
 	reg("DELETE /api/v1/profiles/me/references/{id}", h.DeleteReference)
 
+	// V2 Versioning & Analytics
+	reg("POST /api/v1/profiles/me/publish", h.PublishMe)
+	reg("POST /api/v1/profiles/me/rollback", h.RollbackMe)
+	reg("GET /api/v1/profiles/me/versions", h.GetVersions)
+	reg("GET /api/v1/profiles/me/analytics", h.GetAnalytics)
+
 	// Public view of another user's profile (most-specific "me" routes win).
 	reg("GET /api/v1/profiles/{id}", h.GetByID)
 }

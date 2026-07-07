@@ -22,7 +22,7 @@ func TestEducationLifecycle(t *testing.T) {
 	svc := NewService(newFakeRepo(), nil, nil)
 	ctx := context.Background()
 
-	ed := domain.Education{School: "State University", Degree: "BSc"}
+	ed := domain.Education{Institution: "State University", Degree: "BSc"}
 	p, err := svc.AddEducation(ctx, "u1", &ed)
 	if err != nil {
 		t.Fatalf("add: %v", err)
@@ -52,7 +52,7 @@ func TestCertificationLifecycle(t *testing.T) {
 	svc := NewService(newFakeRepo(), nil, nil)
 	ctx := context.Background()
 
-	c := domain.Certification{Name: "PMP", Issuer: "PMI"}
+	c := domain.CertificationItem{Name: "PMP", Issuer: "PMI"}
 	p, err := svc.AddCertification(ctx, "u1", &c)
 	if err != nil {
 		t.Fatalf("add: %v", err)
@@ -82,23 +82,23 @@ func TestSetLanguagesAndPortfolioReplace(t *testing.T) {
 	svc := NewService(newFakeRepo(), nil, nil)
 	ctx := context.Background()
 
-	if _, err := svc.SetLanguages(ctx, "u1", []domain.Language{{Name: "English", Proficiency: "native"}}); err != nil {
+	if _, err := svc.SetLanguages(ctx, "u1", []domain.LanguageItem{{Name: "English", Proficiency: "native"}}); err != nil {
 		t.Fatalf("set languages: %v", err)
 	}
-	p, err := svc.SetLanguages(ctx, "u1", []domain.Language{{Name: "Arabic", Proficiency: "professional"}})
+	p, err := svc.SetLanguages(ctx, "u1", []domain.LanguageItem{{Name: "Arabic", Proficiency: "professional"}})
 	if err != nil {
 		t.Fatalf("set languages 2: %v", err)
 	}
-	if len(p.Languages) != 1 || p.Languages[0].Name != "Arabic" {
-		t.Fatalf("languages should be replaced, got %+v", p.Languages)
+	if len(p.Identity.Languages) != 1 || p.Identity.Languages[0].Name != "Arabic" {
+		t.Fatalf("languages should be replaced, got %+v", p.Identity.Languages)
 	}
 
-	p, err = svc.SetPortfolio(ctx, "u1", []domain.PortfolioLink{{Platform: "Site", URL: "https://example.com"}})
+	p, err = svc.SetPortfolio(ctx, "u1", []domain.ProjectItem{{LiveDemoURL: "https://example.com"}})
 	if err != nil {
 		t.Fatalf("set portfolio: %v", err)
 	}
-	if len(p.Portfolio) != 1 || p.Portfolio[0].URL != "https://example.com" {
-		t.Fatalf("portfolio not persisted, got %+v", p.Portfolio)
+	if len(p.Projects) != 1 || p.Projects[0].LiveDemoURL != "https://example.com" {
+		t.Fatalf("portfolio not persisted, got %+v", p.Projects)
 	}
 }
 
@@ -107,10 +107,14 @@ func TestWritesEmitProfileUpdated(t *testing.T) {
 	svc := NewService(newFakeRepo(), ev, nil)
 	ctx := context.Background()
 
-	if _, err := svc.UpdateScalars(ctx, "u1", domain.Scalars{Headline: "Engineer"}); err != nil {
+	isDraft := true
+	if _, err := svc.UpdateProfile(ctx, "u1", 0, domain.AggregateUpdate{
+		Identity: &domain.IdentitySection{Headline: "Engineer"},
+		IsDraft:  &isDraft,
+	}); err != nil {
 		t.Fatalf("update: %v", err)
 	}
-	if _, err := svc.SetSkills(ctx, "u1", []domain.ProfileSkill{{Name: "Go"}}); err != nil {
+	if _, err := svc.SetSkills(ctx, "u1", []domain.SkillItem{{Name: "Go"}}); err != nil {
 		t.Fatalf("skills: %v", err)
 	}
 	if len(ev.types) != 2 {

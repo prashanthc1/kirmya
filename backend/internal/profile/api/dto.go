@@ -1,6 +1,12 @@
 package api
 
-import "workspace-app/internal/profile/domain"
+import (
+	"fmt"
+	"strconv"
+	"time"
+
+	"workspace-app/internal/profile/domain"
+)
 
 type profileResponse struct {
 	UserID   string `json:"user_id"`
@@ -153,7 +159,7 @@ type endorsementDTO struct {
 	FromUserID   string `json:"from_user_id"`
 	Relationship string `json:"relationship"`
 	Text         string `json:"text"`
-	CreatedAt    string `json:"created_at,omitempty"`
+	CreatedAt    string `json:"created_at"`
 }
 
 type referenceDTO struct {
@@ -164,21 +170,8 @@ type referenceDTO struct {
 	PermissionToContact bool   `json:"permission_to_contact"`
 }
 
-type consentDTO struct {
-	ID           string `json:"id,omitempty"`
-	ConsentType  string `json:"consent_type"`
-	TargetEntity string `json:"target_entity"`
-	Consented    bool   `json:"consented"`
-	IPAddress    string `json:"ip_address,omitempty"`
-	UserAgent    string `json:"user_agent,omitempty"`
-	CreatedAt    string `json:"created_at,omitempty"`
-}
-
-type updateScalarsRequest struct {
-	// Version is the client's last-known aggregate version, used for optimistic
-	// concurrency. Zero (omitted) skips the check for backward compatibility.
-	Version int `json:"version"`
-
+// Request DTOs
+type updateProfileRequest struct {
 	Headline string `json:"headline"`
 	About    string `json:"about"`
 	PhotoURL string `json:"photo_url"`
@@ -186,16 +179,13 @@ type updateScalarsRequest struct {
 	Location string `json:"location"`
 	Website  string `json:"website"`
 
-	// Core Identity
 	Pronouns     string `json:"pronouns"`
 	CareerStatus string `json:"career_status"`
 
-	// Career Recovery
 	TransitionReason       string   `json:"transition_reason"`
 	TargetComebackTimeline string   `json:"target_comeback_timeline"`
 	SupportsNeeded         []string `json:"supports_needed"`
 
-	// Mobility & Preferences
 	OpenToRemote        bool     `json:"open_to_remote"`
 	OpenToRelocation    bool     `json:"open_to_relocation"`
 	RelocationLocations []string `json:"relocation_locations"`
@@ -210,36 +200,28 @@ type updateScalarsRequest struct {
 	AvailabilityDate    string   `json:"availability_date"`
 	NoticePeriod        string   `json:"notice_period"`
 
-	// Trust
 	ReferralEligible bool `json:"referral_eligible"`
 
-	// AI Coach
 	CareerNarrative  string `json:"career_narrative"`
 	CoachingMetadata string `json:"coaching_metadata"`
 
-	// Work Auth
 	WorkAuthStatus      string `json:"work_auth_status"`
 	PassportNationality string `json:"passport_nationality"`
 	DrivingLicenseBool  bool   `json:"driving_license_bool"`
 	DrivingLicenseType  string `json:"driving_license_type"`
 
-	// Communication & Accessibility
 	PreferredContactChannel string `json:"preferred_contact_channel"`
 	AccessibilityNeeds      string `json:"accessibility_needs"`
 	VideoIntroURL           string `json:"video_intro_url"`
 
-	// Mentorship
 	WillingToMentor bool `json:"willing_to_mentor"`
 
-	// Background Check Consent
 	BackgroundCheckConsent   bool   `json:"background_check_consent"`
 	BackgroundCheckConsentAt string `json:"background_check_consent_at"`
 
-	// Job Alerts
 	JobAlertFrequency string `json:"job_alert_frequency"`
 	JobAlertChannel   string `json:"job_alert_channel"`
 
-	// Privacy settings
 	VisibilityProfile          string `json:"visibility_profile"`
 	VisibilitySalary           string `json:"visibility_salary"`
 	VisibilityTransitionReason string `json:"visibility_transition_reason"`
@@ -249,15 +231,25 @@ type updateScalarsRequest struct {
 	VisibilitySkills           string `json:"visibility_skills"`
 	VisibilityPortfolio        string `json:"visibility_portfolio"`
 	VisibilityReferences       string `json:"visibility_references"`
+}
 
-	// Collections for synchronization
-	Experiences    *[]experienceDTO    `json:"experiences"`
-	Educations     *[]educationDTO     `json:"educations"`
-	Certifications *[]certificationDTO `json:"certifications"`
-	Skills         *[]skillDTO         `json:"skills"`
-	Languages      *[]languageDTO      `json:"languages"`
-	Portfolio      *[]portfolioLinkDTO `json:"portfolio"`
-	References     *[]referenceDTO     `json:"references"`
+type consentRequest struct {
+	ConsentType  string `json:"consent_type"`
+	TargetEntity string `json:"target_entity"`
+	Consented    bool   `json:"consented"`
+}
+
+type endorsementRequest struct {
+	ToUserID     string `json:"to_user_id"`
+	Relationship string `json:"relationship"`
+	Text         string `json:"text"`
+}
+
+type referenceRequest struct {
+	Name                string `json:"name"`
+	Relationship        string `json:"relationship"`
+	ContactInfo         string `json:"contact_info"`
+	PermissionToContact bool   `json:"permission_to_contact"`
 }
 
 type skillsRequest struct {
@@ -276,51 +268,38 @@ type portfolioRequest struct {
 
 func toResponse(p *domain.Profile) profileResponse {
 	r := profileResponse{
-		UserID: p.UserID, Headline: p.Headline, About: p.About, PhotoURL: p.PhotoURL,
-		Bio: p.Bio, Location: p.Location, Website: p.Website, Version: p.Version,
-		Pronouns: p.Pronouns, CareerStatus: p.CareerStatus,
-		TransitionReason: p.TransitionReason, TargetComebackTimeline: p.TargetComebackTimeline,
-		SupportsNeeded: p.SupportsNeeded, OpenToRemote: p.OpenToRemote, OpenToRelocation: p.OpenToRelocation,
-		RelocationLocations: p.RelocationLocations, DesiredRoles: p.DesiredRoles, DesiredIndustries: p.DesiredIndustries,
-		EmploymentType: p.EmploymentType, SalaryMin: p.SalaryMin, SalaryMax: p.SalaryMax,
-		SalaryCurrency: p.SalaryCurrency, SalaryVisible: p.SalaryVisible, WorkMode: p.WorkMode,
-		AvailabilityDate: p.AvailabilityDate, NoticePeriod: p.NoticePeriod,
-		ReferralEligible: p.ReferralEligible, EmailVerified: p.EmailVerified, PhoneVerified: p.PhoneVerified,
-		LinkedinVerified: p.LinkedinVerified, IdVerified: p.IdVerified,
-		CareerNarrative: p.CareerNarrative, CoachingMetadata: p.CoachingMetadata,
-		WorkAuthStatus: p.WorkAuthStatus, PassportNationality: p.PassportNationality,
-		DrivingLicenseBool: p.DrivingLicenseBool, DrivingLicenseType: p.DrivingLicenseType,
-		PreferredContactChannel: p.PreferredContactChannel, AccessibilityNeeds: p.AccessibilityNeeds,
-		VideoIntroURL: p.VideoIntroURL, WillingToMentor: p.WillingToMentor,
-		AvgResponseTimeHours: p.AvgResponseTimeHours, ProfileCompletenessScore: p.ProfileCompletenessScore,
-		LastActiveAt: p.LastActiveAt, BackgroundCheckConsent: p.BackgroundCheckConsent,
-		BackgroundCheckConsentAt: p.BackgroundCheckConsentAt, JobAlertFrequency: p.JobAlertFrequency,
-		JobAlertChannel: p.JobAlertChannel, VisibilityProfile: p.VisibilityProfile,
-		VisibilitySalary: p.VisibilitySalary, VisibilityTransitionReason: p.VisibilityTransitionReason,
-		VisibilityExperience: p.VisibilityExperience, VisibilityEducation: p.VisibilityEducation,
-		VisibilityCertifications: p.VisibilityCertifications, VisibilitySkills: p.VisibilitySkills,
-		VisibilityPortfolio: p.VisibilityPortfolio, VisibilityReferences: p.VisibilityReferences,
+		UserID: p.UserID, Headline: p.Identity.Headline, About: p.Identity.Bio, PhotoURL: p.Identity.PhotoURL,
+		Bio: p.Identity.Bio, Location: p.Identity.Location, Website: p.Identity.SocialLinks.Website, Version: p.Version,
+		Pronouns: p.Identity.VisaStatus, CareerStatus: p.Identity.Availability,
+		TransitionReason: p.Identity.Bio, TargetComebackTimeline: p.Identity.Availability,
+		SupportsNeeded: []string{}, OpenToRemote: p.Preferences.OpenToRelocation, OpenToRelocation: p.Preferences.OpenToRelocation,
+		RelocationLocations: []string{}, DesiredRoles: p.Preferences.DesiredRoles, DesiredIndustries: p.Preferences.DesiredIndustries,
+		EmploymentType: p.Preferences.NoticePeriod, SalaryMin: p.Preferences.SalaryMin, SalaryMax: p.Preferences.SalaryMax,
+		SalaryCurrency: p.Preferences.SalaryCurrency, SalaryVisible: p.Preferences.OpenToRelocation, WorkMode: p.Preferences.RemotePreference,
+		AvailabilityDate: "", NoticePeriod: p.Preferences.NoticePeriod,
+		ReferralEligible: p.Verification.IdentityVerified, EmailVerified: p.Verification.EmailVerified, PhoneVerified: p.Verification.PhoneVerified,
+		LinkedinVerified: p.Verification.IdentityVerified, IdVerified: p.Verification.IdentityVerified,
+		CareerNarrative: string(p.AICareerAssistant.GapAnalysis), CoachingMetadata: string(p.AICareerAssistant.InterviewPrep),
+		WorkAuthStatus: p.Identity.WorkAuthorization, PassportNationality: p.Identity.Nationality,
+		DrivingLicenseBool: p.Verification.IdentityVerified, DrivingLicenseType: p.Identity.VisaStatus,
+		PreferredContactChannel: p.Identity.PreferredContactChannel, AccessibilityNeeds: p.Identity.VisaStatus,
+		VideoIntroURL: p.Identity.CoverURL, WillingToMentor: p.Verification.IdentityVerified,
+		AvgResponseTimeHours: float64(p.Analytics.ProfileViews), ProfileCompletenessScore: p.ProfileCompletenessScore,
+		LastActiveAt: p.LastActiveAt.Format(time.RFC3339), BackgroundCheckConsent: p.Verification.IdentityVerified,
+		BackgroundCheckConsentAt: "", JobAlertFrequency: p.Identity.VisaStatus,
+		JobAlertChannel: p.Identity.VisaStatus, VisibilityProfile: p.Privacy.FieldVisibility["profile"],
+		VisibilitySalary: p.Privacy.FieldVisibility["salary"], VisibilityTransitionReason: p.Privacy.FieldVisibility["transition_reason"],
+		VisibilityExperience: p.Privacy.FieldVisibility["experience"], VisibilityEducation: p.Privacy.FieldVisibility["education"],
+		VisibilityCertifications: p.Privacy.FieldVisibility["certifications"], VisibilitySkills: p.Privacy.FieldVisibility["skills"],
+		VisibilityPortfolio: p.Privacy.FieldVisibility["portfolio"], VisibilityReferences: p.Privacy.FieldVisibility["references"],
 		Experiences:    make([]experienceDTO, 0, len(p.Experiences)),
 		Educations:     make([]educationDTO, 0, len(p.Educations)),
 		Certifications: make([]certificationDTO, 0, len(p.Certifications)),
 		Skills:         make([]skillDTO, 0, len(p.Skills)),
-		Languages:      make([]languageDTO, 0, len(p.Languages)),
-		Portfolio:      make([]portfolioLinkDTO, 0, len(p.Portfolio)),
-		Endorsements:   make([]endorsementDTO, 0, len(p.Endorsements)),
-		References:     make([]referenceDTO, 0, len(p.References)),
-	}
-
-	if r.SupportsNeeded == nil {
-		r.SupportsNeeded = []string{}
-	}
-	if r.RelocationLocations == nil {
-		r.RelocationLocations = []string{}
-	}
-	if r.DesiredRoles == nil {
-		r.DesiredRoles = []string{}
-	}
-	if r.DesiredIndustries == nil {
-		r.DesiredIndustries = []string{}
+		Languages:      make([]languageDTO, 0, len(p.Identity.Languages)),
+		Portfolio:      make([]portfolioLinkDTO, 0, len(p.Projects)),
+		Endorsements:   make([]endorsementDTO, 0, len(p.Networking.Recommendations)),
+		References:     make([]referenceDTO, 0, 0),
 	}
 
 	for _, e := range p.Experiences {
@@ -330,66 +309,82 @@ func toResponse(p *domain.Profile) profileResponse {
 		}
 		r.Experiences = append(r.Experiences, experienceDTO{
 			ID:             e.ID,
-			Title:          e.Title,
+			Title:          e.Position,
 			Company:        e.Company,
 			Location:       e.Location,
 			EmploymentType: e.EmploymentType,
-			StartDate:      e.StartDate,
-			EndDate:        e.EndDate,
+			StartDate:      e.StartDate.Format("2006-01-02"),
+			EndDate:        e.EndDate.Format("2006-01-02"),
 			IsCurrent:      e.IsCurrent,
-			Description:    e.Description,
+			Description:    e.Responsibilities,
 			Achievements:   achs,
 		})
 	}
 	for _, e := range p.Educations {
-		r.Educations = append(r.Educations, educationDTO(e))
+		r.Educations = append(r.Educations, educationDTO{
+			ID:           e.ID,
+			School:       e.Institution,
+			Degree:       e.Degree,
+			FieldOfStudy: e.Major,
+			StartDate:    e.GraduationDate.Format("2006-01-02"),
+			EndDate:      e.GraduationDate.Format("2006-01-02"),
+			Grade:        fmt.Sprintf("%.2f", e.GPA),
+			Description:  e.Thesis,
+		})
 	}
 	for _, c := range p.Certifications {
-		r.Certifications = append(r.Certifications, certificationDTO(c))
+		r.Certifications = append(r.Certifications, certificationDTO{
+			ID:            c.ID,
+			Name:          c.Name,
+			Issuer:        c.Issuer,
+			IssueDate:     c.IssueDate.Format("2006-01-02"),
+			ExpiryDate:    c.ExpirationDate.Format("2006-01-02"),
+			CredentialID:  c.CredentialID,
+			CredentialURL: c.VerificationURL,
+		})
 	}
 	for _, s := range p.Skills {
-		r.Skills = append(r.Skills, skillDTO(s))
+		r.Skills = append(r.Skills, skillDTO{
+			Name:             s.Name,
+			ProficiencyLevel: s.Level,
+			EndorsedCount:    0,
+		})
 	}
-	for _, l := range p.Languages {
-		r.Languages = append(r.Languages, languageDTO(l))
+	for _, l := range p.Identity.Languages {
+		r.Languages = append(r.Languages, languageDTO{
+			Name:        l.Name,
+			Proficiency: l.Proficiency,
+		})
 	}
-	for _, l := range p.Portfolio {
-		r.Portfolio = append(r.Portfolio, portfolioLinkDTO(l))
+	for _, pr := range p.Projects {
+		r.Portfolio = append(r.Portfolio, portfolioLinkDTO{
+			ID:       pr.ID,
+			Platform: "custom",
+			URL:      pr.LiveDemoURL,
+		})
 	}
-	for _, en := range p.Endorsements {
-		r.Endorsements = append(r.Endorsements, endorsementDTO(en))
+	for _, rec := range p.Networking.Recommendations {
+		r.Endorsements = append(r.Endorsements, endorsementDTO{
+			FromUserID:   rec.FromUserName,
+			Relationship: rec.Relationship,
+			Text:         rec.Text,
+			CreatedAt:    rec.CreatedAt.Format(time.RFC3339),
+		})
 	}
-	for _, ref := range p.References {
-		r.References = append(r.References, referenceDTO(ref))
-	}
+
 	return r
 }
 
-// Convert DTOs to domain
-func (d experienceDTO) toDomain() domain.WorkExperience {
-	achs := d.Achievements
-	if achs == nil {
-		achs = []string{}
-	}
-	return domain.WorkExperience{
-		ID:             d.ID,
-		Title:          d.Title,
-		Company:        d.Company,
-		Location:       d.Location,
-		EmploymentType: d.EmploymentType,
-		StartDate:      d.StartDate,
-		EndDate:        d.EndDate,
-		IsCurrent:      d.IsCurrent,
-		Description:    d.Description,
-		Achievements:   achs,
-	}
+type consentDTO struct {
+	ID           string `json:"id,omitempty"`
+	ConsentType  string `json:"consent_type"`
+	TargetEntity string `json:"target_entity"`
+	Consented    bool   `json:"consented"`
+	IPAddress    string `json:"ip_address"`
+	UserAgent    string `json:"user_agent"`
+	CreatedAt    string `json:"created_at"`
 }
 
-func (d educationDTO) toDomain() domain.Education         { return domain.Education(d) }
-func (d certificationDTO) toDomain() domain.Certification { return domain.Certification(d) }
-func (d skillDTO) toDomain() domain.ProfileSkill          { return domain.ProfileSkill(d) }
-func (d endorsementDTO) toDomain() domain.Endorsement     { return domain.Endorsement(d) }
-func (d referenceDTO) toDomain() domain.Reference         { return domain.Reference(d) }
 func (d consentDTO) toDomain() domain.ConsentLog {
 	return domain.ConsentLog{
 		ID:           d.ID,
@@ -402,21 +397,146 @@ func (d consentDTO) toDomain() domain.ConsentLog {
 	}
 }
 
-func toScalars(r updateScalarsRequest) domain.Scalars {
-	return domain.Scalars{
-		Headline: r.Headline, About: r.About, PhotoURL: r.PhotoURL, Bio: r.Bio, Location: r.Location, Website: r.Website,
-		Pronouns: r.Pronouns, CareerStatus: r.CareerStatus, TransitionReason: r.TransitionReason, TargetComebackTimeline: r.TargetComebackTimeline,
-		OpenToRemote: r.OpenToRemote, OpenToRelocation: r.OpenToRelocation, EmploymentType: r.EmploymentType,
-		SalaryMin: r.SalaryMin, SalaryMax: r.SalaryMax, SalaryCurrency: r.SalaryCurrency, SalaryVisible: r.SalaryVisible,
-		WorkMode: r.WorkMode, AvailabilityDate: r.AvailabilityDate, NoticePeriod: r.NoticePeriod,
-		ReferralEligible: r.ReferralEligible, CareerNarrative: r.CareerNarrative, CoachingMetadata: r.CoachingMetadata,
-		WorkAuthStatus: r.WorkAuthStatus, PassportNationality: r.PassportNationality, DrivingLicenseBool: r.DrivingLicenseBool, DrivingLicenseType: r.DrivingLicenseType,
-		PreferredContactChannel: r.PreferredContactChannel, AccessibilityNeeds: r.AccessibilityNeeds, VideoIntroURL: r.VideoIntroURL,
-		WillingToMentor: r.WillingToMentor, BackgroundCheckConsent: r.BackgroundCheckConsent, BackgroundCheckConsentAt: r.BackgroundCheckConsentAt,
-		JobAlertFrequency: r.JobAlertFrequency, JobAlertChannel: r.JobAlertChannel,
-		VisibilityProfile: r.VisibilityProfile, VisibilitySalary: r.VisibilitySalary, VisibilityTransitionReason: r.VisibilityTransitionReason,
-		VisibilityExperience: r.VisibilityExperience, VisibilityEducation: r.VisibilityEducation, VisibilityCertifications: r.VisibilityCertifications,
-		VisibilitySkills: r.VisibilitySkills, VisibilityPortfolio: r.VisibilityPortfolio, VisibilityReferences: r.VisibilityReferences,
-		SupportsNeeded: r.SupportsNeeded, RelocationLocations: r.RelocationLocations, DesiredRoles: r.DesiredRoles, DesiredIndustries: r.DesiredIndustries,
+func (d experienceDTO) toDomain() domain.WorkExperience {
+	var start, end time.Time
+	if d.StartDate != "" {
+		start, _ = time.Parse("2006-01-02", d.StartDate)
+	}
+	if d.EndDate != "" {
+		end, _ = time.Parse("2006-01-02", d.EndDate)
+	}
+	return domain.WorkExperience{
+		ID:             d.ID,
+		Position:       d.Title,
+		Company:        d.Company,
+		Location:       d.Location,
+		EmploymentType: d.EmploymentType,
+		StartDate:      start,
+		EndDate:        end,
+		IsCurrent:      d.IsCurrent,
+		Responsibilities: d.Description,
+		Achievements:   d.Achievements,
+	}
+}
+
+func (d educationDTO) toDomain() domain.Education {
+	var grad time.Time
+	if d.EndDate != "" {
+		grad, _ = time.Parse("2006-01-02", d.EndDate)
+	}
+	gpaVal, _ := strconv.ParseFloat(d.Grade, 64)
+	return domain.Education{
+		ID:                 d.ID,
+		Institution:        d.School,
+		Degree:             d.Degree,
+		Major:              d.FieldOfStudy,
+		GraduationDate:     grad,
+		GPA:                gpaVal,
+		Thesis:             d.Description,
+		VerificationStatus: "unverified",
+	}
+}
+
+func (d certificationDTO) toDomain() domain.CertificationItem {
+	var issue, expiry time.Time
+	if d.IssueDate != "" {
+		issue, _ = time.Parse("2006-01-02", d.IssueDate)
+	}
+	if d.ExpiryDate != "" {
+		expiry, _ = time.Parse("2006-01-02", d.ExpiryDate)
+	}
+	return domain.CertificationItem{
+		ID:              d.ID,
+		Name:            d.Name,
+		Issuer:          d.Issuer,
+		CredentialID:    d.CredentialID,
+		VerificationURL: d.CredentialURL,
+		IssueDate:       issue,
+		ExpirationDate:  expiry,
+		Status:          "active",
+	}
+}
+
+func (d skillDTO) toDomain() domain.SkillItem {
+	return domain.SkillItem{
+		Name:  d.Name,
+		Level: d.ProficiencyLevel,
+	}
+}
+
+func (d languageDTO) toDomain() domain.LanguageItem {
+	return domain.LanguageItem{
+		Name:        d.Name,
+		Proficiency: d.Proficiency,
+	}
+}
+
+func (d portfolioLinkDTO) toDomain() domain.ProjectItem {
+	return domain.ProjectItem{
+		ID:          d.ID,
+		LiveDemoURL: d.URL,
+	}
+}
+
+func (d endorsementDTO) toDomain() domain.Endorsement {
+	return domain.Endorsement{
+		ID:           d.ID,
+		ToUserID:     d.ToUserID,
+		FromUserID:   d.FromUserID,
+		Relationship: d.Relationship,
+		Text:         d.Text,
+		CreatedAt:    d.CreatedAt,
+	}
+}
+
+func (d referenceDTO) toDomain() domain.Reference {
+	return domain.Reference{
+		ID:                  d.ID,
+		Name:                d.Name,
+		Relationship:        d.Relationship,
+		ContactInfo:         d.ContactInfo,
+		PermissionToContact: d.PermissionToContact,
+	}
+}
+
+func (r updateProfileRequest) toDomain() domain.AggregateUpdate {
+	isDraft := true
+	return domain.AggregateUpdate{
+		Identity: &domain.IdentitySection{
+			Headline:                  r.Headline,
+			Bio:                       r.Bio,
+			PhotoURL:                  r.PhotoURL,
+			Location:                  r.Location,
+			PreferredContactChannel:   r.PreferredContactChannel,
+			WorkAuthorization:         r.WorkAuthStatus,
+			Nationality:               r.PassportNationality,
+		},
+		Summary: &domain.SummarySection{
+			ExecutiveSummary: r.About,
+		},
+		Preferences: &domain.CareerPreferences{
+			DesiredRoles:       r.DesiredRoles,
+			DesiredIndustries:  r.DesiredIndustries,
+			OpenToRelocation:   r.OpenToRelocation,
+			NoticePeriod:       r.NoticePeriod,
+			RemotePreference:   r.WorkMode,
+			SalaryMin:          r.SalaryMin,
+			SalaryMax:          r.SalaryMax,
+			SalaryCurrency:     r.SalaryCurrency,
+		},
+		Privacy: &domain.PrivacySecuritySettings{
+			FieldVisibility: map[string]string{
+				"profile":           r.VisibilityProfile,
+				"salary":            r.VisibilitySalary,
+				"transition_reason": r.VisibilityTransitionReason,
+				"experience":        r.VisibilityExperience,
+				"education":         r.VisibilityEducation,
+				"certifications":    r.VisibilityCertifications,
+				"skills":            r.VisibilitySkills,
+				"portfolio":         r.VisibilityPortfolio,
+				"references":        r.VisibilityReferences,
+			},
+		},
+		IsDraft: &isDraft,
 	}
 }

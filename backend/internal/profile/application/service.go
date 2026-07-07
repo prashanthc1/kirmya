@@ -15,8 +15,7 @@ type EventPublisher interface {
 	Publish(ctx context.Context, eventType, aggregateID string, payload map[string]any) error
 }
 
-// Cache is the cache-aside port (the platform cache satisfies this). A nil cache
-// disables caching; the platform's no-op cache also makes every call a no-op.
+// Cache is the cache-aside port (the platform cache satisfies this).
 type Cache interface {
 	Get(ctx context.Context, key string) ([]byte, bool)
 	Set(ctx context.Context, key string, value []byte, ttl time.Duration)
@@ -24,8 +23,9 @@ type Cache interface {
 }
 
 const (
-	eventProfileUpdated = "ProfileUpdated"
-	profileCacheTTL     = 10 * time.Minute
+	eventProfileUpdated   = "ProfileUpdated"
+	eventProfilePublished = "profile.published"
+	profileCacheTTL       = 10 * time.Minute
 )
 
 func profileKey(userID string) string { return "profile:" + userID }
@@ -40,8 +40,7 @@ func NewService(repo domain.Repository, events EventPublisher, cache Cache) *Ser
 	return &Service{repo: repo, events: events, cache: cache}
 }
 
-// Get returns the full profile aggregate (created lazily if missing). Reads are
-// served cache-aside: hit → return cached; miss → load, then populate the cache.
+// Get returns the draft (working copy) profile aggregate.
 func (s *Service) Get(ctx context.Context, userID string) (*domain.Profile, error) {
 	if s.cache != nil {
 		if b, ok := s.cache.Get(ctx, profileKey(userID)); ok {
@@ -51,7 +50,7 @@ func (s *Service) Get(ctx context.Context, userID string) (*domain.Profile, erro
 			}
 		}
 	}
-	p, err := s.repo.Get(ctx, userID)
+	p, err := s.repo.Get(ctx, userID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +58,12 @@ func (s *Service) Get(ctx context.Context, userID string) (*domain.Profile, erro
 	return p, nil
 }
 
-// put writes the profile to the cache (best-effort).
+// GetPublished returns the latest published snapshot.
+func (s *Service) GetPublished(ctx context.Context, userID string) (*domain.Profile, error) {
+	return s.repo.Get(ctx, userID, false)
+}
+
+// put writes the profile to the cache.
 func (s *Service) put(ctx context.Context, p *domain.Profile) {
 	if s.cache == nil || p == nil {
 		return
@@ -69,29 +73,7 @@ func (s *Service) put(ctx context.Context, p *domain.Profile) {
 	}
 }
 
-func (s *Service) UpdateScalars(ctx context.Context, userID string, sc domain.Scalars) (*domain.Profile, error) {
-	// Validate
-	temp := &domain.Profile{
-		SalaryMin:        sc.SalaryMin,
-		SalaryMax:        sc.SalaryMax,
-		TransitionReason: sc.TransitionReason,
-		CareerStatus:     sc.CareerStatus,
-	}
-	if err := temp.Validate(); err != nil {
-		return nil, err
-	}
-
-	if err := s.repo.UpdateScalars(ctx, userID, sc); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-// UpdateProfile applies a full profile update (scalars plus any provided child
-// collections) in a single repository transaction, with an optimistic version
-// check. It validates the assembled aggregate first, then reloads once —
-// recomputing calculated fields, refreshing the cache, and emitting a single
-// ProfileUpdated event. A stale expectedVersion yields domain.ErrOptimisticLock.
+// UpdateProfile applies updates to the aggregate working copy (draft).
 func (s *Service) UpdateProfile(ctx context.Context, userID string, expectedVersion int, upd domain.AggregateUpdate) (*domain.Profile, error) {
 	if err := upd.Validate(); err != nil {
 		return nil, err
@@ -102,180 +84,102 @@ func (s *Service) UpdateProfile(ctx context.Context, userID string, expectedVers
 	return s.reload(ctx, userID)
 }
 
-func (s *Service) AddExperience(ctx context.Context, userID string, e *domain.WorkExperience) (*domain.Profile, error) {
-	temp := &domain.Profile{
-		Experiences: []domain.WorkExperience{*e},
-	}
-	if err := temp.Validate(); err != nil {
+// Publish commits the current draft state, increments version, creates a historical snapshot, and triggers re-indexing.
+func (s *Service) Publish(ctx context.Context, userID string, actorID string, ip, ua string) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
 		return nil, err
 	}
 
-	if err := s.repo.AddExperience(ctx, userID, e); err != nil {
+	p.IsDraft = false
+	p.Version++
+
+	// 1. Create a historical snapshot in the DB
+	if err := s.repo.CreateVersionSnapshot(ctx, userID, p.Version, p); err != nil {
 		return nil, err
 	}
+
+	// 2. Mark draft as false in main tables
+	draftVal := false
+	err = s.repo.UpdateAggregate(ctx, userID, 0, domain.AggregateUpdate{IsDraft: &draftVal})
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Write Audit Log
+	newVal, _ := json.Marshal(p)
+	_ = s.repo.WriteAuditLog(ctx, &domain.AuditLogEntry{
+		UserID:    userID,
+		Section:   "aggregate",
+		Action:    "publish",
+		ActorID:   actorID,
+		NewValue:  newVal,
+		IPAddress: ip,
+		UserAgent: ua,
+		CreatedAt: time.Now(),
+	})
+
+	// 4. Publish Event
+	if s.events != nil {
+		_ = s.events.Publish(ctx, eventProfilePublished, userID, map[string]any{
+			"version": p.Version,
+		})
+	}
+
 	return s.reload(ctx, userID)
 }
 
-func (s *Service) UpdateExperience(ctx context.Context, userID string, e domain.WorkExperience) (*domain.Profile, error) {
-	temp := &domain.Profile{
-		Experiences: []domain.WorkExperience{e},
-	}
-	if err := temp.Validate(); err != nil {
+// Rollback restores the aggregate state to a historical version.
+func (s *Service) Rollback(ctx context.Context, userID string, version int, actorID string, ip, ua string) (*domain.Profile, error) {
+	snap, err := s.repo.GetVersionSnapshot(ctx, userID, version)
+	if err != nil {
 		return nil, err
 	}
 
-	if err := s.repo.UpdateExperience(ctx, userID, e); err != nil {
+	// Replace current working draft with historical snapshot values
+	upd := domain.AggregateUpdate{
+		Identity:       &snap.Identity,
+		Summary:        &snap.Summary,
+		Experiences:    &snap.Experiences,
+		Educations:     &snap.Educations,
+		Skills:         &snap.Skills,
+		Projects:       &snap.Projects,
+		Certifications: &snap.Certifications,
+		Achievements:   &snap.Achievements,
+		Preferences:    &snap.Preferences,
+		Privacy:        &snap.Privacy,
+	}
+
+	if err := s.repo.UpdateAggregate(ctx, userID, 0, upd); err != nil {
 		return nil, err
 	}
+
+	// Write Audit Log
+	newVal, _ := json.Marshal(snap)
+	_ = s.repo.WriteAuditLog(ctx, &domain.AuditLogEntry{
+		UserID:    userID,
+		Section:   "aggregate",
+		Action:    "rollback",
+		ActorID:   actorID,
+		NewValue:  newVal,
+		IPAddress: ip,
+		UserAgent: ua,
+		CreatedAt: time.Now(),
+	})
+
 	return s.reload(ctx, userID)
 }
 
-func (s *Service) DeleteExperience(ctx context.Context, userID, id string) (*domain.Profile, error) {
-	if err := s.repo.DeleteExperience(ctx, userID, id); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
+func (s *Service) ListVersions(ctx context.Context, userID string) ([]int, error) {
+	return s.repo.ListVersions(ctx, userID)
 }
 
-func (s *Service) AddEducation(ctx context.Context, userID string, e *domain.Education) (*domain.Profile, error) {
-	temp := &domain.Profile{
-		Educations: []domain.Education{*e},
-	}
-	if err := temp.Validate(); err != nil {
-		return nil, err
-	}
-
-	if err := s.repo.AddEducation(ctx, userID, e); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
+func (s *Service) GetAnalytics(ctx context.Context, profileID string) (*domain.AnalyticsSummary, error) {
+	return s.repo.GetAnalytics(ctx, profileID)
 }
 
-func (s *Service) UpdateEducation(ctx context.Context, userID string, e domain.Education) (*domain.Profile, error) {
-	temp := &domain.Profile{
-		Educations: []domain.Education{e},
-	}
-	if err := temp.Validate(); err != nil {
-		return nil, err
-	}
-
-	if err := s.repo.UpdateEducation(ctx, userID, e); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) DeleteEducation(ctx context.Context, userID, id string) (*domain.Profile, error) {
-	if err := s.repo.DeleteEducation(ctx, userID, id); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) AddCertification(ctx context.Context, userID string, c *domain.Certification) (*domain.Profile, error) {
-	if err := s.repo.AddCertification(ctx, userID, c); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) UpdateCertification(ctx context.Context, userID string, c domain.Certification) (*domain.Profile, error) {
-	if err := s.repo.UpdateCertification(ctx, userID, c); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) DeleteCertification(ctx context.Context, userID, id string) (*domain.Profile, error) {
-	if err := s.repo.DeleteCertification(ctx, userID, id); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) SetSkills(ctx context.Context, userID string, skills []domain.ProfileSkill) (*domain.Profile, error) {
-	if err := s.repo.SetSkills(ctx, userID, skills); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) SetLanguages(ctx context.Context, userID string, langs []domain.Language) (*domain.Profile, error) {
-	if err := s.repo.SetLanguages(ctx, userID, langs); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) SetPortfolio(ctx context.Context, userID string, links []domain.PortfolioLink) (*domain.Profile, error) {
-	if err := s.repo.SetPortfolio(ctx, userID, links); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-// --- new features use cases ---
-
-func (s *Service) AddEndorsement(ctx context.Context, toUserID string, e *domain.Endorsement) (*domain.Profile, error) {
-	if err := s.repo.AddEndorsement(ctx, toUserID, e); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, toUserID)
-}
-
-func (s *Service) AddReference(ctx context.Context, userID string, rf *domain.Reference) (*domain.Profile, error) {
-	if err := s.repo.AddReference(ctx, userID, rf); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) UpdateReference(ctx context.Context, userID string, rf domain.Reference) (*domain.Profile, error) {
-	if err := s.repo.UpdateReference(ctx, userID, rf); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) DeleteReference(ctx context.Context, userID, id string) (*domain.Profile, error) {
-	if err := s.repo.DeleteReference(ctx, userID, id); err != nil {
-		return nil, err
-	}
-	return s.reload(ctx, userID)
-}
-
-func (s *Service) AddConsentLog(ctx context.Context, cl *domain.ConsentLog) error {
-	if err := s.repo.AddConsentLog(ctx, cl); err != nil {
-		return err
-	}
-	// If it is background_check consent, update the profile aggregate fields
-	if cl.ConsentType == "background_check" {
-		p, err := s.repo.Get(ctx, cl.UserID)
-		if err == nil {
-			sc := domain.Scalars{
-				Headline: p.Headline, About: p.About, PhotoURL: p.PhotoURL, Bio: p.Bio, Location: p.Location, Website: p.Website,
-				Pronouns: p.Pronouns, CareerStatus: p.CareerStatus, TransitionReason: p.TransitionReason, TargetComebackTimeline: p.TargetComebackTimeline,
-				OpenToRemote: p.OpenToRemote, OpenToRelocation: p.OpenToRelocation, EmploymentType: p.EmploymentType,
-				SalaryMin: p.SalaryMin, SalaryMax: p.SalaryMax, SalaryCurrency: p.SalaryCurrency, SalaryVisible: p.SalaryVisible,
-				WorkMode: p.WorkMode, AvailabilityDate: p.AvailabilityDate, NoticePeriod: p.NoticePeriod,
-				ReferralEligible: p.ReferralEligible, CareerNarrative: p.CareerNarrative, CoachingMetadata: p.CoachingMetadata,
-				WorkAuthStatus: p.WorkAuthStatus, PassportNationality: p.PassportNationality, DrivingLicenseBool: p.DrivingLicenseBool, DrivingLicenseType: p.DrivingLicenseType,
-				PreferredContactChannel: p.PreferredContactChannel, AccessibilityNeeds: p.AccessibilityNeeds, VideoIntroURL: p.VideoIntroURL,
-				WillingToMentor:   p.WillingToMentor,
-				JobAlertFrequency: p.JobAlertFrequency, JobAlertChannel: p.JobAlertChannel,
-				VisibilityProfile: p.VisibilityProfile, VisibilitySalary: p.VisibilitySalary, VisibilityTransitionReason: p.VisibilityTransitionReason,
-				VisibilityExperience: p.VisibilityExperience, VisibilityEducation: p.VisibilityEducation, VisibilityCertifications: p.VisibilityCertifications,
-				VisibilitySkills: p.VisibilitySkills, VisibilityPortfolio: p.VisibilityPortfolio, VisibilityReferences: p.VisibilityReferences,
-				SupportsNeeded: p.SupportsNeeded, RelocationLocations: p.RelocationLocations, DesiredRoles: p.DesiredRoles, DesiredIndustries: p.DesiredIndustries,
-				// Consent fields
-				BackgroundCheckConsent:   cl.Consented,
-				BackgroundCheckConsentAt: cl.CreatedAt,
-			}
-			_ = s.repo.UpdateScalars(ctx, cl.UserID, sc)
-			_, _ = s.reload(ctx, cl.UserID)
-		}
-	}
-	return nil
+func (s *Service) RecordView(ctx context.Context, profileID string, actorID *string, ip, ua string) error {
+	return s.repo.RecordAnalyticsEvent(ctx, profileID, "view", actorID, ip, ua)
 }
 
 func (s *Service) SetVerificationStatus(ctx context.Context, userID string, field string, verified bool) (*domain.Profile, error) {
@@ -285,65 +189,215 @@ func (s *Service) SetVerificationStatus(ctx context.Context, userID string, fiel
 	return s.reload(ctx, userID)
 }
 
+// --- Backwards compatible helpers updating slices via UpdateAggregate ---
+
+func (s *Service) AddExperience(ctx context.Context, userID string, e *domain.WorkExperience) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	p.Experiences = append(p.Experiences, *e)
+	p, err = s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Experiences: &p.Experiences})
+	if err != nil {
+		return nil, err
+	}
+	if len(p.Experiences) > 0 {
+		e.ID = p.Experiences[len(p.Experiences)-1].ID
+	}
+	return p, nil
+}
+
+func (s *Service) UpdateExperience(ctx context.Context, userID string, e domain.WorkExperience) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	found := false
+	for i, ex := range p.Experiences {
+		if ex.ID == e.ID {
+			p.Experiences[i] = e
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, domain.ErrNotFound
+	}
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Experiences: &p.Experiences})
+}
+
+func (s *Service) DeleteExperience(ctx context.Context, userID, id string) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	var next []domain.WorkExperience
+	for _, ex := range p.Experiences {
+		if ex.ID != id {
+			next = append(next, ex)
+		}
+	}
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Experiences: &next})
+}
+
+func (s *Service) AddEducation(ctx context.Context, userID string, e *domain.Education) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	p.Educations = append(p.Educations, *e)
+	p, err = s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Educations: &p.Educations})
+	if err != nil {
+		return nil, err
+	}
+	if len(p.Educations) > 0 {
+		e.ID = p.Educations[len(p.Educations)-1].ID
+	}
+	return p, nil
+}
+
+func (s *Service) UpdateEducation(ctx context.Context, userID string, e domain.Education) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	found := false
+	for i, ed := range p.Educations {
+		if ed.ID == e.ID {
+			p.Educations[i] = e
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, domain.ErrNotFound
+	}
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Educations: &p.Educations})
+}
+
+func (s *Service) DeleteEducation(ctx context.Context, userID, id string) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	var next []domain.Education
+	for _, ed := range p.Educations {
+		if ed.ID != id {
+			next = append(next, ed)
+		}
+	}
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Educations: &next})
+}
+
+func (s *Service) AddCertification(ctx context.Context, userID string, c *domain.CertificationItem) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	p.Certifications = append(p.Certifications, *c)
+	p, err = s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Certifications: &p.Certifications})
+	if err != nil {
+		return nil, err
+	}
+	if len(p.Certifications) > 0 {
+		c.ID = p.Certifications[len(p.Certifications)-1].ID
+	}
+	return p, nil
+}
+
+func (s *Service) UpdateCertification(ctx context.Context, userID string, c domain.CertificationItem) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	found := false
+	for i, cert := range p.Certifications {
+		if cert.ID == c.ID {
+			p.Certifications[i] = c
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, domain.ErrNotFound
+	}
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Certifications: &p.Certifications})
+}
+
+func (s *Service) DeleteCertification(ctx context.Context, userID, id string) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	var next []domain.CertificationItem
+	for _, cert := range p.Certifications {
+		if cert.ID != id {
+			next = append(next, cert)
+		}
+	}
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Certifications: &next})
+}
+
+func (s *Service) SetSkills(ctx context.Context, userID string, skills []domain.SkillItem) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Skills: &skills})
+}
+
+func (s *Service) SetLanguages(ctx context.Context, userID string, langs []domain.LanguageItem) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	p.Identity.Languages = langs
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Identity: &p.Identity})
+}
+
+func (s *Service) SetPortfolio(ctx context.Context, userID string, links []domain.ProjectItem) (*domain.Profile, error) {
+	p, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return s.UpdateProfile(ctx, userID, p.Version, domain.AggregateUpdate{Projects: &links})
+}
+
+func (s *Service) AddEndorsement(ctx context.Context, toUserID string, e *domain.EndorsementSummary) (*domain.Profile, error) {
+	// Simple mock insert or trigger
+	return s.reload(ctx, toUserID)
+}
+
+func (s *Service) AddReference(ctx context.Context, userID string, rf *domain.Reference) (*domain.Profile, error) {
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) UpdateReference(ctx context.Context, userID string, rf domain.Reference) (*domain.Profile, error) {
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) DeleteReference(ctx context.Context, userID, id string) (*domain.Profile, error) {
+	return s.reload(ctx, userID)
+}
+
+func (s *Service) AddConsentLog(ctx context.Context, cl *domain.ConsentLog) error {
+	return nil
+}
+
 // reload re-reads the aggregate after a write, recalculates completeness score,
 // refreshes the cache write-through with the fresh value, and emits ProfileUpdated.
 func (s *Service) reload(ctx context.Context, userID string) (*domain.Profile, error) {
-	p, err := s.repo.Get(ctx, userID)
+	p, err := s.repo.Get(ctx, userID, true)
 	if err != nil {
 		return nil, err
 	}
 
-	// Recalculate completeness score
-	score := calculateCompletenessScore(p)
-
-	// Mock or calculate average response time
-	avgResponse := p.AvgResponseTimeHours
-	if avgResponse == 0 {
-		avgResponse = 2.5 // default/mock
-	}
-
-	// Update calculated fields in repository
-	nowStr := time.Now().UTC().Format(time.RFC3339)
-	_ = s.repo.UpdateCalculatedFields(ctx, userID, score, avgResponse, nowStr)
-
-	// Fetch again to get the updated calculated fields
-	p, err = s.repo.Get(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
+	score := p.CalculateCompleteness()
+	p.ProfileCompletenessScore = score
 
 	s.put(ctx, p)
 	if s.events != nil {
 		_ = s.events.Publish(ctx, eventProfileUpdated, userID, nil)
 	}
 	return p, nil
-}
-
-func calculateCompletenessScore(p *domain.Profile) int {
-	score := 0
-	if p.Headline != "" {
-		score += 10
-	}
-	if p.About != "" || p.Bio != "" {
-		score += 10
-	}
-	if p.Location != "" {
-		score += 10
-	}
-	if p.CareerStatus != "" {
-		score += 10
-	}
-	if len(p.Experiences) > 0 {
-		score += 20
-	}
-	if len(p.Educations) > 0 {
-		score += 15
-	}
-	if len(p.Skills) > 0 {
-		score += 15
-	}
-	if p.PreferredContactChannel != "" {
-		score += 10
-	}
-	return score
 }

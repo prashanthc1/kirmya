@@ -80,6 +80,7 @@ type LLM interface {
 	// Ready reports whether the provider is configured (API key present).
 	Ready() bool
 	Complete(ctx context.Context, system string, messages []LLMMessage, maxTokens int) (Completion, error)
+	StreamComplete(ctx context.Context, system string, messages []LLMMessage, maxTokens int) (chan string, error)
 }
 
 // Repository persists coach threads/messages and the interaction log.

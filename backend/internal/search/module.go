@@ -44,6 +44,7 @@ func subscribe(bus *eventbus.Bus, svc *application.Service) {
 	indexUser := func(ctx context.Context, e eventbus.Event) { svc.IndexUser(ctx, e.AggregateID) }
 	bus.Subscribe("UserRegistered", indexUser)
 	bus.Subscribe("ProfileUpdated", indexUser)
+	bus.Subscribe("profile.published", indexUser)
 
 	bus.Subscribe("JobPosted", func(ctx context.Context, e eventbus.Event) {
 		svc.IndexJob(ctx, e.AggregateID)

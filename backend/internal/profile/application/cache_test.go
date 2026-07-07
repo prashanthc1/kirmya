@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"testing"
 	"time"
@@ -53,14 +54,17 @@ func TestGetIsCacheAside(t *testing.T) {
 	ctx := context.Background()
 
 	// Seed the repo with a known headline.
-	if _, err := svc.UpdateScalars(ctx, "u1", domain.Scalars{Headline: "Ops Lead"}); err != nil {
+	isDraft := true
+	if _, err := svc.UpdateProfile(ctx, "u1", 0, domain.AggregateUpdate{
+		Identity: &domain.IdentitySection{Headline: "Ops Lead"},
+		IsDraft:  &isDraft,
+	}); err != nil {
 		t.Fatalf("seed: %v", err)
 	}
 
-	// First Get populates the cache (write-through on the write above already did,
-	// but a fresh read must still serve correctly).
+	// First Get populates the cache
 	p, err := svc.Get(ctx, "u1")
-	if err != nil || p.Headline != "Ops Lead" {
+	if err != nil || p.Identity.Headline != "Ops Lead" {
 		t.Fatalf("first get: %v %+v", err, p)
 	}
 	if _, ok := cache.store[profileKey("u1")]; !ok {
@@ -68,7 +72,10 @@ func TestGetIsCacheAside(t *testing.T) {
 	}
 
 	// Mutate the repo out-of-band (bypassing the service so the cache is stale).
-	if err := repo.UpdateScalars(ctx, "u1", domain.Scalars{Headline: "Changed Underneath"}); err != nil {
+	err = repo.UpdateAggregate(ctx, "u1", 0, domain.AggregateUpdate{
+		Identity: &domain.IdentitySection{Headline: "Changed Underneath"},
+	})
+	if err != nil {
 		t.Fatalf("oob update: %v", err)
 	}
 
@@ -77,8 +84,8 @@ func TestGetIsCacheAside(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cached get: %v", err)
 	}
-	if p.Headline != "Ops Lead" {
-		t.Fatalf("expected cached headline, got %q", p.Headline)
+	if p.Identity.Headline != "Ops Lead" {
+		t.Fatalf("expected cached headline, got %q", p.Identity.Headline)
 	}
 	if cache.hits == 0 {
 		t.Fatal("expected at least one cache hit")
@@ -96,16 +103,20 @@ func TestWriteRefreshesCache(t *testing.T) {
 		t.Fatalf("prime: %v", err)
 	}
 	// A write through the service refreshes the cache write-through.
-	if _, err := svc.SetSkills(ctx, "u1", []domain.ProfileSkill{{Name: "Leadership"}, {Name: "Budgeting"}}); err != nil {
+	if _, err := svc.SetSkills(ctx, "u1", []domain.SkillItem{{Name: "Leadership"}, {Name: "Budgeting"}}); err != nil {
 		t.Fatalf("set skills: %v", err)
 	}
 
-	// A subsequent read sees the fresh skills (served from the refreshed cache).
-	p, err := svc.Get(ctx, "u1")
-	if err != nil {
-		t.Fatalf("get: %v", err)
+	// Verify new values are immediately visible via the cache.
+	b, ok := cache.Get(ctx, profileKey("u1"))
+	if !ok {
+		t.Fatal("expected cached profile after write")
 	}
-	if len(p.Skills) != 2 || p.Skills[0].Name != "Leadership" {
-		t.Fatalf("expected refreshed skills in cache, got %v", p.Skills)
+	var cached domain.Profile
+	if err := json.Unmarshal(b, &cached); err != nil {
+		t.Fatalf("unmarshal cached: %v", err)
+	}
+	if len(cached.Skills) != 2 || cached.Skills[0].Name != "Leadership" {
+		t.Fatalf("expected refreshed cached skills, got %+v", cached.Skills)
 	}
 }

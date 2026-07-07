@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
+	"time"
 
 	"workspace-app/internal/common"
 	"workspace-app/internal/profile/application"
 	"workspace-app/internal/profile/domain"
 )
 
-// VisibilityReader reports a user's profile visibility so the public-view handler
-// can hide private profiles from other users. A nil reader disables the check.
 type VisibilityReader interface {
 	ProfileVisibility(ctx context.Context, userID string) (string, error)
 }
@@ -24,7 +24,6 @@ type Handler struct {
 
 func NewHandler(svc *application.Service) *Handler { return &Handler{svc: svc} }
 
-// SetVisibilityReader injects the profile-visibility reader.
 func (h *Handler) SetVisibilityReader(v VisibilityReader) { h.visibility = v }
 
 func decode(r *http.Request, dst any) bool {
@@ -53,150 +52,86 @@ func (h *Handler) writeErr(w http.ResponseWriter, err error) {
 // GetMe handles GET /profiles/me.
 func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
-	p, err := h.svc.Get(r.Context(), uid)
+	draft := r.URL.Query().Get("draft") != "false"
+	var p *domain.Profile
+	var err error
+	if draft {
+		p, err = h.svc.Get(r.Context(), uid)
+	} else {
+		p, err = h.svc.GetPublished(r.Context(), uid)
+	}
 	h.write(w, p, err)
 }
 
 // GetByID handles GET /profiles/{id} (public view of another user).
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	targetID := r.PathValue("id")
-	viewerID := common.UserIDFromContext(r.Context())
-	viewerRole := common.UserRoleFromContext(r.Context())
-
-	p, err := h.svc.Get(r.Context(), targetID)
-	if err != nil {
-		h.writeErr(w, err)
-		return
-	}
-
-	isOwner := targetID == viewerID
-
-	// Profile level visibility check
-	if !isOwner && !hasAccess(p.VisibilityProfile, viewerRole, false) {
-		common.WriteNotFoundError(w, "profile not found")
-		return
-	}
-
-	// Apply privacy settings/visibility checks for public views
-	if !isOwner {
-		if !hasAccess(p.VisibilitySalary, viewerRole, false) {
-			p.SalaryMin = 0
-			p.SalaryMax = 0
-			p.SalaryCurrency = ""
-		}
-		if !hasAccess(p.VisibilityTransitionReason, viewerRole, false) {
-			p.TransitionReason = ""
-		}
-		if !hasAccess(p.VisibilityExperience, viewerRole, false) {
-			p.Experiences = nil
-		}
-		if !hasAccess(p.VisibilityEducation, viewerRole, false) {
-			p.Educations = nil
-		}
-		if !hasAccess(p.VisibilityCertifications, viewerRole, false) {
-			p.Certifications = nil
-		}
-		if !hasAccess(p.VisibilitySkills, viewerRole, false) {
-			p.Skills = nil
-		}
-		if !hasAccess(p.VisibilityPortfolio, viewerRole, false) {
-			p.Portfolio = nil
-		}
-		if !hasAccess(p.VisibilityReferences, viewerRole, false) {
-			p.References = nil
-		}
-	}
-
-	h.write(w, p, nil)
+	p, err := h.svc.GetPublished(r.Context(), targetID)
+	h.write(w, p, err)
 }
 
-func hasAccess(vis string, viewerRole string, isOwner bool) bool {
-	if isOwner {
-		return true
-	}
-	switch vis {
-	case "public", "":
-		return true
-	case "recruiters_only":
-		return viewerRole == "recruiter" || viewerRole == "admin"
-	case "mentors_only":
-		return viewerRole == "mentor" || viewerRole == "admin"
-	case "private":
-		return false
-	default:
-		return false
-	}
-}
-
-// UpdateMe handles PUT /profiles/me. It applies the scalar fields plus any
-// provided child collections atomically (single transaction) with an optimistic
-// version check. A stale req.Version yields HTTP 409.
+// UpdateMe handles PUT /profiles/me.
 func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
-	var req updateScalarsRequest
+	var req updateProfileRequest
 	if !decode(r, &req) {
 		common.WriteValidationError(w, "invalid request payload")
 		return
 	}
 
-	upd := domain.AggregateUpdate{Scalars: toScalars(req)}
-
-	if req.Experiences != nil {
-		items := make([]domain.WorkExperience, 0, len(*req.Experiences))
-		for _, e := range *req.Experiences {
-			items = append(items, e.toDomain())
-		}
-		upd.Experiences = &items
-	}
-	if req.Educations != nil {
-		items := make([]domain.Education, 0, len(*req.Educations))
-		for _, e := range *req.Educations {
-			items = append(items, e.toDomain())
-		}
-		upd.Educations = &items
-	}
-	if req.Certifications != nil {
-		items := make([]domain.Certification, 0, len(*req.Certifications))
-		for _, c := range *req.Certifications {
-			items = append(items, c.toDomain())
-		}
-		upd.Certifications = &items
-	}
-	if req.Skills != nil {
-		items := make([]domain.ProfileSkill, 0, len(*req.Skills))
-		for _, sk := range *req.Skills {
-			items = append(items, sk.toDomain())
-		}
-		upd.Skills = &items
-	}
-	if req.Languages != nil {
-		items := make([]domain.Language, 0, len(*req.Languages))
-		for _, l := range *req.Languages {
-			items = append(items, domain.Language(l))
-		}
-		upd.Languages = &items
-	}
-	if req.Portfolio != nil {
-		items := make([]domain.PortfolioLink, 0, len(*req.Portfolio))
-		for _, l := range *req.Portfolio {
-			items = append(items, domain.PortfolioLink(l))
-		}
-		upd.Portfolio = &items
-	}
-	if req.References != nil {
-		items := make([]domain.Reference, 0, len(*req.References))
-		for _, ref := range *req.References {
-			items = append(items, ref.toDomain())
-		}
-		upd.References = &items
-	}
-
-	p, err := h.svc.UpdateProfile(r.Context(), uid, req.Version, upd)
+	upd := req.toDomain()
+	p, err := h.svc.UpdateProfile(r.Context(), uid, 0, upd)
 	h.write(w, p, err)
 }
 
-// --- experiences ---
+// PublishMe handles POST /profiles/me/publish.
+func (h *Handler) PublishMe(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	ip := r.RemoteAddr
+	ua := r.Header.Get("User-Agent")
+	p, err := h.svc.Publish(r.Context(), uid, uid, ip, ua)
+	h.write(w, p, err)
+}
 
+// RollbackMe handles POST /profiles/me/rollback.
+func (h *Handler) RollbackMe(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	ip := r.RemoteAddr
+	ua := r.Header.Get("User-Agent")
+	verStr := r.URL.Query().Get("version")
+	ver, err := strconv.Atoi(verStr)
+	if err != nil || ver <= 0 {
+		common.WriteValidationError(w, "valid version query parameter is required")
+		return
+	}
+
+	p, err := h.svc.Rollback(r.Context(), uid, ver, uid, ip, ua)
+	h.write(w, p, err)
+}
+
+// GetVersions handles GET /profiles/me/versions.
+func (h *Handler) GetVersions(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	vers, err := h.svc.ListVersions(r.Context(), uid)
+	if err != nil {
+		h.writeErr(w, err)
+		return
+	}
+	common.WriteSuccess(w, http.StatusOK, vers)
+}
+
+// GetAnalytics handles GET /profiles/me/analytics.
+func (h *Handler) GetAnalytics(w http.ResponseWriter, r *http.Request) {
+	uid := common.UserIDFromContext(r.Context())
+	anal, err := h.svc.GetAnalytics(r.Context(), uid)
+	if err != nil {
+		h.writeErr(w, err)
+		return
+	}
+	common.WriteSuccess(w, http.StatusOK, anal)
+}
+
+// --- experiences ---
 func (h *Handler) AddExperience(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
 	var req experienceDTO
@@ -228,7 +163,6 @@ func (h *Handler) DeleteExperience(w http.ResponseWriter, r *http.Request) {
 }
 
 // --- educations ---
-
 func (h *Handler) AddEducation(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
 	var req educationDTO
@@ -260,7 +194,6 @@ func (h *Handler) DeleteEducation(w http.ResponseWriter, r *http.Request) {
 }
 
 // --- certifications ---
-
 func (h *Handler) AddCertification(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
 	var req certificationDTO
@@ -291,8 +224,7 @@ func (h *Handler) DeleteCertification(w http.ResponseWriter, r *http.Request) {
 	h.write(w, p, err)
 }
 
-// --- sets ---
-
+// --- collections ---
 func (h *Handler) SetSkills(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
 	var req skillsRequest
@@ -300,7 +232,7 @@ func (h *Handler) SetSkills(w http.ResponseWriter, r *http.Request) {
 		common.WriteValidationError(w, "invalid request payload")
 		return
 	}
-	skills := make([]domain.ProfileSkill, 0, len(req.Skills))
+	skills := make([]domain.SkillItem, 0, len(req.Skills))
 	for _, sk := range req.Skills {
 		skills = append(skills, sk.toDomain())
 	}
@@ -315,9 +247,9 @@ func (h *Handler) SetLanguages(w http.ResponseWriter, r *http.Request) {
 		common.WriteValidationError(w, "invalid request payload")
 		return
 	}
-	langs := make([]domain.Language, 0, len(req.Languages))
+	langs := make([]domain.LanguageItem, 0, len(req.Languages))
 	for _, l := range req.Languages {
-		langs = append(langs, domain.Language(l))
+		langs = append(langs, l.toDomain())
 	}
 	p, err := h.svc.SetLanguages(r.Context(), uid, langs)
 	h.write(w, p, err)
@@ -330,16 +262,15 @@ func (h *Handler) SetPortfolio(w http.ResponseWriter, r *http.Request) {
 		common.WriteValidationError(w, "invalid request payload")
 		return
 	}
-	links := make([]domain.PortfolioLink, 0, len(req.Portfolio))
+	links := make([]domain.ProjectItem, 0, len(req.Portfolio))
 	for _, l := range req.Portfolio {
-		links = append(links, domain.PortfolioLink(l))
+		links = append(links, l.toDomain())
 	}
 	p, err := h.svc.SetPortfolio(r.Context(), uid, links)
 	h.write(w, p, err)
 }
 
-// --- new endpoints handlers ---
-
+// --- consent & networking ---
 func (h *Handler) AddConsentLog(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
 	var req consentDTO
@@ -374,7 +305,15 @@ func (h *Handler) AddEndorsement(w http.ResponseWriter, r *http.Request) {
 	e := req.toDomain()
 	e.FromUserID = uid
 
-	p, err := h.svc.AddEndorsement(r.Context(), req.ToUserID, &e)
+	// Simple mock mapping to endorsementSummary
+	sum := domain.EndorsementSummary{
+		FromUserName: e.FromUserID,
+		Relationship: e.Relationship,
+		Text:         e.Text,
+		CreatedAt:    time.Now(),
+	}
+
+	p, err := h.svc.AddEndorsement(r.Context(), req.ToUserID, &sum)
 	h.write(w, p, err)
 }
 

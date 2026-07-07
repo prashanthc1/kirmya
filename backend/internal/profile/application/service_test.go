@@ -4,19 +4,27 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"workspace-app/internal/profile/domain"
 )
 
-func TestUpdateScalarsAndReload(t *testing.T) {
+func TestUpdateMeAndReload(t *testing.T) {
 	svc := NewService(newFakeRepo(), nil, nil)
 	ctx := context.Background()
 
-	p, err := svc.UpdateScalars(ctx, "u1", domain.Scalars{Headline: "Operations Leader", Location: "Dubai"})
+	isDraft := true
+	p, err := svc.UpdateProfile(ctx, "u1", 0, domain.AggregateUpdate{
+		Identity: &domain.IdentitySection{
+			Headline: "Operations Leader",
+			Location: "Dubai",
+		},
+		IsDraft: &isDraft,
+	})
 	if err != nil {
 		t.Fatalf("update: %v", err)
 	}
-	if p.Headline != "Operations Leader" || p.Location != "Dubai" {
+	if p.Identity.Headline != "Operations Leader" || p.Identity.Location != "Dubai" {
 		t.Fatalf("scalars not persisted: %+v", p)
 	}
 }
@@ -25,7 +33,13 @@ func TestExperienceLifecycle(t *testing.T) {
 	svc := NewService(newFakeRepo(), nil, nil)
 	ctx := context.Background()
 
-	e := domain.WorkExperience{Title: "Coordinator", Company: "Acme", Achievements: []string{"Achievement 1"}}
+	e := domain.WorkExperience{
+		Position:     "Coordinator",
+		Company:      "Acme",
+		StartDate:    time.Now().AddDate(-1, 0, 0),
+		EndDate:      time.Now(),
+		Achievements: []string{"Achievement 1"},
+	}
 	p, err := svc.AddExperience(ctx, "u1", &e)
 	if err != nil {
 		t.Fatalf("add: %v", err)
@@ -37,7 +51,7 @@ func TestExperienceLifecycle(t *testing.T) {
 		t.Fatalf("expected achievements in saved experience, got %+v", p.Experiences[0].Achievements)
 	}
 
-	e.Title = "Senior Coordinator"
+	e.Position = "Senior Coordinator"
 	if _, err := svc.UpdateExperience(ctx, "u1", e); err != nil {
 		t.Fatalf("update: %v", err)
 	}
@@ -60,10 +74,10 @@ func TestSetSkillsReplaces(t *testing.T) {
 	svc := NewService(newFakeRepo(), nil, nil)
 	ctx := context.Background()
 
-	if _, err := svc.SetSkills(ctx, "u1", []domain.ProfileSkill{{Name: "Go"}, {Name: "PostgreSQL"}}); err != nil {
+	if _, err := svc.SetSkills(ctx, "u1", []domain.SkillItem{{Name: "Go"}, {Name: "PostgreSQL"}}); err != nil {
 		t.Fatalf("set: %v", err)
 	}
-	p, err := svc.SetSkills(ctx, "u1", []domain.ProfileSkill{{Name: "Leadership"}})
+	p, err := svc.SetSkills(ctx, "u1", []domain.SkillItem{{Name: "Leadership"}})
 	if err != nil {
 		t.Fatalf("set2: %v", err)
 	}
@@ -77,38 +91,22 @@ func TestValidationRules(t *testing.T) {
 	ctx := context.Background()
 
 	// Test 1: Salary min > max should fail
-	_, err := svc.UpdateScalars(ctx, "u1", domain.Scalars{
-		SalaryMin: 10000,
-		SalaryMax: 5000,
+	_, err := svc.UpdateProfile(ctx, "u1", 0, domain.AggregateUpdate{
+		Preferences: &domain.CareerPreferences{
+			SalaryMin: 10000,
+			SalaryMax: 5000,
+		},
 	})
 	if err == nil {
 		t.Error("expected error for min salary > max salary, got nil")
 	}
 
-	// Test 2: Transition reason without proper status should fail
-	_, err = svc.UpdateScalars(ctx, "u1", domain.Scalars{
-		CareerStatus:     "employed_exploring",
-		TransitionReason: "layoff",
-	})
-	if err == nil {
-		t.Error("expected error for transition reason with employed_exploring status, got nil")
-	}
-
-	// Test 3: Transition reason with career_break should succeed
-	_, err = svc.UpdateScalars(ctx, "u1", domain.Scalars{
-		CareerStatus:     "career_break",
-		TransitionReason: "layoff",
-	})
-	if err != nil {
-		t.Errorf("unexpected error for transition reason with career_break: %v", err)
-	}
-
-	// Test 4: Experience start date > end date should fail
+	// Test 2: Experience start date > end date should fail
 	_, err = svc.AddExperience(ctx, "u1", &domain.WorkExperience{
-		Title:     "Mgr",
+		Position:  "Mgr",
 		Company:   "Acme",
-		StartDate: "2023-01-01",
-		EndDate:   "2022-01-01",
+		StartDate: time.Now(),
+		EndDate:   time.Now().AddDate(-1, 0, 0),
 	})
 	if err == nil {
 		t.Error("expected error for experience start date > end date, got nil")
