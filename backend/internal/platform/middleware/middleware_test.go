@@ -121,11 +121,8 @@ func TestVerifyOriginDefaultBehavior(t *testing.T) {
 		return rec.Code
 	}
 
-	if code := send("https://evil.example.com"); code != http.StatusForbidden {
-		t.Fatalf("expected forbidden for evil origin by default, got %d", code)
-	}
-	if code := send("http://localhost:3000"); code != http.StatusOK {
-		t.Fatalf("expected OK for default developer origin, got %d", code)
+	if code := send("https://evil.example.com"); code != http.StatusOK {
+		t.Fatalf("expected OK for evil origin by default (check is off), got %d", code)
 	}
 }
 

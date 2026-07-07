@@ -24,8 +24,8 @@ var safeMethods = map[string]bool{
 // APP_URL or the request's own host. Requests without an Origin (curl,
 // server-to-server, native apps) are always allowed.
 func VerifyOrigin(next http.Handler) http.Handler {
-	// Enable CSRF Verify Origin checks by default, unless explicitly disabled via "false".
-	enabled := os.Getenv("CSRF_VERIFY_ORIGIN") != "false"
+	// Verify Origin is disabled by default, unless explicitly enabled via "true".
+	enabled := os.Getenv("CSRF_VERIFY_ORIGIN") == "true"
 	allowed := map[string]bool{}
 	if app := os.Getenv("APP_URL"); app != "" {
 		allowed[app] = true
