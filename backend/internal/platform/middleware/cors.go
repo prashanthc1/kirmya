@@ -17,6 +17,10 @@ func CORS(next http.Handler) http.Handler {
 	// Fallback/standard developer origins
 	allowedOrigins["http://localhost:3000"] = true
 	allowedOrigins["http://127.0.0.1:3000"] = true
+	allowedOrigins["http://[::1]:3000"] = true
+	allowedOrigins["https://localhost:3000"] = true
+	allowedOrigins["https://127.0.0.1:3000"] = true
+	allowedOrigins["https://[::1]:3000"] = true
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
