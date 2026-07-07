@@ -3,46 +3,57 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Search, 
-  Sparkles, 
-  Briefcase, 
-  Compass, 
-  GraduationCap, 
-  Users, 
-  FileText, 
-  TrendingUp, 
-  DollarSign, 
-  Check, 
-  ChevronDown, 
+import {
+  Search,
+  Sparkles,
+  Briefcase,
+  Compass,
+  GraduationCap,
+  Users,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  Check,
+  ChevronDown,
   ArrowRight,
   ShieldCheck,
   Building,
   UploadCloud,
   Cpu,
-  BrainCircuit
+  BrainCircuit,
 } from "lucide-react";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 
-const COMPANIES = ["Stripe", "Linear", "Vercel", "Airbnb", "Notion", "Framer", "Figma"];
+const COMPANIES = [
+  "Stripe",
+  "Linear",
+  "Vercel",
+  "Airbnb",
+  "Notion",
+  "Framer",
+  "Figma",
+];
 
 const HERO_FEATURES = [
   {
     icon: FileText,
     title: "AI Resume Optimization",
-    description: "Scan your resume against real-time ATS parser guidelines and insert missing industry terms."
+    description:
+      "Scan your resume against real-time ATS parser guidelines and insert missing industry terms.",
   },
   {
     icon: Compass,
     title: "Employee Referral Networks",
-    description: "Connect with verified employees at top companies and secure warm internal referrals."
+    description:
+      "Connect with verified employees at top companies and secure warm internal referrals.",
   },
   {
     icon: GraduationCap,
     title: "Skills Gap Training",
-    description: "Visually trace the missing technical skills you need to qualify for high-tier open positions."
-  }
+    description:
+      "Visually trace the missing technical skills you need to qualify for high-tier open positions.",
+  },
 ];
 
 const PREVIEW_JOBS = [
@@ -54,7 +65,7 @@ const PREVIEW_JOBS = [
     salary: "$160k – $210k",
     match: 98,
     skills: ["Figma", "Design Systems", "Prototyping"],
-    type: "Full-time"
+    type: "Full-time",
   },
   {
     company: "Vercel",
@@ -64,7 +75,7 @@ const PREVIEW_JOBS = [
     salary: "$180k – $240k",
     match: 94,
     skills: ["React", "Next.js", "Tailwind CSS"],
-    type: "Full-time"
+    type: "Full-time",
   },
   {
     company: "Stripe",
@@ -74,8 +85,8 @@ const PREVIEW_JOBS = [
     salary: "$170k – $220k",
     match: 89,
     skills: ["Ruby", "React", "System Design"],
-    type: "Hybrid"
-  }
+    type: "Hybrid",
+  },
 ];
 
 const PRICING_PLANS = [
@@ -89,11 +100,11 @@ const PRICING_PLANS = [
       "5 AI Resume reviews per month",
       "Request up to 3 active referrals",
       "Join 2 community circles",
-      "Weekly AI Career coaching session"
+      "Weekly AI Career coaching session",
     ],
     cta: "Start Your Comeback",
     href: "/sign-up",
-    highlight: false
+    highlight: false,
   },
   {
     name: "Accelerator",
@@ -106,27 +117,27 @@ const PRICING_PLANS = [
       "Full interactive Career Roadmap",
       "Join unlimited community circles",
       "On-demand AI Coach & interview mockups",
-      "Salary prediction metrics"
+      "Salary prediction metrics",
     ],
     cta: "Upgrade to Accelerator",
     href: "/sign-up",
-    highlight: true
-  }
+    highlight: true,
+  },
 ];
 
 const FAQS = [
   {
     q: "Is Kirmya really free to use?",
-    a: "Yes. During career transitions, the last thing you need is another bill. The core tools—resume parsing, AI coaching suggestions, community access, and mentorship sessions—are free. We focus on one metric: the speed at which you land your next interview."
+    a: "Yes. During career transitions, the last thing you need is another bill. The core tools—resume parsing, AI coaching suggestions, community access, and mentorship sessions—are free. We focus on one metric: the speed at which you land your next interview.",
   },
   {
     q: "How does the referral system prevent spam?",
-    a: "We do not allow cold, automated messaging. Referral requests require structured introductions, target specific open roles, and are matched based on mutual interest, protecting referrers from spam while keeping candidate signal high."
+    a: "We do not allow cold, automated messaging. Referral requests require structured introductions, target specific open roles, and are matched based on mutual interest, protecting referrers from spam while keeping candidate signal high.",
   },
   {
     q: "What makes Kirmya different from LinkedIn?",
-    a: "LinkedIn optimizes for screen time, influencers, and vanity metrics. Kirmya is a recovery workspace. There is no public content feed. We provide tools to directly prepare you for interviews and connect with internal champions."
-  }
+    a: "LinkedIn optimizes for screen time, influencers, and vanity metrics. Kirmya is a recovery workspace. There is no public content feed. We provide tools to directly prepare you for interviews and connect with internal champions.",
+  },
 ];
 
 export default function HomePage() {
@@ -187,7 +198,10 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed"
           >
-            The gap on your resume isn&apos;t a red flag—it&apos;s a chapter. Kirmya is the AI-powered operating system where top-tier professionals regroup, optimize materials, swap referrals, and land interviews.
+            The gap on your resume isn&apos;t a red flag—it&apos;s a chapter.
+            Kirmya is the AI-powered operating system where top-tier
+            professionals regroup, optimize materials, swap referrals, and land
+            interviews.
           </motion.p>
 
           {/* Call to Actions */}
@@ -224,7 +238,10 @@ export default function HomePage() {
             </p>
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-60">
               {COMPANIES.map((company, idx) => (
-                <span key={idx} className="text-lg font-bold tracking-tight text-foreground select-none">
+                <span
+                  key={idx}
+                  className="text-lg font-bold tracking-tight text-foreground select-none"
+                >
                   {company}
                 </span>
               ))}
@@ -241,7 +258,8 @@ export default function HomePage() {
               Everything you need for a faster comeback
             </h2>
             <p className="text-muted-foreground text-base">
-              Kirmya replaces traditional, passive job searching with active, AI-assisted tools that prioritize candidate placement speed.
+              Kirmya replaces traditional, passive job searching with active,
+              AI-assisted tools that prioritize candidate placement speed.
             </p>
           </div>
 
@@ -249,12 +267,17 @@ export default function HomePage() {
             {HERO_FEATURES.map((feature, idx) => {
               const Icon = feature.icon;
               return (
-                <div key={idx} className="bg-card border border-border/60 p-8 rounded-3xl space-y-4 hover:shadow-lg hover:border-border transition-all duration-300">
+                <div
+                  key={idx}
+                  className="bg-card border border-border/60 p-8 rounded-3xl space-y-4 hover:shadow-lg hover:border-border transition-all duration-300"
+                >
                   <div className="h-10 w-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="text-lg font-bold">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
               );
             })}
@@ -276,14 +299,16 @@ export default function HomePage() {
                 Benchmark your profile with automated intelligence
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Our parsing model reads your resume just like a corporate Applicant Tracking System (ATS), scores it against live job parameters, and offers structural corrections instantly.
+                Our parsing model reads your resume just like a corporate
+                Applicant Tracking System (ATS), scores it against live job
+                parameters, and offers structural corrections instantly.
               </p>
-              
+
               <ul className="space-y-3">
                 {[
                   "Visual match score against real open positions",
                   "Missing keywords highlighted in red for instant additions",
-                  "Direct recommendations for skill gaps and online courses"
+                  "Direct recommendations for skill gaps and online courses",
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2.5 text-sm">
                     <div className="mt-0.5 h-4 w-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
@@ -300,47 +325,74 @@ export default function HomePage() {
               <div className="flex items-center justify-between border-b border-border/40 pb-4 mb-6">
                 <div className="flex items-center gap-2">
                   <Cpu className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-bold">Resume ATS Simulator</span>
+                  <span className="text-sm font-bold">
+                    Resume ATS Simulator
+                  </span>
                 </div>
                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               </div>
 
               <div className="space-y-4">
-                <div className="border border-dashed border-border/80 p-8 rounded-2xl text-center space-y-3 bg-secondary/25 hover:bg-secondary/40 transition-colors cursor-pointer" onClick={handleMockScan}>
+                <div
+                  className="border border-dashed border-border/80 p-8 rounded-2xl text-center space-y-3 bg-secondary/25 hover:bg-secondary/40 transition-colors cursor-pointer"
+                  onClick={handleMockScan}
+                >
                   <UploadCloud className="h-8 w-8 text-muted-foreground mx-auto" />
                   <div>
-                    <p className="text-sm font-bold">Click here to upload your resume</p>
-                    <p className="text-xs text-muted-foreground">PDF or Word files, max 5MB</p>
+                    <p className="text-sm font-bold">
+                      Click here to upload your resume
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PDF or Word files, max 5MB
+                    </p>
                   </div>
                 </div>
 
                 {scanning && (
                   <div className="space-y-2">
                     <div className="h-1 bg-secondary rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         className="h-full bg-primary"
                         initial={{ width: 0 }}
                         animate={{ width: "100%" }}
                         transition={{ duration: 2 }}
                       />
                     </div>
-                    <p className="text-xs text-center text-muted-foreground">Scanning resume keywords against Live ATS databases...</p>
+                    <p className="text-xs text-center text-muted-foreground">
+                      Scanning resume keywords against Live ATS databases...
+                    </p>
                   </div>
                 )}
 
                 {resumeScore !== null && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-secondary/50 rounded-2xl space-y-3"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">Resume Strength Index</span>
-                      <span className="text-sm font-extrabold text-emerald-500">{resumeScore}% Match</span>
+                      <span className="text-sm font-semibold">
+                        Resume Strength Index
+                      </span>
+                      <span className="text-sm font-extrabold text-emerald-500">
+                        {resumeScore}% Match
+                      </span>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Suggested Enhancements</p>
-                      <p className="text-xs">Add <strong className="text-primary font-semibold">Next.js App Router</strong> and <strong className="text-primary font-semibold">CI/CD Pipeline</strong> to match targeted React roles.</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        Suggested Enhancements
+                      </p>
+                      <p className="text-xs">
+                        Add{" "}
+                        <strong className="text-primary font-semibold">
+                          Next.js App Router
+                        </strong>{" "}
+                        and{" "}
+                        <strong className="text-primary font-semibold">
+                          CI/CD Pipeline
+                        </strong>{" "}
+                        to match targeted React roles.
+                      </p>
                     </div>
                   </motion.div>
                 )}
@@ -355,10 +407,18 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
             <div>
-              <h2 className="text-3xl font-extrabold tracking-tight">Featured Live Roles</h2>
-              <p className="text-muted-foreground text-sm mt-2">Roles optimized for our community members featuring warm internal referrals.</p>
+              <h2 className="text-3xl font-extrabold tracking-tight">
+                Featured Live Roles
+              </h2>
+              <p className="text-muted-foreground text-sm mt-2">
+                Roles optimized for our community members featuring warm
+                internal referrals.
+              </p>
             </div>
-            <Link href="/jobs" className="text-sm font-bold text-primary flex items-center gap-1 hover:underline">
+            <Link
+              href="/jobs"
+              className="text-sm font-bold text-primary flex items-center gap-1 hover:underline"
+            >
               Search all open positions
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -366,14 +426,19 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PREVIEW_JOBS.map((job, idx) => (
-              <div key={idx} className="bg-card border border-border/60 p-6 rounded-3xl space-y-6 flex flex-col justify-between hover:shadow-lg hover:border-border transition-all">
+              <div
+                key={idx}
+                className="bg-card border border-border/60 p-6 rounded-3xl space-y-6 flex flex-col justify-between hover:shadow-lg hover:border-border transition-all"
+              >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <div className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center text-sm font-bold border border-border/40 select-none">
                         {job.logo}
                       </div>
-                      <span className="text-xs font-semibold text-muted-foreground">{job.company}</span>
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        {job.company}
+                      </span>
                     </div>
                     <div className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-extrabold text-emerald-500 flex items-center gap-0.5">
                       <Sparkles className="h-2.5 w-2.5" />
@@ -382,10 +447,13 @@ export default function HomePage() {
                   </div>
 
                   <h3 className="text-base font-bold truncate">{job.title}</h3>
-                  
+
                   <div className="flex flex-wrap gap-1.5">
                     {job.skills.map((skill, sIdx) => (
-                      <span key={sIdx} className="text-[10px] px-2 py-0.5 bg-secondary text-muted-foreground rounded-full border border-border/40">
+                      <span
+                        key={sIdx}
+                        className="text-[10px] px-2 py-0.5 bg-secondary text-muted-foreground rounded-full border border-border/40"
+                      >
                         {skill}
                       </span>
                     ))}
@@ -406,17 +474,22 @@ export default function HomePage() {
       <section className="py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight">Flexible plans for every recovery phase</h2>
-            <p className="text-muted-foreground text-sm mt-2">Get access to community groups, AI co-pilots, and verified referrers.</p>
+            <h2 className="text-3xl font-extrabold tracking-tight">
+              Flexible plans for every recovery phase
+            </h2>
+            <p className="text-muted-foreground text-sm mt-2">
+              Get access to community groups, AI co-pilots, and verified
+              referrers.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {PRICING_PLANS.map((plan, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className={`bg-card border p-8 rounded-3xl flex flex-col justify-between relative hover:shadow-lg transition-all ${
-                  plan.highlight 
-                    ? "border-primary shadow-lg shadow-blue-500/5 ring-1 ring-primary/20" 
+                  plan.highlight
+                    ? "border-primary shadow-lg shadow-blue-500/5 ring-1 ring-primary/20"
                     : "border-border/60"
                 }`}
               >
@@ -425,21 +498,32 @@ export default function HomePage() {
                     Recommended
                   </span>
                 )}
-                
+
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1.5 min-h-[40px]">{plan.desc}</p>
+                    <h3 className="text-lg font-bold text-foreground">
+                      {plan.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1.5 min-h-[40px]">
+                      {plan.desc}
+                    </p>
                   </div>
 
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold tracking-tight">{plan.price}</span>
-                    <span className="text-xs text-muted-foreground">/ {plan.period}</span>
+                    <span className="text-4xl font-extrabold tracking-tight">
+                      {plan.price}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      / {plan.period}
+                    </span>
                   </div>
 
                   <ul className="space-y-3">
                     {plan.features.map((feature, fIdx) => (
-                      <li key={fIdx} className="flex items-center gap-2.5 text-sm">
+                      <li
+                        key={fIdx}
+                        className="flex items-center gap-2.5 text-sm"
+                      >
                         <div className="h-4 w-4 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-primary">
                           <Check className="h-3 w-3" />
                         </div>
@@ -468,21 +552,28 @@ export default function HomePage() {
       {/* FAQ Accordions */}
       <section className="py-20 bg-secondary/15 border-t border-border/40">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold tracking-tight text-center mb-12">Frequently Asked Questions</h2>
-          
+          <h2 className="text-3xl font-extrabold tracking-tight text-center mb-12">
+            Frequently Asked Questions
+          </h2>
+
           <div className="space-y-4">
             {FAQS.map((faq, idx) => {
               const isOpen = activeFaq === idx;
               return (
-                <div key={idx} className="border border-border/80 bg-card rounded-2xl overflow-hidden transition-all duration-300">
+                <div
+                  key={idx}
+                  className="border border-border/80 bg-card rounded-2xl overflow-hidden transition-all duration-300"
+                >
                   <button
                     onClick={() => setActiveFaq(isOpen ? null : idx)}
                     className="w-full flex items-center justify-between p-5 text-left font-bold text-sm focus:outline-none"
                   >
                     <span>{faq.q}</span>
-                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
-                  
+
                   <AnimatePresence initial={false}>
                     {isOpen && (
                       <motion.div

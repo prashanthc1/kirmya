@@ -3,6 +3,7 @@
 ## Overview
 
 The frontend has been refactored into a **modular monolith** architecture:
+
 - Single application (not microservices)
 - Organized into independent feature modules
 - Clear module boundaries and dependencies
@@ -12,21 +13,25 @@ The frontend has been refactored into a **modular monolith** architecture:
 ## Architecture Principles
 
 ### 1. Module Independence
+
 - Each module is self-contained
 - Modules don't directly import from other modules
 - Communication through well-defined interfaces
 
 ### 2. Clear Boundaries
+
 - Each module owns its components, hooks, services, types
 - Public API defined in `index.ts`
 - Internal implementation details hidden
 
 ### 3. Reduced Coupling
+
 - Minimize module-to-module dependencies
 - Share only through core/common modules
 - Use dependency injection where needed
 
 ### 4. Scalability
+
 - Easy to add new modules
 - New features don't require restructuring
 - Team members can work on separate modules independently
@@ -197,25 +202,27 @@ module/
 ## Module Communication
 
 ### ✅ Allowed (Good)
+
 ```typescript
 // Within same module
-import { useJobs } from './hooks';
-import { Job } from './types';
+import { useJobs } from "./hooks";
+import { Job } from "./types";
 
 // From core
-import { useAuth, useNotifications } from '@/core';
-import { API_BASE_URL } from '@/core/config';
+import { useAuth, useNotifications } from "@/core";
+import { API_BASE_URL } from "@/core/config";
 ```
 
 ### ❌ Not Allowed (Bad)
+
 ```typescript
 // Jobs module importing from Ideas module directly
-import { useIdeas } from '@/modules/ideas';  // NO!
+import { useIdeas } from "@/modules/ideas"; // NO!
 
 // Accessing internal files
-import { jobsService } from '@/modules/jobs/services/jobsService';  // NO!
+import { jobsService } from "@/modules/jobs/services/jobsService"; // NO!
 // Use public API instead:
-import { jobsService } from '@/modules/jobs';  // OK!
+import { jobsService } from "@/modules/jobs"; // OK!
 ```
 
 ## Module Index (Barrel Export)
@@ -224,14 +231,15 @@ Each module exports its public API through `index.ts`:
 
 ```typescript
 // modules/jobs/index.ts
-export * from './components';
-export * from './pages';
-export * from './hooks';
-export * from './types';
-export * from './services';
+export * from "./components";
+export * from "./pages";
+export * from "./hooks";
+export * from "./types";
+export * from "./services";
 ```
 
 This ensures:
+
 - Clean imports: `import { JobCard } from '@/modules/jobs'`
 - Hidden internals: Users can't access internal services directly
 - Easy refactoring: Move files without breaking imports
@@ -239,6 +247,7 @@ This ensures:
 ## Core Module
 
 The `core` module contains:
+
 - **API Client**: Centralized HTTP requests
 - **Providers**: Auth, Theme, Notifications
 - **Hooks**: Global utilities (useAuth, useNotifications)
@@ -249,24 +258,28 @@ The `core` module contains:
 ## Benefits
 
 ### Scalability
+
 ✅ Easy to add new features (create new module)  
 ✅ Independent development (teams work on separate modules)  
-✅ Clear code organization  
+✅ Clear code organization
 
 ### Maintainability
+
 ✅ Find related code easily (everything in one module)  
 ✅ Understand dependencies at a glance  
-✅ Easier testing (modules are isolated)  
+✅ Easier testing (modules are isolated)
 
 ### Reusability
+
 ✅ Share common code through core/  
 ✅ Publish modules independently (future microservices)  
-✅ Module dependencies are explicit  
+✅ Module dependencies are explicit
 
 ### Testability
+
 ✅ Mock entire module (unit tests)  
 ✅ Test modules independently  
-✅ Clear test boundaries  
+✅ Clear test boundaries
 
 ## Path Aliases
 
@@ -305,26 +318,32 @@ TypeScript paths configured for clean imports:
 ## Module Dependencies
 
 ### auth module
+
 - Depends on: core
 - Used by: all other modules (for user context)
 
 ### jobs module
+
 - Depends on: core
 - Used by: profile module (for user's applications)
 
 ### ideas module
+
 - Depends on: core
 - Used by: none
 
 ### profile module
+
 - Depends on: core, jobs (for applications list)
 - Used by: none
 
 ### notifications module
+
 - Depends on: core
 - Used by: all modules (for user feedback)
 
 ### linkedin module
+
 - Depends on: core, auth
 - Used by: auth module (for social login)
 
@@ -344,6 +363,7 @@ TypeScript paths configured for clean imports:
 ## Deployment
 
 The modular monolith structure doesn't affect deployment:
+
 - Still builds as single Next.js application
 - Code splitting works as expected
 - Bundle size optimizations remain the same
@@ -352,6 +372,7 @@ The modular monolith structure doesn't affect deployment:
 ## Future: Micro Modules
 
 If needed in the future, individual modules can be extracted:
+
 - Publish to npm (private registry)
 - Share between projects
 - Evolve into microservices
@@ -375,28 +396,34 @@ modules/jobs/
 ## Documentation
 
 Every module has `README.md`:
+
 ```markdown
 # Jobs Module
 
 ## Overview
+
 Handles job listing, posting, and applications.
 
 ## Public API
+
 - `useJobs()` - Fetch jobs list
 - `JobCard` - Display job card
 - `JobsPage` - Main jobs page
 
 ## Dependencies
+
 - core
 - profile (imports applications)
 
 ## Adding Features
+
 [Instructions for developers]
 ```
 
 ## Conclusion
 
 This modular monolith architecture provides:
+
 - ✅ Clear code organization
 - ✅ Independent modules
 - ✅ Explicit dependencies

@@ -213,7 +213,12 @@ export default function AboutPage() {
               needs most when things are hard.
             </p>
             <p
-              style={{ fontSize: "16px", lineHeight: 1.7, color: "#4A443B", margin: 0 }}
+              style={{
+                fontSize: "16px",
+                lineHeight: 1.7,
+                color: "#4A443B",
+                margin: 0,
+              }}
             >
               We&apos;re rebuilding the match around proof: what you&apos;ve
               shipped, the calls you&apos;ve made, the teams you&apos;ve
@@ -258,7 +263,11 @@ export default function AboutPage() {
                   Proof over pedigree
                 </div>
                 <div
-                  style={{ fontSize: "15px", color: "#6B6357", lineHeight: 1.5 }}
+                  style={{
+                    fontSize: "15px",
+                    color: "#6B6357",
+                    lineHeight: 1.5,
+                  }}
                 >
                   Outcomes lead. Logos and buzzwords don&apos;t.
                 </div>
@@ -292,7 +301,11 @@ export default function AboutPage() {
                   Dignity, always
                 </div>
                 <div
-                  style={{ fontSize: "15px", color: "#6B6357", lineHeight: 1.5 }}
+                  style={{
+                    fontSize: "15px",
+                    color: "#6B6357",
+                    lineHeight: 1.5,
+                  }}
                 >
                   No ghosting. Every applicant hears back.
                 </div>
@@ -326,7 +339,11 @@ export default function AboutPage() {
                   Free for candidates
                 </div>
                 <div
-                  style={{ fontSize: "15px", color: "#6B6357", lineHeight: 1.5 }}
+                  style={{
+                    fontSize: "15px",
+                    color: "#6B6357",
+                    lineHeight: 1.5,
+                  }}
                 >
                   Recruiters fund the platform. Job-seekers never pay.
                 </div>
@@ -648,8 +665,8 @@ export default function AboutPage() {
               maxWidth: "520px",
             }}
           >
-            Whether you&apos;re hiring or looking, there&apos;s a more human
-            way to do this.
+            Whether you&apos;re hiring or looking, there&apos;s a more human way
+            to do this.
           </p>
           <div
             style={{

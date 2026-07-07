@@ -23,6 +23,7 @@ src/
 ### Example: Move authentication code
 
 **Before:**
+
 ```
 lib/auth-context.tsx
 lib/auth.ts
@@ -31,6 +32,7 @@ components/LinkedInLoginButton.tsx
 ```
 
 **After:**
+
 ```
 src/modules/auth/
 ├── context/AuthContext.tsx
@@ -56,21 +58,21 @@ src/modules/auth/
 ### Old Imports (to be removed)
 
 ```typescript
-import { useAuth } from '@/lib/auth-context';
-import { api } from '@/lib/api';
-import { Navigation } from '@/components/Navigation';
+import { useAuth } from "@/lib/auth-context";
+import { api } from "@/lib/api";
+import { Navigation } from "@/components/Navigation";
 ```
 
 ### New Imports
 
 ```typescript
-import { useAuth } from '@/core/providers';  // From core AppProvider
-import { apiClient } from '@/core/api/client';  // Core API client
-import { Navigation } from '@/core/components';  // Shared component
+import { useAuth } from "@/core/providers"; // From core AppProvider
+import { apiClient } from "@/core/api/client"; // Core API client
+import { Navigation } from "@/core/components"; // Shared component
 
 // Or from specific modules:
-import { LinkedInLoginButton } from '@/modules/auth';
-import { jobsService } from '@/modules/jobs';
+import { LinkedInLoginButton } from "@/modules/auth";
+import { jobsService } from "@/modules/jobs";
 ```
 
 ## Phase 4: Module-Specific Patterns
@@ -79,15 +81,13 @@ import { jobsService } from '@/modules/jobs';
 
 ```typescript
 // src/modules/jobs/services/index.ts
-import { apiClient } from '@/core/api/client';
-import { API_ENDPOINTS } from '@/core/config';
+import { apiClient } from "@/core/api/client";
+import { API_ENDPOINTS } from "@/core/config";
 
 export const jobsService = {
-  searchJobs: (filters) => 
-    apiClient.get(`${API_ENDPOINTS.JOBS_LIST}?...`),
-  
-  getJob: (id) =>
-    apiClient.get(API_ENDPOINTS.JOBS_DETAIL(id)),
+  searchJobs: (filters) => apiClient.get(`${API_ENDPOINTS.JOBS_LIST}?...`),
+
+  getJob: (id) => apiClient.get(API_ENDPOINTS.JOBS_DETAIL(id)),
 };
 ```
 
@@ -95,8 +95,8 @@ export const jobsService = {
 
 ```typescript
 // src/modules/jobs/hooks/useJobs.ts
-import { useState, useEffect } from 'react';
-import { jobsService } from '../services';
+import { useState, useEffect } from "react";
+import { jobsService } from "../services";
 
 export function useJobs(filters) {
   const [jobs, setJobs] = useState([]);
@@ -105,7 +105,8 @@ export function useJobs(filters) {
 
   useEffect(() => {
     setLoading(true);
-    jobsService.searchJobs(filters)
+    jobsService
+      .searchJobs(filters)
       .then(setJobs)
       .catch(setError)
       .finally(() => setLoading(false));
@@ -152,7 +153,7 @@ import styles from './page.module.css';
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState([]);
-  
+
   useEffect(() => {
     api.searchJobs().then(setJobs);
   }, []);
@@ -227,10 +228,10 @@ modules/jobs/
 
 ```typescript
 // modules/jobs/__tests__/services.test.ts
-import { jobsService } from '../services';
+import { jobsService } from "../services";
 
-describe('jobsService', () => {
-  it('should fetch jobs', async () => {
+describe("jobsService", () => {
+  it("should fetch jobs", async () => {
     const jobs = await jobsService.searchJobs();
     expect(Array.isArray(jobs)).toBe(true);
   });
@@ -241,17 +242,17 @@ describe('jobsService', () => {
 
 ```typescript
 // modules/jobs/__tests__/hooks.test.ts
-import { renderHook, waitFor } from '@testing-library/react';
-import { useJobs } from '../hooks';
+import { renderHook, waitFor } from "@testing-library/react";
+import { useJobs } from "../hooks";
 
-describe('useJobs', () => {
-  it('should load jobs', async () => {
+describe("useJobs", () => {
+  it("should load jobs", async () => {
     const { result } = renderHook(() => useJobs());
-    
+
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
-    
+
     expect(result.current.jobs.length).toBeGreaterThan(0);
   });
 });
@@ -282,15 +283,17 @@ Module Dependencies:
 ### Avoid Circular Dependencies
 
 ❌ Bad:
+
 ```typescript
 // modules/jobs/components/JobCard.tsx
-import { ProfileLink } from '@/modules/profile'; // profile depends on jobs!
+import { ProfileLink } from "@/modules/profile"; // profile depends on jobs!
 ```
 
 ✅ Good:
+
 ```typescript
 // modules/jobs/components/JobCard.tsx
-import { useAuth } from '@/core'; // Only use from core
+import { useAuth } from "@/core"; // Only use from core
 ```
 
 ## Phase 9: Public API Definition
@@ -299,10 +302,10 @@ Each module must have a clear public API in `index.ts`:
 
 ```typescript
 // modules/jobs/index.ts
-export * from './components';  // All components
-export * from './hooks';       // All hooks
-export * from './services';    // Services
-export * from './types';       // Types
+export * from "./components"; // All components
+export * from "./hooks"; // All hooks
+export * from "./services"; // Services
+export * from "./types"; // Types
 
 // NOT exported:
 // - internals from services/
@@ -343,20 +346,23 @@ export * from './types';       // Types
 **Problem**: Type not exported from module index
 
 **Solution**: Add to `index.ts`:
+
 ```typescript
-export * from './types';
+export * from "./types";
 ```
 
 ### Issue: Direct Service Import
 
 **Problem**: Importing internal service:
+
 ```typescript
-import { jobsService } from '@/modules/jobs/services/jobsService';
+import { jobsService } from "@/modules/jobs/services/jobsService";
 ```
 
 **Solution**: Import from module public API:
+
 ```typescript
-import { jobsService } from '@/modules/jobs';
+import { jobsService } from "@/modules/jobs";
 ```
 
 ## Performance Considerations
@@ -389,6 +395,7 @@ The structure makes this transition seamless!
 ## Summary
 
 The migration transforms the codebase from a flat structure to a modular monolith:
+
 - **Better organization**: Related code in one module
 - **Easier scaling**: Add features as new modules
 - **Independent testing**: Test modules in isolation

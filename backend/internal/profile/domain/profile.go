@@ -7,7 +7,12 @@ import (
 	"fmt"
 )
 
-var ErrNotFound = errors.New("profile not found")
+var (
+	ErrNotFound = errors.New("profile not found")
+	// ErrOptimisticLock is returned when a version-checked update is applied on
+	// top of a stale read (concurrent modification). Mapped to HTTP 409.
+	ErrOptimisticLock = errors.New("profile was modified by another request")
+)
 
 // Profile is the aggregate: scalar fields plus child collections.
 type Profile struct {
@@ -131,6 +136,39 @@ func (p *Profile) Validate() error {
 	}
 
 	return nil
+}
+
+// AggregateUpdate carries a full profile update: the scalar fields plus any
+// child collections that should be replaced. A nil collection pointer means
+// "leave unchanged"; a non-nil (possibly empty) slice replaces the stored
+// collection. It is applied atomically by Repository.UpdateAggregate.
+type AggregateUpdate struct {
+	Scalars        Scalars
+	Experiences    *[]WorkExperience
+	Educations     *[]Education
+	Certifications *[]Certification
+	Skills         *[]ProfileSkill
+	Languages      *[]Language
+	Portfolio      *[]PortfolioLink
+	References     *[]Reference
+}
+
+// Validate runs the aggregate's business-rule checks over the assembled update
+// (salary range, transition-reason precondition, experience/education dates).
+func (u AggregateUpdate) Validate() error {
+	p := &Profile{
+		SalaryMin:        u.Scalars.SalaryMin,
+		SalaryMax:        u.Scalars.SalaryMax,
+		TransitionReason: u.Scalars.TransitionReason,
+		CareerStatus:     u.Scalars.CareerStatus,
+	}
+	if u.Experiences != nil {
+		p.Experiences = *u.Experiences
+	}
+	if u.Educations != nil {
+		p.Educations = *u.Educations
+	}
+	return p.Validate()
 }
 
 // Scalars carries the editable top-level fields.
@@ -291,6 +329,11 @@ type Repository interface {
 	// Get returns the full aggregate. A profile row is created lazily if absent.
 	Get(ctx context.Context, userID string) (*Profile, error)
 	UpdateScalars(ctx context.Context, userID string, s Scalars) error
+
+	// UpdateAggregate applies scalar fields and any provided child collections in
+	// a single transaction. When expectedVersion > 0 it performs an optimistic
+	// version check and returns ErrOptimisticLock on a stale write.
+	UpdateAggregate(ctx context.Context, userID string, expectedVersion int, u AggregateUpdate) error
 
 	AddExperience(ctx context.Context, userID string, e *WorkExperience) error
 	UpdateExperience(ctx context.Context, userID string, e WorkExperience) error

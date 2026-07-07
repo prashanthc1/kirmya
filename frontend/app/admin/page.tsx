@@ -76,8 +76,17 @@ function AdminConsole() {
   if (authLoading || !isAdmin) {
     return (
       <div style={pageStyle}>
-        <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Admin" }]} />
-        <main style={{ flex: 1, maxWidth: "1100px", margin: "0 auto", padding: "52px 24px" }}>
+        <SiteNav
+          breadcrumb={[{ label: "Home", href: "/" }, { label: "Admin" }]}
+        />
+        <main
+          style={{
+            flex: 1,
+            maxWidth: "1100px",
+            margin: "0 auto",
+            padding: "52px 24px",
+          }}
+        >
           <p style={{ color: "#8A8175" }}>Checking access…</p>
         </main>
         <SiteFooter />
@@ -94,7 +103,9 @@ function AdminConsole() {
 
   return (
     <div style={pageStyle}>
-      <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Admin" }]} />
+      <SiteNav
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Admin" }]}
+      />
 
       <main
         style={{
@@ -108,11 +119,34 @@ function AdminConsole() {
         <div style={eyebrowStyle}>Platform</div>
         <h1 style={headingStyle}>Admin Console</h1>
 
-        <div role="tablist" style={{ display: "flex", gap: "6px", background: "#F3ECE2", borderRadius: "100px", padding: "4px", width: "fit-content", margin: "22px 0 28px" }}>
-          <button type="button" role="tab" aria-selected={tab === "overview"} onClick={() => setTab("overview")} style={tabStyle(tab === "overview")}>
+        <div
+          role="tablist"
+          style={{
+            display: "flex",
+            gap: "6px",
+            background: "#F3ECE2",
+            borderRadius: "100px",
+            padding: "4px",
+            width: "fit-content",
+            margin: "22px 0 28px",
+          }}
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "overview"}
+            onClick={() => setTab("overview")}
+            style={tabStyle(tab === "overview")}
+          >
             Overview
           </button>
-          <button type="button" role="tab" aria-selected={tab === "users"} onClick={() => setTab("users")} style={tabStyle(tab === "users")}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "users"}
+            onClick={() => setTab("users")}
+            style={tabStyle(tab === "users")}
+          >
             Users
           </button>
         </div>
@@ -124,10 +158,24 @@ function AdminConsole() {
         )}
 
         {tab === "overview" && (
-          <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(212px,1fr))", gap: "16px" }}>
+          <section
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(212px,1fr))",
+              gap: "16px",
+            }}
+          >
             {statCards.map((card) => (
               <div key={card.label} style={statCardStyle}>
-                <div style={{ fontSize: "13.5px", color: "#8A8175", marginBottom: "12px" }}>{card.label}</div>
+                <div
+                  style={{
+                    fontSize: "13.5px",
+                    color: "#8A8175",
+                    marginBottom: "12px",
+                  }}
+                >
+                  {card.label}
+                </div>
                 <div style={statValueStyle}>{card.value ?? "—"}</div>
               </div>
             ))}
@@ -135,22 +183,46 @@ function AdminConsole() {
         )}
 
         {tab === "users" && (
-          <section style={{ background: "#fff", border: "1px solid #EFE7DC", borderRadius: "18px", overflow: "hidden" }}>
+          <section
+            style={{
+              background: "#fff",
+              border: "1px solid #EFE7DC",
+              borderRadius: "18px",
+              overflow: "hidden",
+            }}
+          >
             {users.length === 0 ? (
-              <p style={{ padding: "20px", color: "#8A8175", margin: 0 }}>No users found.</p>
+              <p style={{ padding: "20px", color: "#8A8175", margin: 0 }}>
+                No users found.
+              </p>
             ) : (
               <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
                 {users.map((u) => (
                   <li key={u.id} style={userRowStyle}>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: "15px" }}>{u.full_name}</div>
-                      <div style={{ fontSize: "13px", color: "#8A8175" }}>{u.email}</div>
+                      <div style={{ fontWeight: 600, fontSize: "15px" }}>
+                        {u.full_name}
+                      </div>
+                      <div style={{ fontSize: "13px", color: "#8A8175" }}>
+                        {u.email}
+                      </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                      }}
+                    >
                       {u.roles.map((r) => (
-                        <span key={r} style={roleTagStyle}>{r}</span>
+                        <span key={r} style={roleTagStyle}>
+                          {r}
+                        </span>
                       ))}
-                      <span style={{ fontSize: "12px", color: "#5B554C" }}>{u.status}</span>
+                      <span style={{ fontSize: "12px", color: "#5B554C" }}>
+                        {u.status}
+                      </span>
                     </div>
                   </li>
                 ))}

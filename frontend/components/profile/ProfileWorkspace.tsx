@@ -2,10 +2,18 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CloudLightning, ShieldCheck, Check, Clock, AlertCircle } from "lucide-react";
+import {
+  Sparkles,
+  CloudLightning,
+  ShieldCheck,
+  Check,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
 import { ExtendedProfile } from "./types";
 import { MOCK_PROFILE } from "./mockData";
 import { profileClient } from "@/lib/api/profile";
+import { ApiError } from "@/lib/api/client";
 import ProfileLeftSidebar from "./ProfileLeftSidebar";
 import ProfileCenterWorkspace from "./ProfileCenterWorkspace";
 import ProfileAiAssistant from "./ProfileAiAssistant";
@@ -15,7 +23,9 @@ export default function ProfileWorkspace() {
   const [profile, setProfile] = useState<ExtendedProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSectionId, setActiveSectionId] = useState("identity");
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
   const [isCloudSynced, setIsCloudSynced] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
@@ -24,48 +34,91 @@ export default function ProfileWorkspace() {
   const [redoStack, setRedoStack] = useState<ExtendedProfile[]>([]);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const triggerAutosave = React.useCallback((dataToSave: ExtendedProfile) => {
-    setSaveStatus("saving");
-    
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
+  const triggerAutosave = React.useCallback(
+    (dataToSave: ExtendedProfile) => {
+      setSaveStatus("saving");
 
-    saveTimeoutRef.current = setTimeout(async () => {
-      try {
-        // Calculate completeness score
-        const filledFields = Object.keys(dataToSave).filter(k => !!(dataToSave as unknown as Record<string, unknown>)[k]).length;
-        const totalFields = 20; // estimate
-        dataToSave.profile_completeness_score = Math.min(98, Math.round((filledFields / totalFields) * 100));
-
-        // Save locally
-        localStorage.setItem("kirmya_profile_data", JSON.stringify(dataToSave));
-        
-        // Attempt cloud sync if authenticated
-        if (isCloudSynced) {
-          await profileClient.updateMe(dataToSave);
-        }
-        
-        setSaveStatus("saved");
-      } catch (err) {
-        console.error("Autosave sync failed", err);
-        setSaveStatus("error");
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
       }
-    }, 700);
-  }, [isCloudSynced]);
+
+      saveTimeoutRef.current = setTimeout(async () => {
+        try {
+          // Calculate completeness score
+          const filledFields = Object.keys(dataToSave).filter(
+            (k) => !!(dataToSave as unknown as Record<string, unknown>)[k],
+          ).length;
+          const totalFields = 20; // estimate
+          dataToSave.profile_completeness_score = Math.min(
+            98,
+            Math.round((filledFields / totalFields) * 100),
+          );
+
+          // Save locally
+          localStorage.setItem(
+            "kirmya_profile_data",
+            JSON.stringify(dataToSave),
+          );
+
+          // Attempt cloud sync if authenticated
+          if (isCloudSynced) {
+            const saved = await profileClient.updateMe(dataToSave);
+            // Keep the local version in sync with the server's bumped version so
+            // the next autosave passes the optimistic-concurrency check.
+            if (saved && typeof saved.version === "number") {
+              dataToSave.version = saved.version;
+              localStorage.setItem(
+                "kirmya_profile_data",
+                JSON.stringify(dataToSave),
+              );
+              setProfile((prev) =>
+                prev ? { ...prev, version: saved.version } : prev,
+              );
+            }
+          }
+
+          setSaveStatus("saved");
+        } catch (err) {
+          // 409: another session updated the profile since we loaded it. Pull the
+          // server copy so the user is editing the latest version, and flag the
+          // conflict via saveStatus.
+          if (err instanceof ApiError && err.status === 409) {
+            setSaveStatus("error");
+            try {
+              const fresh = await profileClient.getMe();
+              if (fresh) {
+                const merged = { ...MOCK_PROFILE, ...fresh } as ExtendedProfile;
+                setProfile(merged);
+                localStorage.setItem(
+                  "kirmya_profile_data",
+                  JSON.stringify(merged),
+                );
+              }
+            } catch {
+              /* refetch failed — leave the error state for the user to retry */
+            }
+            return;
+          }
+          console.error("Autosave sync failed", err);
+          setSaveStatus("error");
+        }
+      }, 700);
+    },
+    [isCloudSynced],
+  );
 
   // Push state to history stack for Undo
   const pushToHistory = React.useCallback((currentState: ExtendedProfile) => {
-    setHistoryStack(prev => [...prev.slice(-19), currentState]); // Limit to 20 states
+    setHistoryStack((prev) => [...prev.slice(-19), currentState]); // Limit to 20 states
     setRedoStack([]); // Clear redo stack on new action
   }, []);
 
   const handleUndo = React.useCallback(() => {
     if (historyStack.length === 0 || !profile) return;
     const prev = historyStack[historyStack.length - 1];
-    setHistoryStack(prevHistory => prevHistory.slice(0, -1));
-    setRedoStack(prevRedo => [...prevRedo, profile]);
-    
+    setHistoryStack((prevHistory) => prevHistory.slice(0, -1));
+    setRedoStack((prevRedo) => [...prevRedo, profile]);
+
     setProfile(prev);
     triggerAutosave(prev);
   }, [historyStack, profile, triggerAutosave]);
@@ -73,9 +126,9 @@ export default function ProfileWorkspace() {
   const handleRedo = React.useCallback(() => {
     if (redoStack.length === 0 || !profile) return;
     const next = redoStack[redoStack.length - 1];
-    setRedoStack(prevRedo => prevRedo.slice(0, -1));
-    setHistoryStack(prevHistory => [...prevHistory, profile]);
-    
+    setRedoStack((prevRedo) => prevRedo.slice(0, -1));
+    setHistoryStack((prevHistory) => [...prevHistory, profile]);
+
     setProfile(next);
     triggerAutosave(next);
   }, [redoStack, profile, triggerAutosave]);
@@ -96,7 +149,10 @@ export default function ProfileWorkspace() {
           setSaveStatus("saved");
         }
       } catch (err) {
-        console.warn("Kirmya API offline or unauthorized. Falling back to Local Storage flow.", err);
+        console.warn(
+          "Kirmya API offline or unauthorized. Falling back to Local Storage flow.",
+          err,
+        );
         // Offline / Local storage fallback
         if (active) {
           const stored = localStorage.getItem("kirmya_profile_data");
@@ -105,7 +161,10 @@ export default function ProfileWorkspace() {
           } else {
             // Seed default mockup profile
             setProfile(MOCK_PROFILE);
-            localStorage.setItem("kirmya_profile_data", JSON.stringify(MOCK_PROFILE));
+            localStorage.setItem(
+              "kirmya_profile_data",
+              JSON.stringify(MOCK_PROFILE),
+            );
           }
           setIsCloudSynced(false);
           setSaveStatus("saved");
@@ -147,7 +206,10 @@ export default function ProfileWorkspace() {
     triggerAutosave(nextState);
   };
 
-  const handleApplyAiChange = (sectionId: string, updatedFields: Partial<ExtendedProfile>) => {
+  const handleApplyAiChange = (
+    sectionId: string,
+    updatedFields: Partial<ExtendedProfile>,
+  ) => {
     if (!profile) return;
     pushToHistory(profile);
 
@@ -157,7 +219,12 @@ export default function ProfileWorkspace() {
   };
 
   const handleReset = () => {
-    if (!window.confirm("Are you sure you want to reset your profile to default settings? This will clear current changes.")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to reset your profile to default settings? This will clear current changes.",
+      )
+    )
+      return;
     if (profile) pushToHistory(profile);
     setProfile(MOCK_PROFILE);
     triggerAutosave(MOCK_PROFILE);
@@ -193,7 +260,6 @@ export default function ProfileWorkspace() {
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
-      
       {/* Save status header indicator */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-5">
         <div>
@@ -203,14 +269,17 @@ export default function ProfileWorkspace() {
               AI Copilot Active
             </span>
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Redesign and optimize your professional identity with live suggestions.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Redesign and optimize your professional identity with live
+            suggestions.
+          </p>
         </div>
 
         {/* Save Pill */}
         <div className="flex items-center gap-3">
           <AnimatePresence mode="wait">
             {saveStatus === "saving" && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 5 }}
@@ -221,7 +290,7 @@ export default function ProfileWorkspace() {
               </motion.div>
             )}
             {saveStatus === "saved" && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 5 }}
@@ -232,7 +301,7 @@ export default function ProfileWorkspace() {
               </motion.div>
             )}
             {saveStatus === "error" && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 5 }}
@@ -248,7 +317,6 @@ export default function ProfileWorkspace() {
 
       {/* Main Grid Layout */}
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-        
         {/* Left Sidebar */}
         <ProfileLeftSidebar
           profile={profile}

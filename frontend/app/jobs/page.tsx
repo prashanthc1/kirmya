@@ -2,21 +2,21 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Search, 
-  MapPin, 
-  DollarSign, 
-  Briefcase, 
-  Sparkles, 
-  ChevronRight, 
-  CheckCircle2, 
-  Building2, 
-  Clock, 
+import {
+  Search,
+  MapPin,
+  DollarSign,
+  Briefcase,
+  Sparkles,
+  ChevronRight,
+  CheckCircle2,
+  Building2,
+  Clock,
   ShieldAlert,
   ArrowLeft,
   Award,
   BookOpen,
-  Info
+  Info,
 } from "lucide-react";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
@@ -38,8 +38,9 @@ const JOB_TYPES = ["All Types", "Full-time", "Contract", "Remote", "Part-time"];
 const getMockJobData = (job: Job) => {
   const code = job.id.charCodeAt(0) + job.id.charCodeAt(job.id.length - 1);
   const matchScore = 80 + (code % 19); // 80 - 98
-  const difficulty = (code % 3) === 0 ? "Hard" : (code % 3) === 1 ? "Medium" : "Easy";
-  
+  const difficulty =
+    code % 3 === 0 ? "Hard" : code % 3 === 1 ? "Medium" : "Easy";
+
   const skillsMap: Record<string, string[]> = {
     engineer: ["React", "Next.js", "TypeScript", "Node.js", "System Design"],
     developer: ["Go", "PostgreSQL", "Redis", "Docker", "AWS"],
@@ -47,7 +48,7 @@ const getMockJobData = (job: Job) => {
     product: ["Product Strategy", "Agile", "User Interviews", "Roadmapping"],
     marketing: ["SEO", "Copywriting", "Growth Hacking", "Google Analytics"],
   };
-  
+
   const titleLower = job.title.toLowerCase();
   let skills = ["Communication", "Problem Solving", "Collaboration"];
   for (const [key, list] of Object.entries(skillsMap)) {
@@ -87,7 +88,9 @@ export default function JobsPage() {
       } catch (err) {
         if (active) {
           setError(
-            err instanceof ApiError ? err.message : "Could not load jobs. Please try again."
+            err instanceof ApiError
+              ? err.message
+              : "Could not load jobs. Please try again.",
           );
         }
       } finally {
@@ -109,13 +112,13 @@ export default function JobsPage() {
           job.title.toLowerCase().includes(q) ||
           job.company.toLowerCase().includes(q) ||
           job.description?.toLowerCase().includes(q) ||
-          job.location?.toLowerCase().includes(q)
+          job.location?.toLowerCase().includes(q),
       );
     }
 
     if (selectedType !== "All Types") {
       result = result.filter(
-        (job) => job.job_type?.toLowerCase() === selectedType.toLowerCase()
+        (job) => job.job_type?.toLowerCase() === selectedType.toLowerCase(),
       );
     }
 
@@ -137,14 +140,20 @@ export default function JobsPage() {
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-6 overflow-hidden">
         {/* Left Side: Job Search List */}
-        <div className={`flex-1 md:w-[420px] md:flex-none flex flex-col gap-4 ${
-          activeJob && selectedJobId ? "hidden md:flex" : "flex"
-        }`}>
+        <div
+          className={`flex-1 md:w-[420px] md:flex-none flex flex-col gap-4 ${
+            activeJob && selectedJobId ? "hidden md:flex" : "flex"
+          }`}
+        >
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">Open Opportunities</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              Open Opportunities
+            </h1>
             <p className="text-xs text-muted-foreground mt-1">
-              {loading ? "Searching roles..." : `${filteredJobs.length} active positions found`}
+              {loading
+                ? "Searching roles..."
+                : `${filteredJobs.length} active positions found`}
             </p>
           </div>
 
@@ -182,7 +191,9 @@ export default function JobsPage() {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
                 <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs font-medium">Scanning live jobs database...</span>
+                <span className="text-xs font-medium">
+                  Scanning live jobs database...
+                </span>
               </div>
             ) : error ? (
               <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium">
@@ -191,8 +202,12 @@ export default function JobsPage() {
             ) : filteredJobs.length === 0 ? (
               <div className="text-center py-12 border border-dashed border-border/80 rounded-2xl p-6 bg-secondary/15">
                 <Briefcase className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-bold">No jobs matching your filters</p>
-                <p className="text-xs text-muted-foreground mt-1">Try resetting search keywords or type filters.</p>
+                <p className="text-sm font-bold">
+                  No jobs matching your filters
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Try resetting search keywords or type filters.
+                </p>
               </div>
             ) : (
               filteredJobs.map((job) => {
@@ -210,18 +225,26 @@ export default function JobsPage() {
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-muted-foreground truncate">{job.company}</span>
+                        <span className="text-xs font-bold text-muted-foreground truncate">
+                          {job.company}
+                        </span>
                         <div className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-extrabold text-emerald-500 flex items-center gap-0.5 shrink-0">
                           <Sparkles className="h-2 w-2" />
                           {matchScore}% Match
                         </div>
                       </div>
-                      <h3 className="text-sm font-bold text-foreground mt-1.5 line-clamp-1">{job.title}</h3>
+                      <h3 className="text-sm font-bold text-foreground mt-1.5 line-clamp-1">
+                        {job.title}
+                      </h3>
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/40 pt-3 mt-1">
-                      <span className="truncate max-w-[150px]">{job.location}</span>
-                      <span className="font-semibold text-foreground shrink-0">{job.salary}</span>
+                      <span className="truncate max-w-[150px]">
+                        {job.location}
+                      </span>
+                      <span className="font-semibold text-foreground shrink-0">
+                        {job.salary}
+                      </span>
                     </div>
                   </div>
                 );
@@ -231,9 +254,11 @@ export default function JobsPage() {
         </div>
 
         {/* Right Side: Active Job Details Workspace */}
-        <div className={`flex-1 flex flex-col bg-card border border-border/80 rounded-3xl overflow-hidden shadow-sm ${
-          activeJob && selectedJobId ? "flex" : "hidden md:flex"
-        }`}>
+        <div
+          className={`flex-1 flex flex-col bg-card border border-border/80 rounded-3xl overflow-hidden shadow-sm ${
+            activeJob && selectedJobId ? "flex" : "hidden md:flex"
+          }`}
+        >
           {activeJob && mockData ? (
             <div className="flex flex-col h-full relative">
               {/* Mobile Back Button */}
@@ -251,17 +276,23 @@ export default function JobsPage() {
               <div className="p-6 md:p-8 border-b border-border/40 space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <span className="text-sm font-bold text-primary">{activeJob.company}</span>
-                    <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">{activeJob.title}</h2>
+                    <span className="text-sm font-bold text-primary">
+                      {activeJob.company}
+                    </span>
+                    <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">
+                      {activeJob.title}
+                    </h2>
                   </div>
-                  
+
                   {/* Match Ring */}
                   <div className="px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center shrink-0">
                     <div className="text-sm font-extrabold text-emerald-500 flex items-center justify-center gap-1">
                       <Sparkles className="h-4.5 w-4.5" />
                       {mockData.matchScore}%
                     </div>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-0.5">AI Match Index</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-0.5">
+                      AI Match Index
+                    </span>
                   </div>
                 </div>
 
@@ -273,7 +304,9 @@ export default function JobsPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-4 w-4 text-muted-foreground/80" />
-                    <span className="font-semibold text-foreground">{activeJob.salary}</span>
+                    <span className="font-semibold text-foreground">
+                      {activeJob.salary}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Briefcase className="h-4 w-4 text-muted-foreground/80" />
@@ -281,7 +314,12 @@ export default function JobsPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4 text-muted-foreground/80" />
-                    <span>Interview difficulty: <strong className="text-foreground">{mockData.difficulty}</strong></span>
+                    <span>
+                      Interview difficulty:{" "}
+                      <strong className="text-foreground">
+                        {mockData.difficulty}
+                      </strong>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -297,10 +335,15 @@ export default function JobsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <span className="text-xs font-semibold text-muted-foreground block">Skills Matched ({mockData.matchedSkills.length})</span>
+                      <span className="text-xs font-semibold text-muted-foreground block">
+                        Skills Matched ({mockData.matchedSkills.length})
+                      </span>
                       <div className="flex flex-wrap gap-1.5">
                         {mockData.matchedSkills.map((skill) => (
-                          <span key={skill} className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-500 flex items-center gap-1">
+                          <span
+                            key={skill}
+                            className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-500 flex items-center gap-1"
+                          >
                             <CheckCircle2 className="h-3 w-3" />
                             {skill}
                           </span>
@@ -309,10 +352,16 @@ export default function JobsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <span className="text-xs font-semibold text-muted-foreground block">Missing / Improvement Gap ({mockData.missingSkills.length})</span>
+                      <span className="text-xs font-semibold text-muted-foreground block">
+                        Missing / Improvement Gap (
+                        {mockData.missingSkills.length})
+                      </span>
                       <div className="flex flex-wrap gap-1.5">
                         {mockData.missingSkills.map((skill) => (
-                          <span key={skill} className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <span
+                            key={skill}
+                            className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1"
+                          >
                             <ShieldAlert className="h-3 w-3" />
                             {skill}
                           </span>
@@ -324,15 +373,20 @@ export default function JobsPage() {
 
                 {/* Job Description section */}
                 <div className="space-y-4">
-                  <h3 className="text-base font-bold text-foreground">Role Description</h3>
+                  <h3 className="text-base font-bold text-foreground">
+                    Role Description
+                  </h3>
                   <div className="text-sm leading-relaxed text-muted-foreground space-y-3 whitespace-pre-wrap">
-                    {activeJob.description || "No description provided for this opening."}
+                    {activeJob.description ||
+                      "No description provided for this opening."}
                   </div>
                 </div>
 
                 {/* Interview Pipeline Steps widget */}
                 <div className="space-y-4">
-                  <h3 className="text-base font-bold text-foreground">Hiring Process Pipeline</h3>
+                  <h3 className="text-base font-bold text-foreground">
+                    Hiring Process Pipeline
+                  </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
                       { step: 1, label: "Application Screen" },
@@ -340,9 +394,16 @@ export default function JobsPage() {
                       { step: 3, label: "System Design" },
                       { step: 4, label: "Leadership Fit" },
                     ].map((pipeline) => (
-                      <div key={pipeline.step} className="p-3 bg-secondary/20 border border-border/40 rounded-xl space-y-1">
-                        <span className="text-[10px] font-bold text-primary block">STAGE 0{pipeline.step}</span>
-                        <span className="text-xs font-semibold text-foreground block">{pipeline.label}</span>
+                      <div
+                        key={pipeline.step}
+                        className="p-3 bg-secondary/20 border border-border/40 rounded-xl space-y-1"
+                      >
+                        <span className="text-[10px] font-bold text-primary block">
+                          STAGE 0{pipeline.step}
+                        </span>
+                        <span className="text-xs font-semibold text-foreground block">
+                          {pipeline.label}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -352,10 +413,14 @@ export default function JobsPage() {
               {/* Sticky bottom CTA panel */}
               <div className="p-6 border-t border-border/40 bg-card/85 backdrop-blur-sm flex items-center justify-between gap-4 mt-auto">
                 <div className="hidden sm:block">
-                  <span className="text-xs text-muted-foreground block">Apply directly to recruiter</span>
-                  <span className="text-sm font-semibold text-foreground">{activeJob.company} Hiring Desk</span>
+                  <span className="text-xs text-muted-foreground block">
+                    Apply directly to recruiter
+                  </span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {activeJob.company} Hiring Desk
+                  </span>
                 </div>
-                
+
                 <button className="flex-1 sm:flex-initial px-6 py-2.5 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-sm font-bold shadow-sm shadow-blue-500/10 flex items-center justify-center gap-1.5">
                   Apply Now
                   <ChevronRight className="h-4.5 w-4.5" />
@@ -365,9 +430,12 @@ export default function JobsPage() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
               <Briefcase className="h-10 w-10 text-muted-foreground mb-3" />
-              <h3 className="text-base font-bold text-foreground">No active job selected</h3>
+              <h3 className="text-base font-bold text-foreground">
+                No active job selected
+              </h3>
               <p className="text-xs text-muted-foreground mt-1.5 max-w-xs">
-                Select an open role from the search listings pane to view the ATS scoring check, required skills, and direct apply pipeline.
+                Select an open role from the search listings pane to view the
+                ATS scoring check, required skills, and direct apply pipeline.
               </p>
             </div>
           )}

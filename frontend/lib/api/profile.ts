@@ -12,12 +12,27 @@ export interface Profile {
 
   // Core Identity
   pronouns: string;
-  career_status: "actively_looking" | "open_to_opportunities" | "employed_exploring" | "career_break" | "";
+  career_status:
+    | "actively_looking"
+    | "open_to_opportunities"
+    | "employed_exploring"
+    | "career_break"
+    | "";
 
   // Career Recovery
-  transition_reason?: "layoff" | "sabbatical" | "caregiving" | "health" | "upskilling" | "relocation" | "other" | "";
+  transition_reason?:
+    | "layoff"
+    | "sabbatical"
+    | "caregiving"
+    | "health"
+    | "upskilling"
+    | "relocation"
+    | "other"
+    | "";
   target_comeback_timeline: string;
-  supports_needed: ("referrals" | "mentorship" | "interview_prep" | "skill_building")[];
+  supports_needed: (
+    "referrals" | "mentorship" | "interview_prep" | "skill_building"
+  )[];
 
   // Mobility & Preferences
   open_to_remote: boolean;
@@ -46,7 +61,8 @@ export interface Profile {
   coaching_metadata: string;
 
   // Work Auth
-  work_auth_status: "citizen" | "resident" | "needs_sponsorship" | "visit_visa" | "";
+  work_auth_status:
+    "citizen" | "resident" | "needs_sponsorship" | "visit_visa" | "";
   passport_nationality: string;
   driving_license_bool: boolean;
   driving_license_type: string;
@@ -75,13 +91,19 @@ export interface Profile {
   // Privacy Visibility
   visibility_profile: "public" | "recruiters_only" | "mentors_only" | "private";
   visibility_salary: "public" | "recruiters_only" | "mentors_only" | "private";
-  visibility_transition_reason: "public" | "recruiters_only" | "mentors_only" | "private";
-  visibility_experience: "public" | "recruiters_only" | "mentors_only" | "private";
-  visibility_education: "public" | "recruiters_only" | "mentors_only" | "private";
-  visibility_certifications: "public" | "recruiters_only" | "mentors_only" | "private";
+  visibility_transition_reason:
+    "public" | "recruiters_only" | "mentors_only" | "private";
+  visibility_experience:
+    "public" | "recruiters_only" | "mentors_only" | "private";
+  visibility_education:
+    "public" | "recruiters_only" | "mentors_only" | "private";
+  visibility_certifications:
+    "public" | "recruiters_only" | "mentors_only" | "private";
   visibility_skills: "public" | "recruiters_only" | "mentors_only" | "private";
-  visibility_portfolio: "public" | "recruiters_only" | "mentors_only" | "private";
-  visibility_references: "public" | "recruiters_only" | "mentors_only" | "private";
+  visibility_portfolio:
+    "public" | "recruiters_only" | "mentors_only" | "private";
+  visibility_references:
+    "public" | "recruiters_only" | "mentors_only" | "private";
 
   // Nested Collections
   experiences: WorkExperience[];
@@ -175,44 +197,60 @@ export interface ConsentLog {
 // API functions
 export const profileClient = {
   getMe: () => api.get<Profile>("/profiles/me"),
-  
+
   updateMe: (data: Partial<Profile>) => api.put<Profile>("/profiles/me", data),
-  
+
   getByID: (id: string) => api.get<Profile>(`/profiles/${id}`),
 
   // Experiences
-  addExperience: (exp: WorkExperience) => api.post<Profile>("/profiles/me/experiences", exp),
-  updateExperience: (id: string, exp: WorkExperience) => api.put<Profile>(`/profiles/me/experiences/${id}`, exp),
-  deleteExperience: (id: string) => api.delete<Profile>(`/profiles/me/experiences/${id}`),
+  addExperience: (exp: WorkExperience) =>
+    api.post<Profile>("/profiles/me/experiences", exp),
+  updateExperience: (id: string, exp: WorkExperience) =>
+    api.put<Profile>(`/profiles/me/experiences/${id}`, exp),
+  deleteExperience: (id: string) =>
+    api.delete<Profile>(`/profiles/me/experiences/${id}`),
 
   // Education
-  addEducation: (edu: Education) => api.post<Profile>("/profiles/me/educations", edu),
-  updateEducation: (id: string, edu: Education) => api.put<Profile>(`/profiles/me/educations/${id}`, edu),
-  deleteEducation: (id: string) => api.delete<Profile>(`/profiles/me/educations/${id}`),
+  addEducation: (edu: Education) =>
+    api.post<Profile>("/profiles/me/educations", edu),
+  updateEducation: (id: string, edu: Education) =>
+    api.put<Profile>(`/profiles/me/educations/${id}`, edu),
+  deleteEducation: (id: string) =>
+    api.delete<Profile>(`/profiles/me/educations/${id}`),
 
   // Certifications
-  addCertification: (cert: Certification) => api.post<Profile>("/profiles/me/certifications", cert),
-  updateCertification: (id: string, cert: Certification) => api.put<Profile>(`/profiles/me/certifications/${id}`, cert),
-  deleteCertification: (id: string) => api.delete<Profile>(`/profiles/me/certifications/${id}`),
+  addCertification: (cert: Certification) =>
+    api.post<Profile>("/profiles/me/certifications", cert),
+  updateCertification: (id: string, cert: Certification) =>
+    api.put<Profile>(`/profiles/me/certifications/${id}`, cert),
+  deleteCertification: (id: string) =>
+    api.delete<Profile>(`/profiles/me/certifications/${id}`),
 
   // Skills
-  setSkills: (skills: ProfileSkill[]) => api.put<Profile>("/profiles/me/skills", { skills }),
+  setSkills: (skills: ProfileSkill[]) =>
+    api.put<Profile>("/profiles/me/skills", { skills }),
 
   // Languages
-  setLanguages: (languages: Language[]) => api.put<Profile>("/profiles/me/languages", { languages }),
+  setLanguages: (languages: Language[]) =>
+    api.put<Profile>("/profiles/me/languages", { languages }),
 
   // Portfolio
-  setPortfolio: (portfolio: PortfolioLink[]) => api.put<Profile>("/profiles/me/portfolio", { portfolio }),
+  setPortfolio: (portfolio: PortfolioLink[]) =>
+    api.put<Profile>("/profiles/me/portfolio", { portfolio }),
 
   // Endorsements
-  addEndorsement: (endorsement: Omit<Endorsement, "id" | "from_user_id">) => 
+  addEndorsement: (endorsement: Omit<Endorsement, "id" | "from_user_id">) =>
     api.post<Profile>("/profiles/me/endorsements", endorsement),
 
   // References
-  addReference: (ref: Reference) => api.post<Profile>("/profiles/me/references", ref),
-  updateReference: (id: string, ref: Reference) => api.put<Profile>(`/profiles/me/references/${id}`, ref),
-  deleteReference: (id: string) => api.delete<Profile>(`/profiles/me/references/${id}`),
+  addReference: (ref: Reference) =>
+    api.post<Profile>("/profiles/me/references", ref),
+  updateReference: (id: string, ref: Reference) =>
+    api.put<Profile>(`/profiles/me/references/${id}`, ref),
+  deleteReference: (id: string) =>
+    api.delete<Profile>(`/profiles/me/references/${id}`),
 
   // Consent log
-  addConsent: (consent: Omit<ConsentLog, "id">) => api.post<void>("/profiles/me/consent", consent),
+  addConsent: (consent: Omit<ConsentLog, "id">) =>
+    api.post<void>("/profiles/me/consent", consent),
 };

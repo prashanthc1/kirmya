@@ -5,7 +5,11 @@ export interface Connection {
   requester_id: string;
   receiver_id: string;
   status: "pending" | "accepted" | "rejected" | "blocked" | "declined";
-  origin: "mentorship_match" | "referral_request" | "job_application" | "manual_request";
+  origin:
+    | "mentorship_match"
+    | "referral_request"
+    | "job_application"
+    | "manual_request";
   created_at: string;
   updated_at: string;
   responded_at?: string;
@@ -25,7 +29,10 @@ export interface ConnectionStatusResponse {
 
 export const networkClient = {
   sendRequest: (receiverID: string, origin: string = "manual_request") =>
-    api.post<Connection>("/network/requests", { receiver_id: receiverID, origin }),
+    api.post<Connection>("/network/requests", {
+      receiver_id: receiverID,
+      origin,
+    }),
 
   acceptRequest: (id: string) =>
     api.put<{ status: string }>(`/network/requests/${id}/accept`, {}),
@@ -39,8 +46,7 @@ export const networkClient = {
   unconnect: (userID: string) =>
     api.delete<{ status: string }>(`/network/connections/${userID}`),
 
-  getConnections: () =>
-    api.get<Connection[]>("/network/connections"),
+  getConnections: () => api.get<Connection[]>("/network/connections"),
 
   getIncomingRequests: () =>
     api.get<Connection[]>("/network/requests/incoming"),

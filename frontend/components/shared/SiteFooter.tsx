@@ -42,7 +42,9 @@ const DEFAULT_GROUPS: [FooterGroup, FooterGroup, FooterGroup] = [
   },
 ];
 
-export default function SiteFooter({ groups = DEFAULT_GROUPS }: SiteFooterProps) {
+export default function SiteFooter({
+  groups = DEFAULT_GROUPS,
+}: SiteFooterProps) {
   return (
     <footer className="w-full bg-card border-t border-border/40 py-12 md:py-16 mt-auto">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -53,8 +55,9 @@ export default function SiteFooter({ groups = DEFAULT_GROUPS }: SiteFooterProps)
               Kirmya
             </span>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-              Kirmya. Sanskrit for <em>the instrument of purposeful action</em>. 
-              The AI career operating system designed to guide you through transition and come back stronger.
+              Kirmya. Sanskrit for <em>the instrument of purposeful action</em>.
+              The AI career operating system designed to guide you through
+              transition and come back stronger.
             </p>
           </div>
 
@@ -67,8 +70,8 @@ export default function SiteFooter({ groups = DEFAULT_GROUPS }: SiteFooterProps)
               <ul className="space-y-2">
                 {group.links.map((link, idx) => (
                   <li key={idx}>
-                    <Link 
-                      href={link.href} 
+                    <Link
+                      href={link.href}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
                     >
                       {link.label}
@@ -86,14 +89,14 @@ export default function SiteFooter({ groups = DEFAULT_GROUPS }: SiteFooterProps)
             &copy; {new Date().getFullYear()} Kirmya. Built for your comeback.
           </p>
           <div className="flex gap-6">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               Privacy Policy
             </Link>
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               Terms of Service

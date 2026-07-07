@@ -164,115 +164,8 @@ func (r *Repository) UpdateScalars(ctx context.Context, userID string, s domain.
 	if err := r.ensureRow(ctx, userID); err != nil {
 		return err
 	}
-
-	// Encrypt sensitive fields
-	transReasonEnc, err := r.crypt.Encrypt(s.TransitionReason)
-	if err != nil {
-		return err
-	}
-	salMinEnc, err := r.crypt.Encrypt(strconv.Itoa(s.SalaryMin))
-	if err != nil {
-		return err
-	}
-	salMaxEnc, err := r.crypt.Encrypt(strconv.Itoa(s.SalaryMax))
-	if err != nil {
-		return err
-	}
-	salCurrEnc, err := r.crypt.Encrypt(s.SalaryCurrency)
-	if err != nil {
-		return err
-	}
-
 	return r.tx(ctx, func(tx *sql.Tx) error {
-		// Update scalar fields
-		_, err = tx.ExecContext(ctx, `
-			UPDATE profiles
-			SET headline = $2, about = $3, photo_url = $4, bio = $5, location = $6, website = $7,
-			    pronouns = $8, career_status = $9, transition_reason_enc = $10, target_comeback_timeline = $11,
-			    open_to_remote = $12, open_to_relocation = $13, employment_type = $14,
-			    salary_min_enc = $15, salary_max_enc = $16, salary_currency_enc = $17, salary_visible = $18,
-			    work_mode = $19, availability_date = NULLIF($20,'')::date, notice_period = $21,
-			    referral_eligible = $22, career_narrative = $23, coaching_metadata = $24,
-			    work_auth_status = $25, passport_nationality = $26, driving_license_bool = $27, driving_license_type = $28,
-			    preferred_contact_channel = $29, accessibility_needs = $30, video_intro_url = $31,
-			    willing_to_mentor = $32, background_check_consent = $33,
-			    background_check_consent_at = NULLIF($34,'')::timestamptz, job_alert_frequency = $35, job_alert_channel = $36,
-			    visibility_profile = $37, visibility_salary = $38, visibility_transition_reason = $39,
-			    visibility_experience = $40, visibility_education = $41, visibility_certifications = $42,
-			    visibility_skills = $43, visibility_portfolio = $44, visibility_references = $45,
-			    updated_at = now(), version = version + 1
-			WHERE user_id = $1 AND deleted_at IS NULL`,
-			userID, s.Headline, s.About, s.PhotoURL, s.Bio, s.Location, s.Website,
-			s.Pronouns, s.CareerStatus, transReasonEnc, s.TargetComebackTimeline,
-			s.OpenToRemote, s.OpenToRelocation, s.EmploymentType,
-			salMinEnc, salMaxEnc, salCurrEnc, s.SalaryVisible,
-			s.WorkMode, s.AvailabilityDate, s.NoticePeriod,
-			s.ReferralEligible, s.CareerNarrative, s.CoachingMetadata,
-			s.WorkAuthStatus, s.PassportNationality, s.DrivingLicenseBool, s.DrivingLicenseType,
-			s.PreferredContactChannel, s.AccessibilityNeeds, s.VideoIntroURL,
-			s.WillingToMentor, s.BackgroundCheckConsent, s.BackgroundCheckConsentAt,
-			s.JobAlertFrequency, s.JobAlertChannel,
-			s.VisibilityProfile, s.VisibilitySalary, s.VisibilityTransitionReason,
-			s.VisibilityExperience, s.VisibilityEducation, s.VisibilityCertifications,
-			s.VisibilitySkills, s.VisibilityPortfolio, s.VisibilityReferences,
-		)
-		if err != nil {
-			return err
-		}
-
-		// Rebuild support table
-		if _, err := tx.ExecContext(ctx, `DELETE FROM profile_supports WHERE user_id = $1`, userID); err != nil {
-			return err
-		}
-		for _, sup := range s.SupportsNeeded {
-			if sup == "" {
-				continue
-			}
-			if _, err := tx.ExecContext(ctx, `INSERT INTO profile_supports (user_id, support) VALUES ($1,$2)`, userID, sup); err != nil {
-				return err
-			}
-		}
-
-		// Rebuild relocation locations
-		if _, err := tx.ExecContext(ctx, `DELETE FROM profile_relocation_locations WHERE user_id = $1`, userID); err != nil {
-			return err
-		}
-		for _, loc := range s.RelocationLocations {
-			if loc == "" {
-				continue
-			}
-			if _, err := tx.ExecContext(ctx, `INSERT INTO profile_relocation_locations (user_id, location) VALUES ($1,$2)`, userID, loc); err != nil {
-				return err
-			}
-		}
-
-		// Rebuild desired roles
-		if _, err := tx.ExecContext(ctx, `DELETE FROM profile_desired_roles WHERE user_id = $1`, userID); err != nil {
-			return err
-		}
-		for _, role := range s.DesiredRoles {
-			if role == "" {
-				continue
-			}
-			if _, err := tx.ExecContext(ctx, `INSERT INTO profile_desired_roles (user_id, role) VALUES ($1,$2)`, userID, role); err != nil {
-				return err
-			}
-		}
-
-		// Rebuild desired industries
-		if _, err := tx.ExecContext(ctx, `DELETE FROM profile_desired_industries WHERE user_id = $1`, userID); err != nil {
-			return err
-		}
-		for _, ind := range s.DesiredIndustries {
-			if ind == "" {
-				continue
-			}
-			if _, err := tx.ExecContext(ctx, `INSERT INTO profile_desired_industries (user_id, industry) VALUES ($1,$2)`, userID, ind); err != nil {
-				return err
-			}
-		}
-
-		return nil
+		return r.applyScalars(ctx, tx, userID, s)
 	})
 }
 
@@ -341,58 +234,13 @@ func (r *Repository) loadExperiences(ctx context.Context, userID string) ([]doma
 
 func (r *Repository) AddExperience(ctx context.Context, userID string, e *domain.WorkExperience) error {
 	return r.tx(ctx, func(tx *sql.Tx) error {
-		err := tx.QueryRowContext(ctx, `
-			INSERT INTO work_experiences (user_id, title, company, location, employment_type, start_date, end_date, is_current, description)
-			VALUES ($1,$2,$3,$4,$5,NULLIF($6,'')::date,NULLIF($7,'')::date,$8,$9)
-			RETURNING id`,
-			userID, e.Title, e.Company, e.Location, e.EmploymentType, e.StartDate, e.EndDate, e.IsCurrent, e.Description).
-			Scan(&e.ID)
-		if err != nil {
-			return err
-		}
-		for i, ach := range e.Achievements {
-			if ach == "" {
-				continue
-			}
-			_, err = tx.ExecContext(ctx, `
-				INSERT INTO work_experience_achievements (experience_id, achievement, sort_order)
-				VALUES ($1,$2,$3)`, e.ID, ach, i)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+		return insertExperienceQ(ctx, tx, userID, e)
 	})
 }
 
 func (r *Repository) UpdateExperience(ctx context.Context, userID string, e domain.WorkExperience) error {
 	return r.tx(ctx, func(tx *sql.Tx) error {
-		res, err := tx.ExecContext(ctx, `
-			UPDATE work_experiences
-			SET title=$3, company=$4, location=$5, employment_type=$6,
-			    start_date=NULLIF($7,'')::date, end_date=NULLIF($8,'')::date, is_current=$9, description=$10, updated_at=now()
-			WHERE id=$1 AND user_id=$2`,
-			e.ID, userID, e.Title, e.Company, e.Location, e.EmploymentType, e.StartDate, e.EndDate, e.IsCurrent, e.Description)
-		if err = owned(res, err); err != nil {
-			return err
-		}
-
-		if _, err = tx.ExecContext(ctx, `DELETE FROM work_experience_achievements WHERE experience_id = $1`, e.ID); err != nil {
-			return err
-		}
-
-		for i, ach := range e.Achievements {
-			if ach == "" {
-				continue
-			}
-			_, err = tx.ExecContext(ctx, `
-				INSERT INTO work_experience_achievements (experience_id, achievement, sort_order)
-				VALUES ($1,$2,$3)`, e.ID, ach, i)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+		return updateExperienceQ(ctx, tx, userID, e)
 	})
 }
 
@@ -426,21 +274,11 @@ func (r *Repository) loadEducations(ctx context.Context, userID string) ([]domai
 }
 
 func (r *Repository) AddEducation(ctx context.Context, userID string, e *domain.Education) error {
-	return r.db.QueryRowContext(ctx, `
-		INSERT INTO educations (user_id, school, degree, field_of_study, start_date, end_date, grade, description)
-		VALUES ($1,$2,$3,$4,NULLIF($5,'')::date,NULLIF($6,'')::date,$7,$8)
-		RETURNING id`,
-		userID, e.School, e.Degree, e.FieldOfStudy, e.StartDate, e.EndDate, e.Grade, e.Description).Scan(&e.ID)
+	return insertEducationQ(ctx, r.db, userID, e)
 }
 
 func (r *Repository) UpdateEducation(ctx context.Context, userID string, e domain.Education) error {
-	res, err := r.db.ExecContext(ctx, `
-		UPDATE educations
-		SET school=$3, degree=$4, field_of_study=$5, start_date=NULLIF($6,'')::date,
-		    end_date=NULLIF($7,'')::date, grade=$8, description=$9, updated_at=now()
-		WHERE id=$1 AND user_id=$2`,
-		e.ID, userID, e.School, e.Degree, e.FieldOfStudy, e.StartDate, e.EndDate, e.Grade, e.Description)
-	return owned(res, err)
+	return updateEducationQ(ctx, r.db, userID, e)
 }
 
 func (r *Repository) DeleteEducation(ctx context.Context, userID, id string) error {
@@ -473,21 +311,11 @@ func (r *Repository) loadCertifications(ctx context.Context, userID string) ([]d
 }
 
 func (r *Repository) AddCertification(ctx context.Context, userID string, c *domain.Certification) error {
-	return r.db.QueryRowContext(ctx, `
-		INSERT INTO certifications (user_id, name, issuer, issue_date, expiry_date, credential_id, credential_url)
-		VALUES ($1,$2,$3,NULLIF($4,'')::date,NULLIF($5,'')::date,$6,$7)
-		RETURNING id`,
-		userID, c.Name, c.Issuer, c.IssueDate, c.ExpiryDate, c.CredentialID, c.CredentialURL).Scan(&c.ID)
+	return insertCertificationQ(ctx, r.db, userID, c)
 }
 
 func (r *Repository) UpdateCertification(ctx context.Context, userID string, c domain.Certification) error {
-	res, err := r.db.ExecContext(ctx, `
-		UPDATE certifications
-		SET name=$3, issuer=$4, issue_date=NULLIF($5,'')::date, expiry_date=NULLIF($6,'')::date,
-		    credential_id=$7, credential_url=$8, updated_at=now()
-		WHERE id=$1 AND user_id=$2`,
-		c.ID, userID, c.Name, c.Issuer, c.IssueDate, c.ExpiryDate, c.CredentialID, c.CredentialURL)
-	return owned(res, err)
+	return updateCertificationQ(ctx, r.db, userID, c)
 }
 
 func (r *Repository) DeleteCertification(ctx context.Context, userID, id string) error {
@@ -519,26 +347,7 @@ func (r *Repository) loadSkills(ctx context.Context, userID string) ([]domain.Pr
 
 func (r *Repository) SetSkills(ctx context.Context, userID string, skills []domain.ProfileSkill) error {
 	return r.tx(ctx, func(tx *sql.Tx) error {
-		if _, err := tx.ExecContext(ctx, `DELETE FROM profile_skills WHERE user_id = $1`, userID); err != nil {
-			return err
-		}
-		for _, sk := range skills {
-			if sk.Name == "" {
-				continue
-			}
-			var skillID string
-			if err := tx.QueryRowContext(ctx,
-				`INSERT INTO skills (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
-				sk.Name).Scan(&skillID); err != nil {
-				return err
-			}
-			if _, err := tx.ExecContext(ctx,
-				`INSERT INTO profile_skills (user_id, skill_id, proficiency_level, endorsed_count) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
-				userID, skillID, sk.ProficiencyLevel, sk.EndorsedCount); err != nil {
-				return err
-			}
-		}
-		return nil
+		return setSkillsQ(ctx, tx, userID, skills)
 	})
 }
 
@@ -565,31 +374,7 @@ func (r *Repository) loadLanguages(ctx context.Context, userID string) ([]domain
 
 func (r *Repository) SetLanguages(ctx context.Context, userID string, langs []domain.Language) error {
 	return r.tx(ctx, func(tx *sql.Tx) error {
-		if _, err := tx.ExecContext(ctx, `DELETE FROM profile_languages WHERE user_id = $1`, userID); err != nil {
-			return err
-		}
-		for _, l := range langs {
-			if l.Name == "" {
-				continue
-			}
-			prof := l.Proficiency
-			if prof == "" {
-				prof = "professional"
-			}
-			var langID string
-			if err := tx.QueryRowContext(ctx,
-				`INSERT INTO languages (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
-				l.Name).Scan(&langID); err != nil {
-				return err
-			}
-			if _, err := tx.ExecContext(ctx,
-				`INSERT INTO profile_languages (user_id, language_id, proficiency) VALUES ($1,$2,$3)
-				 ON CONFLICT (user_id, language_id) DO UPDATE SET proficiency = EXCLUDED.proficiency`,
-				userID, langID, prof); err != nil {
-				return err
-			}
-		}
-		return nil
+		return setLanguagesQ(ctx, tx, userID, langs)
 	})
 }
 
@@ -615,19 +400,7 @@ func (r *Repository) loadPortfolio(ctx context.Context, userID string) ([]domain
 
 func (r *Repository) SetPortfolio(ctx context.Context, userID string, links []domain.PortfolioLink) error {
 	return r.tx(ctx, func(tx *sql.Tx) error {
-		if _, err := tx.ExecContext(ctx, `DELETE FROM portfolio_links WHERE user_id = $1`, userID); err != nil {
-			return err
-		}
-		for _, l := range links {
-			if l.URL == "" {
-				continue
-			}
-			if _, err := tx.ExecContext(ctx,
-				`INSERT INTO portfolio_links (user_id, label, url) VALUES ($1,$2,$3)`, userID, l.Platform, l.URL); err != nil {
-				return err
-			}
-		}
-		return nil
+		return setPortfolioQ(ctx, tx, userID, links)
 	})
 }
 
@@ -757,19 +530,11 @@ func (r *Repository) AddEndorsement(ctx context.Context, toUserID string, e *dom
 }
 
 func (r *Repository) AddReference(ctx context.Context, userID string, rf *domain.Reference) error {
-	return r.db.QueryRowContext(ctx, `
-		INSERT INTO profile_references (user_id, name, relationship, contact_info, permission_to_contact)
-		VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-		userID, rf.Name, rf.Relationship, rf.ContactInfo, rf.PermissionToContact).Scan(&rf.ID)
+	return insertReferenceQ(ctx, r.db, userID, rf)
 }
 
 func (r *Repository) UpdateReference(ctx context.Context, userID string, rf domain.Reference) error {
-	res, err := r.db.ExecContext(ctx, `
-		UPDATE profile_references
-		SET name = $3, relationship = $4, contact_info = $5, permission_to_contact = $6
-		WHERE id = $1 AND user_id = $2`,
-		rf.ID, userID, rf.Name, rf.Relationship, rf.ContactInfo, rf.PermissionToContact)
-	return owned(res, err)
+	return updateReferenceQ(ctx, r.db, userID, rf)
 }
 
 func (r *Repository) DeleteReference(ctx context.Context, userID, id string) error {

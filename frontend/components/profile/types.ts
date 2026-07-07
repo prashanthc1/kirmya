@@ -1,22 +1,22 @@
-import { 
-  Profile as BaseProfile, 
-  WorkExperience, 
-  Education, 
-  Certification, 
-  ProfileSkill, 
-  Language, 
-  PortfolioLink, 
-  Reference 
+import {
+  Profile as BaseProfile,
+  WorkExperience,
+  Education,
+  Certification,
+  ProfileSkill,
+  Language,
+  PortfolioLink,
+  Reference,
 } from "@/lib/api/profile";
 
-export type { 
-  WorkExperience, 
-  Education, 
-  Certification, 
-  ProfileSkill, 
-  Language, 
-  PortfolioLink, 
-  Reference 
+export type {
+  WorkExperience,
+  Education,
+  Certification,
+  ProfileSkill,
+  Language,
+  PortfolioLink,
+  Reference,
 };
 
 export interface ProjectItem {
@@ -40,7 +40,16 @@ export interface AchievementItem {
   title: string;
   issuer_or_org: string;
   date: string;
-  category: "award" | "publication" | "patent" | "conference" | "hackathon" | "open_source" | "volunteer" | "competition" | "leadership";
+  category:
+    | "award"
+    | "publication"
+    | "patent"
+    | "conference"
+    | "hackathon"
+    | "open_source"
+    | "volunteer"
+    | "competition"
+    | "leadership";
   description: string;
   url?: string;
 }
@@ -190,14 +199,24 @@ export interface ExtendedProfile extends BaseProfile {
 
   // Section 14: Privacy & Security
   privacy_settings?: {
-    profile_visibility: "public" | "recruiters_only" | "connections_only" | "private";
+    profile_visibility:
+      "public" | "recruiters_only" | "connections_only" | "private";
     anonymous_mode: boolean;
     hide_salary: boolean;
     hide_employer: boolean;
     search_indexing: boolean;
     blocked_users: string[];
     mfa_enabled: boolean;
-    active_sessions: { device: string; location: string; last_active: string }[];
-    api_tokens: { id: string; name: string; created_at: string; last_used: string }[];
+    active_sessions: {
+      device: string;
+      location: string;
+      last_active: string;
+    }[];
+    api_tokens: {
+      id: string;
+      name: string;
+      created_at: string;
+      last_used: string;
+    }[];
   };
 }

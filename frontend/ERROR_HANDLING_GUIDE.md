@@ -37,6 +37,7 @@ Provides automatic retry logic with:
 - Retry callbacks for UI updates
 
 Usage:
+
 ```typescript
 import { apiEnhanced } from "@/lib/api-enhanced";
 
@@ -48,7 +49,7 @@ const jobs = await apiEnhanced.searchJobs(keyword, location, type);
 Provides consistent error handling in components:
 
 ```typescript
-const { error, isRetrying, handleError, handleErrorWithRetry, clearError } = 
+const { error, isRetrying, handleError, handleErrorWithRetry, clearError } =
   useErrorHandler({ context: "feature-name" });
 
 // Handle basic errors
@@ -88,6 +89,7 @@ All major pages have been updated to use the error handling system:
 - Automatic error classification and retry logic for network errors
 
 Handlers:
+
 - `loadJobs()`: Search and filter jobs
 - `handlePostJob()`: Post a new job
 - `handleApplyJob()`: Apply for a job
@@ -115,12 +117,14 @@ Handlers:
 ### 1. Network Error Simulation
 
 Edit the API endpoint temporarily:
+
 ```typescript
 // In lib/api.ts
 const API_BASE = "/api/invalid-endpoint"; // Triggers network error
 ```
 
 Expected behavior:
+
 - Error is classified as NETWORK type
 - Automatic retry after 1s, 2s, 4s delays
 - User sees retry notifications
@@ -129,11 +133,13 @@ Expected behavior:
 ### 2. Validation Error (400)
 
 Send invalid data to endpoints:
+
 ```typescript
 await api.postJob(token, "", "", "", "x", "", ""); // Title too short
 ```
 
 Expected behavior:
+
 - Error classified as VALIDATION
 - Not retried (client error)
 - User sees validation error message
@@ -142,12 +148,14 @@ Expected behavior:
 ### 3. Authentication Error (401)
 
 Use expired/invalid token:
+
 ```typescript
 const invalidToken = "invalid.token.here";
 await api.postJob(invalidToken, "Title", "Company", ...);
 ```
 
 Expected behavior:
+
 - Error classified as AUTH
 - Not retried
 - User should be redirected to login (implement in future)
@@ -155,11 +163,13 @@ Expected behavior:
 ### 4. Timeout Error
 
 Configure timeout in api-enhanced.ts:
+
 ```typescript
 await apiCallWithRetry("/jobs", { timeout: 100 }); // Very short timeout
 ```
 
 Expected behavior:
+
 - Request aborts after 100ms
 - Classified as TIMEOUT type
 - Automatic retry with exponential backoff
@@ -167,11 +177,13 @@ Expected behavior:
 ### 5. Server Error (500)
 
 Server returns 500 status:
+
 ```typescript
 // Backend simulates error
 ```
 
 Expected behavior:
+
 - Error classified as SERVER
 - Automatically retried 3 times
 - User sees retry notifications
@@ -182,12 +194,14 @@ Expected behavior:
 ### Inline Errors (Per-Page)
 
 ```tsx
-{pageError && (
-  <div className={styles.error}>
-    <button onClick={clearError}>×</button>
-    {pageError.message}
-  </div>
-)}
+{
+  pageError && (
+    <div className={styles.error}>
+      <button onClick={clearError}>×</button>
+      {pageError.message}
+    </div>
+  );
+}
 ```
 
 ### Toast Notifications (Global)

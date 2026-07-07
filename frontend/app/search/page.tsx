@@ -55,7 +55,7 @@ function SearchResults() {
     (async () => {
       try {
         const data = await api.get<SearchResponse>(
-          `/search?q=${encodeURIComponent(query)}`
+          `/search?q=${encodeURIComponent(query)}`,
         );
         if (active) {
           setResults(data?.results ?? []);
@@ -66,7 +66,7 @@ function SearchResults() {
           setError(
             err instanceof ApiError
               ? err.message
-              : "Search is unavailable right now. Please try again."
+              : "Search is unavailable right now. Please try again.",
           );
         }
       } finally {
@@ -173,7 +173,11 @@ function SearchResults() {
                         {hit.title}
                       </Typography>
                       {hit.subtitle && (
-                        <Typography variant="body2" color="text.secondary" noWrap>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          noWrap
+                        >
                           {hit.subtitle}
                         </Typography>
                       )}
@@ -192,7 +196,9 @@ function SearchResults() {
 export default function SearchPage() {
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Search" }]} />
+      <SiteNav
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Search" }]}
+      />
       <Suspense
         fallback={
           <Container maxWidth="md" sx={{ flex: 1, py: 8 }}>

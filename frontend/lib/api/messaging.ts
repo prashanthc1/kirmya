@@ -28,15 +28,27 @@ export const messagingClient = {
     api.get<{ conversations: Conversation[] }>("/conversations"),
 
   startConversation: (participantIDs: string[], title: string = "") =>
-    api.post<Conversation>("/conversations", { participant_ids: participantIDs, title }),
+    api.post<Conversation>("/conversations", {
+      participant_ids: participantIDs,
+      title,
+    }),
 
   getMessages: (conversationID: string, searchQuery?: string) => {
-    const path = `/conversations/${conversationID}/messages` + (searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : "");
+    const path =
+      `/conversations/${conversationID}/messages` +
+      (searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : "");
     return api.get<{ messages: Message[] }>(path);
   },
 
-  sendMessage: (conversationID: string, body: string, contentType: string = "text") =>
-    api.post<Message>(`/conversations/${conversationID}/messages`, { body, content_type: contentType }),
+  sendMessage: (
+    conversationID: string,
+    body: string,
+    contentType: string = "text",
+  ) =>
+    api.post<Message>(`/conversations/${conversationID}/messages`, {
+      body,
+      content_type: contentType,
+    }),
 
   sendAttachment: (conversationID: string, formData: FormData) =>
     api.post<Message>(`/conversations/${conversationID}/messages`, undefined, {
@@ -47,7 +59,9 @@ export const messagingClient = {
     }),
 
   deleteMessage: (conversationID: string, messageID: string) =>
-    api.delete<{ deleted: boolean }>(`/conversations/${conversationID}/messages/${messageID}`),
+    api.delete<{ deleted: boolean }>(
+      `/conversations/${conversationID}/messages/${messageID}`,
+    ),
 
   markRead: (conversationID: string) =>
     api.post<{ read: boolean }>(`/conversations/${conversationID}/read`),
@@ -56,10 +70,15 @@ export const messagingClient = {
     api.post<{ ok: boolean }>(`/conversations/${conversationID}/typing`),
 
   archiveConversation: (conversationID: string, archive: boolean) =>
-    api.post<{ archived: boolean }>(`/conversations/${conversationID}/archive`, { archive }),
+    api.post<{ archived: boolean }>(
+      `/conversations/${conversationID}/archive`,
+      { archive },
+    ),
 
   pinConversation: (conversationID: string, pin: boolean) =>
-    api.post<{ pinned: boolean }>(`/conversations/${conversationID}/pin`, { pin }),
+    api.post<{ pinned: boolean }>(`/conversations/${conversationID}/pin`, {
+      pin,
+    }),
 };
 
 export interface WSEvent {
@@ -157,7 +176,9 @@ export class KirmyaWebSocketClient {
 
   public sendTyping(conversationID: string): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ type: "typing", conversation_id: conversationID }));
+      this.socket.send(
+        JSON.stringify({ type: "typing", conversation_id: conversationID }),
+      );
     }
   }
 

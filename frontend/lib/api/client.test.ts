@@ -23,7 +23,8 @@ describe("api client", () => {
   beforeEach(() => {
     setAccessToken(null);
     // Clear cookies between tests.
-    document.cookie = "csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+    document.cookie =
+      "csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
     vi.restoreAllMocks();
   });
 
@@ -34,7 +35,9 @@ describe("api client", () => {
   it("unwraps the { data } envelope on success", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValue(jsonResponse(200, { data: { id: "u1", name: "Ada" } }));
+      .mockResolvedValue(
+        jsonResponse(200, { data: { id: "u1", name: "Ada" } }),
+      );
 
     const result = await api.get<{ id: string; name: string }>("/users/me");
 
@@ -86,7 +89,9 @@ describe("api client", () => {
 
   it("throws ApiError carrying the error envelope", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      jsonResponse(422, { error: { code: "validation_error", message: "bad email" } }),
+      jsonResponse(422, {
+        error: { code: "validation_error", message: "bad email" },
+      }),
     );
 
     await expect(api.post("/auth/register", {})).rejects.toMatchObject({
@@ -101,9 +106,15 @@ describe("api client", () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       // 1st: original request -> 401
-      .mockResolvedValueOnce(jsonResponse(401, { error: { code: "unauthorized", message: "expired" } }))
+      .mockResolvedValueOnce(
+        jsonResponse(401, {
+          error: { code: "unauthorized", message: "expired" },
+        }),
+      )
       // 2nd: refresh -> new token
-      .mockResolvedValueOnce(jsonResponse(200, { data: { access_token: "fresh-tok" } }))
+      .mockResolvedValueOnce(
+        jsonResponse(200, { data: { access_token: "fresh-tok" } }),
+      )
       // 3rd: retried original -> success
       .mockResolvedValueOnce(jsonResponse(200, { data: { id: "u1" } }));
 
@@ -119,8 +130,16 @@ describe("api client", () => {
   it("clears the token and surfaces 401 when refresh fails", async () => {
     setAccessToken("stale");
     vi.spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(jsonResponse(401, { error: { code: "unauthorized", message: "expired" } }))
-      .mockResolvedValueOnce(jsonResponse(401, { error: { code: "unauthorized", message: "no cookie" } }));
+      .mockResolvedValueOnce(
+        jsonResponse(401, {
+          error: { code: "unauthorized", message: "expired" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(401, {
+          error: { code: "unauthorized", message: "no cookie" },
+        }),
+      );
 
     await expect(api.get("/users/me")).rejects.toBeInstanceOf(ApiError);
     expect(getAccessToken()).toBeNull();
@@ -135,7 +154,11 @@ describe("api client", () => {
   });
 
   it("returns undefined for 204 responses", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(204, undefined));
-    await expect(request("/auth/logout", { method: "POST" })).resolves.toBeUndefined();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse(204, undefined),
+    );
+    await expect(
+      request("/auth/logout", { method: "POST" }),
+    ).resolves.toBeUndefined();
   });
 });

@@ -16,7 +16,14 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+  default: ({
+    href,
+    children,
+    ...rest
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
     <a href={href} {...rest}>
       {children}
     </a>
@@ -73,7 +80,9 @@ describe("SiteNav", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Ada L\./ }));
 
-    expect(screen.getByRole("menuitem", { name: /Sign out/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /Sign out/ }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("Jobs")[0].closest("a")).toHaveAttribute(
       "href",
       "/jobs",
@@ -92,11 +101,20 @@ describe("SiteNav", () => {
   it("renders breadcrumb items and marks the last as the current page", () => {
     render(
       <SiteNav
-        breadcrumb={[{ label: "Jobs", href: "/jobs" }, { label: "Frontend Engineer" }]}
+        breadcrumb={[
+          { label: "Jobs", href: "/jobs" },
+          { label: "Frontend Engineer" },
+        ]}
       />,
     );
     expect(screen.getByLabelText(/breadcrumb/i)).toBeInTheDocument();
-    expect(screen.getAllByText("Jobs")[0].closest("a")).toHaveAttribute("href", "/jobs");
-    expect(screen.getByText("Frontend Engineer")).toHaveAttribute("aria-current", "page");
+    expect(screen.getAllByText("Jobs")[0].closest("a")).toHaveAttribute(
+      "href",
+      "/jobs",
+    );
+    expect(screen.getByText("Frontend Engineer")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 });

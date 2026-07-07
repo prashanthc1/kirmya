@@ -7,7 +7,11 @@ export const DEMO = {
 };
 
 /** Log in through the UI and wait for the dashboard. */
-export async function login(page: Page, email: string, password = DEMO_PASSWORD) {
+export async function login(
+  page: Page,
+  email: string,
+  password = DEMO_PASSWORD,
+) {
   await page.goto("/sign-in");
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);

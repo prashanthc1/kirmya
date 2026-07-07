@@ -15,7 +15,9 @@ export default function ProfilePage() {
         <div className="absolute top-1/3 right-10 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[80px] pointer-events-none -z-10 dark:bg-purple-500/10" />
         <div className="absolute bottom-10 left-10 w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none -z-10 dark:bg-emerald-500/5" />
 
-        <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile" }]} />
+        <SiteNav
+          breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile" }]}
+        />
 
         <main className="flex-grow">
           <ProfileWorkspace />

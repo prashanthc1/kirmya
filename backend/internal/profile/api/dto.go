@@ -175,6 +175,10 @@ type consentDTO struct {
 }
 
 type updateScalarsRequest struct {
+	// Version is the client's last-known aggregate version, used for optimistic
+	// concurrency. Zero (omitted) skips the check for backward compatibility.
+	Version int `json:"version"`
+
 	Headline string `json:"headline"`
 	About    string `json:"about"`
 	PhotoURL string `json:"photo_url"`

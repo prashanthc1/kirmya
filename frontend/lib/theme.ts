@@ -92,7 +92,8 @@ const theme = createTheme({
         root: {
           borderRadius: 100, // Pill styling
           padding: "10px 24px",
-          transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, box-shadow 0.2s ease",
+          transition:
+            "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, box-shadow 0.2s ease",
           "&:hover": {
             transform: "translateY(-1px)",
           },
@@ -123,9 +124,11 @@ const theme = createTheme({
         root: {
           borderRadius: 16,
           border: "1px solid rgba(43, 38, 32, 0.05)",
-          boxShadow: "0 4px 20px -2px rgba(43, 38, 32, 0.02), 0 12px 40px -8px rgba(214, 104, 56, 0.03)",
+          boxShadow:
+            "0 4px 20px -2px rgba(43, 38, 32, 0.02), 0 12px 40px -8px rgba(214, 104, 56, 0.03)",
           backgroundColor: "#FFFFFF",
-          transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease",
+          transition:
+            "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease",
           overflow: "visible", // Allows internal glow filters to show
         },
       },

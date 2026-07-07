@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { 
-  Sparkles, 
-  Mail, 
-  ArrowLeft, 
-  Loader2, 
+import {
+  Sparkles,
+  Mail,
+  ArrowLeft,
+  Loader2,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 
@@ -40,7 +40,10 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <Link
+            href="/"
+            className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
+          >
             Kirmya
           </Link>
         </div>
@@ -53,7 +56,9 @@ export default function ForgotPasswordPage() {
             <div className="space-y-2">
               <h1 className="text-xl font-bold">Check your inbox</h1>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                If an account exists for <strong className="text-foreground">{email.trim()}</strong>, we&apos;ve sent a password-reset link. It expires in 1 hour.
+                If an account exists for{" "}
+                <strong className="text-foreground">{email.trim()}</strong>,
+                we&apos;ve sent a password-reset link. It expires in 1 hour.
               </p>
             </div>
             <Link
@@ -64,20 +69,25 @@ export default function ForgotPasswordPage() {
             </Link>
           </div>
         ) : (
-          <form 
-            onSubmit={handleSubmit} 
-            className="bg-card border border-border/80 p-8 rounded-3xl space-y-5 shadow-lg shadow-black/5" 
+          <form
+            onSubmit={handleSubmit}
+            className="bg-card border border-border/80 p-8 rounded-3xl space-y-5 shadow-lg shadow-black/5"
             noValidate
           >
             <div className="space-y-1.5 text-center sm:text-left">
-              <h1 className="text-xl font-extrabold tracking-tight">Reset password</h1>
+              <h1 className="text-xl font-extrabold tracking-tight">
+                Reset password
+              </h1>
               <p className="text-xs text-muted-foreground">
-                Enter your email address and we&apos;ll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset
+                your password.
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground block">Email Address</label>
+              <label className="text-xs font-semibold text-muted-foreground block">
+                Email Address
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                 <input
@@ -103,7 +113,10 @@ export default function ForgotPasswordPage() {
 
             <div className="text-center text-xs text-muted-foreground pt-4 border-t border-border/40">
               Remembered it?{" "}
-              <Link href="/sign-in" className="font-bold text-primary hover:underline">
+              <Link
+                href="/sign-in"
+                className="font-bold text-primary hover:underline"
+              >
                 Sign in
               </Link>
             </div>

@@ -49,17 +49,16 @@ Frontend (App Router):
 ```
 frontend/
 ├── app/                 # routes = URLs; route groups: (marketing), (auth), (app), (admin)
-├── src/
-│   ├── components/      # ui/ (ShadCN primitives) + shared/ (composed components)
-│   ├── features/<f>/    # one folder per domain (mirrors backend): api.ts, schemas.ts, hooks.ts, components/, types.ts
-│   ├── lib/             # api/client.ts (auth header, CSRF, refresh-on-401), auth/, hooks/, utils/, config.ts
-│   └── types/           # shared/generated TS types
-└── tests/               # components/ (Vitest + RTL) and e2e/ (Playwright)
+├── components/          # shared/ (MuiModal, etc.) + profile/ (ProfileWorkspace, etc.)
+├── lib/                 # api/client.ts (auth client), auth/ (auth-context), theme.ts
+├── public/              # static assets
+└── e2e/                 # end-to-end integration tests (Playwright)
 ```
 
 > Both repos are mid-migration. Some backend modules still use the older
 > `service/repository/handler` layout and some frontend pages predate `features/`;
 > migrate to the target layout *as you touch them*. Everything compiles under one binary/build.
+> Unit tests are colocated alongside their target components (e.g. `*.test.tsx`, `*.test.ts`).
 
 ## 3. DDD conventions (backend)
 

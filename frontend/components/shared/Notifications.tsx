@@ -7,12 +7,16 @@ interface NotificationsContextType {
   showNotification: (message: string, severity?: AlertColor) => void;
 }
 
-const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
+const NotificationsContext = createContext<
+  NotificationsContextType | undefined
+>(undefined);
 
 export function useNotifications() {
   const context = useContext(NotificationsContext);
   if (!context) {
-    throw new Error("useNotifications must be used within a NotificationsProvider");
+    throw new Error(
+      "useNotifications must be used within a NotificationsProvider",
+    );
   }
   return context;
 }
@@ -21,18 +25,26 @@ interface NotificationsProviderProps {
   children: React.ReactNode;
 }
 
-export function NotificationsProvider({ children }: NotificationsProviderProps) {
+export function NotificationsProvider({
+  children,
+}: NotificationsProviderProps) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState<AlertColor>("success");
 
-  const showNotification = useCallback((msg: string, sev: AlertColor = "success") => {
-    setMessage(msg);
-    setSeverity(sev);
-    setOpen(true);
-  }, []);
+  const showNotification = useCallback(
+    (msg: string, sev: AlertColor = "success") => {
+      setMessage(msg);
+      setSeverity(sev);
+      setOpen(true);
+    },
+    [],
+  );
 
-  const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string,
+  ) => {
     if (reason === "clickaway") {
       return;
     }

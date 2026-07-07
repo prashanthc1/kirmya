@@ -39,26 +39,17 @@ export class ApiError extends Error {
   }
 }
 
-// --- persistent access token -------------------------------------------------
-// Cache the token in localStorage to maintain the login session across full reloads,
-// avoiding logged-out UI flashes before the refresh cookie establishes a new session.
-let accessToken: string | null = typeof window !== "undefined" ? localStorage.getItem("kirmya_access_token") : null;
+// --- in-memory access token --------------------------------------------------
+// Access token is held strictly in memory to prevent XSS-based token extraction.
+// Session restoration on full reload is handled transparently via the httpOnly
+// refresh cookie (see request interceptor below).
+let accessToken: string | null = null;
 
 export function setAccessToken(token: string | null): void {
   accessToken = token;
-  if (typeof window !== "undefined") {
-    if (token) {
-      localStorage.setItem("kirmya_access_token", token);
-    } else {
-      localStorage.removeItem("kirmya_access_token");
-    }
-  }
 }
 
 export function getAccessToken(): string | null {
-  if (!accessToken && typeof window !== "undefined") {
-    accessToken = localStorage.getItem("kirmya_access_token");
-  }
   return accessToken;
 }
 
@@ -69,7 +60,9 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(
-    new RegExp("(?:^|; )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]*)"),
+    new RegExp(
+      "(?:^|; )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]*)",
+    ),
   );
   return match ? decodeURIComponent(match[1]) : null;
 }
@@ -129,7 +122,9 @@ async function refreshAccessToken(): Promise<boolean> {
           })(),
         });
         if (!res.ok) return false;
-        const payload = (await res.json()) as { data?: { access_token?: string } };
+        const payload = (await res.json()) as {
+          data?: { access_token?: string };
+        };
         const token = payload?.data?.access_token;
         if (!token) return false;
         setAccessToken(token);
@@ -164,12 +159,17 @@ async function parseError(res: Response): Promise<ApiError> {
  * throws {@link ApiError} otherwise. On a 401 it transparently refreshes once
  * and retries.
  */
-export async function request<T = unknown>(path: string, opts: RequestOptions = {}): Promise<T> {
+export async function request<T = unknown>(
+  path: string,
+  opts: RequestOptions = {},
+): Promise<T> {
   const method = (opts.method ?? "GET").toUpperCase();
 
   const send = (): Promise<Response> => {
     const headers = buildHeaders(method, opts);
-    const body = opts.body ?? (opts.json !== undefined ? JSON.stringify(opts.json) : undefined);
+    const body =
+      opts.body ??
+      (opts.json !== undefined ? JSON.stringify(opts.json) : undefined);
     return fetch(buildUrl(path), {
       ...opts,
       method,
@@ -197,7 +197,9 @@ export async function request<T = unknown>(path: string, opts: RequestOptions = 
   if (!text) return undefined as T;
   const payload = JSON.parse(text) as { data?: T };
   // Endpoints wrap success in { data }, but tolerate bare bodies too.
-  return (payload && "data" in payload ? payload.data : (payload as unknown)) as T;
+  return (
+    payload && "data" in payload ? payload.data : (payload as unknown)
+  ) as T;
 }
 
 /** Convenience verbs. */

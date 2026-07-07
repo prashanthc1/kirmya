@@ -23,7 +23,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-3">
         <Loader2 className="h-8 w-8 text-primary animate-spin" />
-        <span className="text-sm font-semibold text-muted-foreground">Authenticating session...</span>
+        <span className="text-sm font-semibold text-muted-foreground">
+          Authenticating session...
+        </span>
       </div>
     );
   }

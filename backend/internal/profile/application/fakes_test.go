@@ -92,6 +92,75 @@ func (r *fakeRepo) UpdateScalars(_ context.Context, userID string, s domain.Scal
 	return nil
 }
 
+func (r *fakeRepo) UpdateAggregate(ctx context.Context, userID string, expectedVersion int, u domain.AggregateUpdate) error {
+	r.mu.Lock()
+	if p := r.get(userID); expectedVersion > 0 && p.Version != expectedVersion {
+		r.mu.Unlock()
+		return domain.ErrOptimisticLock
+	}
+	r.mu.Unlock()
+
+	if err := r.UpdateScalars(ctx, userID, u.Scalars); err != nil {
+		return err
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	p := r.get(userID)
+	p.Version++
+
+	if u.Experiences != nil {
+		out := make([]domain.WorkExperience, 0, len(*u.Experiences))
+		for _, e := range *u.Experiences {
+			if e.ID == "" {
+				e.ID = r.id("exp")
+			}
+			out = append(out, e)
+		}
+		p.Experiences = out
+	}
+	if u.Educations != nil {
+		out := make([]domain.Education, 0, len(*u.Educations))
+		for _, e := range *u.Educations {
+			if e.ID == "" {
+				e.ID = r.id("edu")
+			}
+			out = append(out, e)
+		}
+		p.Educations = out
+	}
+	if u.Certifications != nil {
+		out := make([]domain.Certification, 0, len(*u.Certifications))
+		for _, c := range *u.Certifications {
+			if c.ID == "" {
+				c.ID = r.id("cert")
+			}
+			out = append(out, c)
+		}
+		p.Certifications = out
+	}
+	if u.Skills != nil {
+		p.Skills = append([]domain.ProfileSkill(nil), *u.Skills...)
+	}
+	if u.Languages != nil {
+		p.Languages = append([]domain.Language(nil), *u.Languages...)
+	}
+	if u.Portfolio != nil {
+		p.Portfolio = append([]domain.PortfolioLink(nil), *u.Portfolio...)
+	}
+	if u.References != nil {
+		out := make([]domain.Reference, 0, len(*u.References))
+		for _, rf := range *u.References {
+			if rf.ID == "" {
+				rf.ID = r.id("ref")
+			}
+			out = append(out, rf)
+		}
+		p.References = out
+	}
+	return nil
+}
+
 func (r *fakeRepo) AddExperience(_ context.Context, userID string, e *domain.WorkExperience) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()

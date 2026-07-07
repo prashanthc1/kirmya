@@ -5,6 +5,7 @@ Welcome to the Modular Monolith frontend! This guide helps you get started.
 ## Understanding the Architecture (5 min)
 
 Read in this order:
+
 1. [ARCHITECTURE_SUMMARY.md](./ARCHITECTURE_SUMMARY.md) - Overview (5 min)
 2. [MODULAR_ARCHITECTURE.md](./MODULAR_ARCHITECTURE.md) - Detailed structure (10 min)
 
@@ -71,20 +72,19 @@ export interface Favorite {
 // modules/jobs/services/index.ts
 export const jobsService = {
   // ... existing code ...
-  
+
   favoriteJob: (token: string, jobId: string): Promise<Favorite> => {
     return apiClient.post(
       `/jobs/${jobId}/favorite`,
       {},
-      { headers: { Authorization: `Bearer ${token}` } }
+      { headers: { Authorization: `Bearer ${token}` } },
     );
   },
 
   unfavoriteJob: (token: string, jobId: string): Promise<void> => {
-    return apiClient.delete(
-      `/jobs/${jobId}/favorite`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    return apiClient.delete(`/jobs/${jobId}/favorite`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
   },
 };
 ```
@@ -93,10 +93,10 @@ export const jobsService = {
 
 ```typescript
 // modules/jobs/hooks/useFavorite.ts
-import { useState } from 'react';
-import { jobsService } from '../services';
-import { useAuth } from '@/core';
-import { useNotifications } from '@/modules/notifications';
+import { useState } from "react";
+import { jobsService } from "../services";
+import { useAuth } from "@/core";
+import { useNotifications } from "@/modules/notifications";
 
 export function useFavorite(jobId: string) {
   const [isFavorited, setIsFavorited] = useState(false);
@@ -106,7 +106,7 @@ export function useFavorite(jobId: string) {
 
   const toggleFavorite = async () => {
     if (!token) {
-      notify('Please login first', 'warning');
+      notify("Please login first", "warning");
       return;
     }
 
@@ -115,14 +115,14 @@ export function useFavorite(jobId: string) {
       if (isFavorited) {
         await jobsService.unfavoriteJob(token, jobId);
         setIsFavorited(false);
-        notify('Removed from favorites', 'info');
+        notify("Removed from favorites", "info");
       } else {
         await jobsService.favoriteJob(token, jobId);
         setIsFavorited(true);
-        notify('Added to favorites', 'success');
+        notify("Added to favorites", "success");
       }
     } catch (error) {
-      notify('Failed to update favorite', 'error');
+      notify("Failed to update favorite", "error");
     } finally {
       setLoading(false);
     }
@@ -176,10 +176,10 @@ export function FavoriteButton({ jobId, onlyIcon }: FavoriteButtonProps) {
 
 ```typescript
 // modules/jobs/components/index.ts
-export { FavoriteButton } from './FavoriteButton';  // ← ADD THIS
+export { FavoriteButton } from "./FavoriteButton"; // ← ADD THIS
 
 // modules/jobs/hooks/index.ts
-export { useFavorite } from './useFavorite';  // ← ADD THIS
+export { useFavorite } from "./useFavorite"; // ← ADD THIS
 ```
 
 #### Step 7: Use in Component
@@ -206,8 +206,8 @@ function JobCard({ job }) {
 
 ```typescript
 // hooks/useJobs.ts
-import { useState, useEffect } from 'react';
-import { jobsService } from '../services';
+import { useState, useEffect } from "react";
+import { jobsService } from "../services";
 
 export function useJobs(filters) {
   const [jobs, setJobs] = useState([]);
@@ -238,9 +238,9 @@ export function useJobs(filters) {
 
 ```typescript
 // hooks/usePostJob.ts
-import { useState } from 'react';
-import { jobsService } from '../services';
-import { useAuth } from '@/core';
+import { useState } from "react";
+import { jobsService } from "../services";
+import { useAuth } from "@/core";
 
 export function usePostJob() {
   const [loading, setLoading] = useState(false);
@@ -327,15 +327,15 @@ export function PostJobForm({ onSuccess }) {
 
 ```typescript
 // In any component, you can import and console.log
-import * as Jobs from '@/modules/jobs';
-console.log('Jobs exports:', Jobs);
+import * as Jobs from "@/modules/jobs";
+console.log("Jobs exports:", Jobs);
 ```
 
 ### Verify Service Call
 
 ```typescript
 // In browser console
-const { jobsService } = await import('/src/modules/jobs/services/index.ts');
+const { jobsService } = await import("/src/modules/jobs/services/index.ts");
 jobsService.searchJobs();
 ```
 
@@ -364,17 +364,17 @@ npm test -- --watch
 
 ```typescript
 // modules/jobs/__tests__/services.test.ts
-import { jobsService } from '../services';
+import { jobsService } from "../services";
 
-describe('jobsService', () => {
-  it('should search jobs', async () => {
-    const jobs = await jobsService.searchJobs({ keyword: 'engineer' });
+describe("jobsService", () => {
+  it("should search jobs", async () => {
+    const jobs = await jobsService.searchJobs({ keyword: "engineer" });
     expect(Array.isArray(jobs)).toBe(true);
   });
 
-  it('should get single job', async () => {
-    const job = await jobsService.getJob('job-123');
-    expect(job.id).toBe('job-123');
+  it("should get single job", async () => {
+    const job = await jobsService.getJob("job-123");
+    expect(job.id).toBe("job-123");
   });
 });
 ```
@@ -382,11 +382,13 @@ describe('jobsService', () => {
 ## Performance Tips
 
 1. **Use dynamic imports for heavy modules**
+
    ```typescript
-   const JobsPage = dynamic(() => import('@/modules/jobs'));
+   const JobsPage = dynamic(() => import("@/modules/jobs"));
    ```
 
 2. **Memoize components**
+
    ```typescript
    export const JobCard = React.memo(({ job }) => (
      // ...
@@ -432,7 +434,7 @@ npm run lint      # Lint code
 ✅ **Test everything** - Write tests as you code  
 ✅ **Document your code** - Add README to new modules  
 ✅ **Follow patterns** - Use existing patterns as templates  
-✅ **Ask for review** - Code review helps catch issues early  
+✅ **Ask for review** - Code review helps catch issues early
 
 ---
 

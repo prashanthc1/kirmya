@@ -2,7 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
-import { ThemeProvider as MuiThemeProvider, createTheme } from "@mui/material/styles";
+import {
+  ThemeProvider as MuiThemeProvider,
+  createTheme,
+} from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { NotificationsProvider } from "@/components/shared/Notifications";
 
@@ -31,7 +34,9 @@ function ThemeProviderInner({ children }: { children: React.ReactNode }) {
           primary: isDark ? "#F8FAFC" : "#0F172A",
           secondary: isDark ? "#CBD5E1" : "#64748B",
         },
-        divider: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.08)",
+        divider: isDark
+          ? "rgba(255, 255, 255, 0.08)"
+          : "rgba(15, 23, 42, 0.08)",
       },
       typography: {
         fontFamily: "var(--font-public-sans), sans-serif",

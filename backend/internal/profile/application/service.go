@@ -87,6 +87,21 @@ func (s *Service) UpdateScalars(ctx context.Context, userID string, sc domain.Sc
 	return s.reload(ctx, userID)
 }
 
+// UpdateProfile applies a full profile update (scalars plus any provided child
+// collections) in a single repository transaction, with an optimistic version
+// check. It validates the assembled aggregate first, then reloads once —
+// recomputing calculated fields, refreshing the cache, and emitting a single
+// ProfileUpdated event. A stale expectedVersion yields domain.ErrOptimisticLock.
+func (s *Service) UpdateProfile(ctx context.Context, userID string, expectedVersion int, upd domain.AggregateUpdate) (*domain.Profile, error) {
+	if err := upd.Validate(); err != nil {
+		return nil, err
+	}
+	if err := s.repo.UpdateAggregate(ctx, userID, expectedVersion, upd); err != nil {
+		return nil, err
+	}
+	return s.reload(ctx, userID)
+}
+
 func (s *Service) AddExperience(ctx context.Context, userID string, e *domain.WorkExperience) (*domain.Profile, error) {
 	temp := &domain.Profile{
 		Experiences: []domain.WorkExperience{*e},

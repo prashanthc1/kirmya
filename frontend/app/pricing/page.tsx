@@ -170,7 +170,12 @@ export default function PricingPage() {
               ].map((f) => (
                 <div
                   key={f}
-                  style={{ display: "flex", gap: "10px", fontSize: "15px", color: "#5B554C" }}
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    fontSize: "15px",
+                    color: "#5B554C",
+                  }}
                 >
                   <span style={{ color: "#4F7C6A", flex: "none" }}>✓</span> {f}
                 </div>
@@ -285,7 +290,12 @@ export default function PricingPage() {
               ].map((f) => (
                 <div
                   key={f}
-                  style={{ display: "flex", gap: "10px", fontSize: "15px", color: "#E5DFD5" }}
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    fontSize: "15px",
+                    color: "#E5DFD5",
+                  }}
                 >
                   <span style={{ color: "#E7A57E", flex: "none" }}>✓</span> {f}
                 </div>
@@ -379,7 +389,12 @@ export default function PricingPage() {
               ].map((f) => (
                 <div
                   key={f}
-                  style={{ display: "flex", gap: "10px", fontSize: "15px", color: "#5B554C" }}
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    fontSize: "15px",
+                    color: "#5B554C",
+                  }}
                 >
                   <span style={{ color: "#4F7C6A", flex: "none" }}>✓</span> {f}
                 </div>
@@ -496,9 +511,7 @@ export default function PricingPage() {
         >
           Pricing questions
         </h2>
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <div
             style={{
               background: "#fff",
@@ -545,8 +558,8 @@ export default function PricingPage() {
                 margin: 0,
               }}
             >
-              Any posting currently open to applicants. Close or fill a role
-              and you can open another in its place at no extra cost.
+              Any posting currently open to applicants. Close or fill a role and
+              you can open another in its place at no extra cost.
             </p>
           </div>
           <div

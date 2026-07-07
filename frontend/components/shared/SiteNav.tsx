@@ -5,25 +5,25 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "next-themes";
-import { 
-  Sun, 
-  Moon, 
-  Laptop, 
-  Menu, 
-  X, 
-  LogOut, 
-  Settings, 
-  User, 
-  ChevronRight, 
-  Briefcase, 
-  Users, 
-  FileText, 
-  GraduationCap, 
-  Sparkles, 
+import {
+  Sun,
+  Moon,
+  Laptop,
+  Menu,
+  X,
+  LogOut,
+  Settings,
+  User,
+  ChevronRight,
+  Briefcase,
+  Users,
+  FileText,
+  GraduationCap,
+  Sparkles,
   Compass,
   Bell,
   Shield,
-  Search
+  Search,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -50,7 +50,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  
+
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -62,7 +62,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
   const handleSignOut = async () => {
     setProfileMenuOpen(false);
     router.push("/");
-    
+
     // Wait until Next.js has transitioned to the public home page before clearing the auth state,
     // ensuring the AuthGuard on the protected dashboard has been unmounted.
     if (typeof window !== "undefined") {
@@ -83,7 +83,9 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
     const parts = name.trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return "?";
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    return (
+      parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
   };
 
   const formatName = (name: string) => {
@@ -100,10 +102,12 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
       {/* Row 1: The Main Navbar (Global) */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          
           {/* Left Side: Brand Logo */}
           <div className="flex items-center shrink-0">
-            <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+            <Link
+              href={user ? "/dashboard" : "/"}
+              className="flex items-center gap-2"
+            >
               <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
                 Kirmya
               </span>
@@ -114,9 +118,9 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
           <div className="flex-grow max-w-md mx-4 hidden md:block">
             <div className="relative flex items-center bg-secondary/50 dark:bg-secondary/20 border border-border/40 hover:border-primary/40 focus-within:border-primary rounded-full px-4 py-2 transition-all">
               <Search className="h-4 w-4 text-muted-foreground mr-2.5 shrink-0" />
-              <input 
-                type="text" 
-                placeholder="Search profiles, creators, or users..." 
+              <input
+                type="text"
+                placeholder="Search profiles, creators, or users..."
                 className="w-full bg-transparent border-none text-xs text-foreground placeholder-muted-foreground outline-none"
               />
             </div>
@@ -130,8 +134,8 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                 <button
                   onClick={() => setTheme("light")}
                   className={`p-1.5 rounded-full transition-all duration-200 ${
-                    theme === "light" 
-                      ? "bg-background text-foreground shadow-sm" 
+                    theme === "light"
+                      ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                   title="Light mode"
@@ -141,8 +145,8 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                 <button
                   onClick={() => setTheme("dark")}
                   className={`p-1.5 rounded-full transition-all duration-200 ${
-                    theme === "dark" 
-                      ? "bg-background text-foreground shadow-sm" 
+                    theme === "dark"
+                      ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                   title="Dark mode"
@@ -152,8 +156,8 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                 <button
                   onClick={() => setTheme("system")}
                   className={`p-1.5 rounded-full transition-all duration-200 ${
-                    theme === "system" 
-                      ? "bg-background text-foreground shadow-sm" 
+                    theme === "system"
+                      ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                   title="System preference"
@@ -168,10 +172,12 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
             ) : user ? (
               <div className="flex items-center gap-2">
                 {/* Inbox Quick Link */}
-                <Link 
-                  href="/inbox" 
+                <Link
+                  href="/inbox"
                   className={`p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all ${
-                    pathname.startsWith("/inbox") ? "text-foreground bg-secondary" : ""
+                    pathname.startsWith("/inbox")
+                      ? "text-foreground bg-secondary"
+                      : ""
                   }`}
                   title="Messages"
                 >
@@ -197,8 +203,8 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                   <AnimatePresence>
                     {profileMenuOpen && (
                       <>
-                        <div 
-                          className="fixed inset-0 z-10" 
+                        <div
+                          className="fixed inset-0 z-10"
                           onClick={() => setProfileMenuOpen(false)}
                         />
                         <motion.div
@@ -210,10 +216,14 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                           className="absolute right-0 mt-2 w-56 rounded-2xl border border-border/80 bg-card p-2 text-card-foreground shadow-lg shadow-black/5 ring-1 ring-black/5 focus:outline-none z-20"
                         >
                           <div className="px-3 py-2 text-xs border-b border-border/40 mb-1">
-                            <p className="font-semibold text-foreground truncate">{user.full_name}</p>
-                            <p className="text-muted-foreground truncate">{user.email}</p>
+                            <p className="font-semibold text-foreground truncate">
+                              {user.full_name}
+                            </p>
+                            <p className="text-muted-foreground truncate">
+                              {user.email}
+                            </p>
                           </div>
-                          
+
                           <Link
                             href="/profile"
                             role="menuitem"
@@ -223,7 +233,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                             <User className="h-4 w-4" />
                             My Profile
                           </Link>
-                          
+
                           <Link
                             href="/settings"
                             role="menuitem"
@@ -282,7 +292,11 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary md:hidden"
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
@@ -292,26 +306,30 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
       <div className="border-t border-border/40 bg-muted/10 dark:bg-card/25">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-12 items-center justify-between gap-4">
-            
             {/* Left Side: Breadcrumbs */}
             <div className="flex items-center min-w-0">
               {breadcrumb && breadcrumb.length > 0 ? (
-                <nav aria-label="Breadcrumb" className="flex items-center space-x-1 text-xs sm:text-sm text-muted-foreground truncate">
+                <nav
+                  aria-label="Breadcrumb"
+                  className="flex items-center space-x-1 text-xs sm:text-sm text-muted-foreground truncate"
+                >
                   {breadcrumb.map((item, idx) => {
                     const isLast = idx === breadcrumb.length - 1;
                     return (
                       <React.Fragment key={idx}>
-                        {idx > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />}
+                        {idx > 0 && (
+                          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                        )}
                         {item.href ? (
-                          <Link 
-                            href={item.href} 
+                          <Link
+                            href={item.href}
                             className="hover:text-foreground transition-colors font-medium truncate"
                             {...(isLast ? { "aria-current": "page" } : {})}
                           >
                             {item.label}
                           </Link>
                         ) : (
-                          <span 
+                          <span
                             className="text-foreground font-semibold truncate"
                             {...(isLast ? { "aria-current": "page" } : {})}
                           >
@@ -323,32 +341,34 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                   })}
                 </nav>
               ) : (
-                <span className="text-xs font-semibold text-muted-foreground">Kirmya Hub</span>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  Kirmya Hub
+                </span>
               )}
             </div>
 
             {/* Right Side: Page navigation links */}
             <nav className="hidden md:flex items-center space-x-1.5 shrink-0">
-              {user && MENU_LINKS.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname.startsWith(link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
-                      isActive 
-                        ? "bg-primary text-primary-foreground shadow-sm shadow-blue-500/10" 
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {link.label}
-                  </Link>
-                );
-              })}
+              {user &&
+                MENU_LINKS.map((link) => {
+                  const Icon = link.icon;
+                  const isActive = pathname.startsWith(link.href);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm shadow-blue-500/10"
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {link.label}
+                    </Link>
+                  );
+                })}
             </nav>
-
           </div>
         </div>
       </div>
@@ -366,10 +386,14 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
               {user ? (
                 <>
                   <div className="px-3 py-2 border-b border-border/40 mb-2">
-                    <p className="text-sm font-bold text-foreground truncate">{user.full_name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    <p className="text-sm font-bold text-foreground truncate">
+                      {user.full_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </p>
                   </div>
-                  
+
                   {MENU_LINKS.map((link) => {
                     const Icon = link.icon;
                     return (
@@ -384,9 +408,9 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                       </Link>
                     );
                   })}
-                  
+
                   <div className="border-t border-border/40 my-2 pt-2" />
-                  
+
                   <Link
                     href="/profile"
                     onClick={() => setMobileMenuOpen(false)}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 
 	"workspace-app/internal/common"
@@ -41,11 +40,14 @@ func (h *Handler) write(w http.ResponseWriter, p *domain.Profile, err error) {
 }
 
 func (h *Handler) writeErr(w http.ResponseWriter, err error) {
-	if errors.Is(err, domain.ErrNotFound) {
+	switch {
+	case errors.Is(err, domain.ErrNotFound):
 		common.WriteNotFoundError(w, "not found")
-		return
+	case errors.Is(err, domain.ErrOptimisticLock):
+		common.WriteError(w, common.NewConflictError("profile was modified by another request; reload and retry"))
+	default:
+		common.WriteValidationError(w, err.Error())
 	}
-	common.WriteValidationError(w, err.Error())
 }
 
 // GetMe handles GET /profiles/me.
@@ -126,21 +128,9 @@ func hasAccess(vis string, viewerRole string, isOwner bool) bool {
 	}
 }
 
-func isValidUUID(uuid string) bool {
-	if len(uuid) != 36 {
-		return false
-	}
-	for i, c := range uuid {
-		if i == 8 || i == 13 || i == 18 || i == 23 {
-			if c != '-' {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-// UpdateMe handles PUT /profiles/me.
+// UpdateMe handles PUT /profiles/me. It applies the scalar fields plus any
+// provided child collections atomically (single transaction) with an optimistic
+// version check. A stale req.Version yields HTTP 409.
 func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
 	var req updateScalarsRequest
@@ -149,177 +139,60 @@ func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("[UpdateMe Debug] uid=%s, career_status=%q, transition_reason=%q, headline=%q", uid, req.CareerStatus, req.TransitionReason, req.Headline)
+	upd := domain.AggregateUpdate{Scalars: toScalars(req)}
 
-	// 1. Update scalar fields
-	_, err := h.svc.UpdateScalars(r.Context(), uid, toScalars(req))
-	if err != nil {
-		h.write(w, nil, err)
-		return
-	}
-
-	// 2. Load current profile state to compare/reconcile lists
-	currentProfile, err := h.svc.Get(r.Context(), uid)
-	if err != nil {
-		h.write(w, nil, err)
-		return
-	}
-
-	// 3. Reconcile Experiences
 	if req.Experiences != nil {
-		incomingIDs := make(map[string]bool)
-		for _, exp := range *req.Experiences {
-			domExp := exp.toDomain()
-			if exp.ID != "" && isValidUUID(exp.ID) {
-				incomingIDs[exp.ID] = true
-				if _, err = h.svc.UpdateExperience(r.Context(), uid, domExp); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			} else {
-				domExp.ID = "" // Clear temporary/mock ID
-				if _, err = h.svc.AddExperience(r.Context(), uid, &domExp); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			}
+		items := make([]domain.WorkExperience, 0, len(*req.Experiences))
+		for _, e := range *req.Experiences {
+			items = append(items, e.toDomain())
 		}
-		for _, existing := range currentProfile.Experiences {
-			if !incomingIDs[existing.ID] {
-				if _, err = h.svc.DeleteExperience(r.Context(), uid, existing.ID); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			}
-		}
+		upd.Experiences = &items
 	}
-
-	// 4. Reconcile Educations
 	if req.Educations != nil {
-		incomingIDs := make(map[string]bool)
-		for _, edu := range *req.Educations {
-			domEdu := edu.toDomain()
-			if edu.ID != "" && isValidUUID(edu.ID) {
-				incomingIDs[edu.ID] = true
-				if _, err = h.svc.UpdateEducation(r.Context(), uid, domEdu); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			} else {
-				domEdu.ID = "" // Clear temporary/mock ID
-				if _, err = h.svc.AddEducation(r.Context(), uid, &domEdu); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			}
+		items := make([]domain.Education, 0, len(*req.Educations))
+		for _, e := range *req.Educations {
+			items = append(items, e.toDomain())
 		}
-		for _, existing := range currentProfile.Educations {
-			if !incomingIDs[existing.ID] {
-				if _, err = h.svc.DeleteEducation(r.Context(), uid, existing.ID); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			}
-		}
+		upd.Educations = &items
 	}
-
-	// 5. Reconcile Certifications
 	if req.Certifications != nil {
-		incomingIDs := make(map[string]bool)
-		for _, cert := range *req.Certifications {
-			domCert := cert.toDomain()
-			if cert.ID != "" && isValidUUID(cert.ID) {
-				incomingIDs[cert.ID] = true
-				if _, err = h.svc.UpdateCertification(r.Context(), uid, domCert); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			} else {
-				domCert.ID = "" // Clear temporary/mock ID
-				if _, err = h.svc.AddCertification(r.Context(), uid, &domCert); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			}
+		items := make([]domain.Certification, 0, len(*req.Certifications))
+		for _, c := range *req.Certifications {
+			items = append(items, c.toDomain())
 		}
-		for _, existing := range currentProfile.Certifications {
-			if !incomingIDs[existing.ID] {
-				if _, err = h.svc.DeleteCertification(r.Context(), uid, existing.ID); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			}
-		}
+		upd.Certifications = &items
 	}
-
-	// 6. Reconcile Skills
 	if req.Skills != nil {
-		skills := make([]domain.ProfileSkill, 0, len(*req.Skills))
+		items := make([]domain.ProfileSkill, 0, len(*req.Skills))
 		for _, sk := range *req.Skills {
-			skills = append(skills, sk.toDomain())
+			items = append(items, sk.toDomain())
 		}
-		if _, err = h.svc.SetSkills(r.Context(), uid, skills); err != nil {
-			h.write(w, nil, err)
-			return
-		}
+		upd.Skills = &items
 	}
-
-	// 7. Reconcile Languages
 	if req.Languages != nil {
-		langs := make([]domain.Language, 0, len(*req.Languages))
+		items := make([]domain.Language, 0, len(*req.Languages))
 		for _, l := range *req.Languages {
-			langs = append(langs, domain.Language(l))
+			items = append(items, domain.Language(l))
 		}
-		if _, err = h.svc.SetLanguages(r.Context(), uid, langs); err != nil {
-			h.write(w, nil, err)
-			return
-		}
+		upd.Languages = &items
 	}
-
-	// 8. Reconcile Portfolio
 	if req.Portfolio != nil {
-		links := make([]domain.PortfolioLink, 0, len(*req.Portfolio))
+		items := make([]domain.PortfolioLink, 0, len(*req.Portfolio))
 		for _, l := range *req.Portfolio {
-			links = append(links, domain.PortfolioLink(l))
+			items = append(items, domain.PortfolioLink(l))
 		}
-		if _, err = h.svc.SetPortfolio(r.Context(), uid, links); err != nil {
-			h.write(w, nil, err)
-			return
-		}
+		upd.Portfolio = &items
 	}
-
-	// 9. Reconcile References
 	if req.References != nil {
-		incomingIDs := make(map[string]bool)
+		items := make([]domain.Reference, 0, len(*req.References))
 		for _, ref := range *req.References {
-			domRef := ref.toDomain()
-			if ref.ID != "" && isValidUUID(ref.ID) {
-				incomingIDs[ref.ID] = true
-				if _, err = h.svc.UpdateReference(r.Context(), uid, domRef); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			} else {
-				domRef.ID = "" // Clear temporary/mock ID
-				if _, err = h.svc.AddReference(r.Context(), uid, &domRef); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			}
+			items = append(items, ref.toDomain())
 		}
-		for _, existing := range currentProfile.References {
-			if !incomingIDs[existing.ID] {
-				if _, err = h.svc.DeleteReference(r.Context(), uid, existing.ID); err != nil {
-					h.write(w, nil, err)
-					return
-				}
-			}
-		}
+		upd.References = &items
 	}
 
-	// 10. Load final updated profile and return
-	finalProfile, err := h.svc.Get(r.Context(), uid)
-	h.write(w, finalProfile, err)
+	p, err := h.svc.UpdateProfile(r.Context(), uid, req.Version, upd)
+	h.write(w, p, err)
 }
 
 // --- experiences ---

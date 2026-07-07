@@ -3,7 +3,14 @@ import { render, screen } from "@testing-library/react";
 import SiteFooter from "@/components/shared/SiteFooter";
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+  default: ({
+    href,
+    children,
+    ...rest
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
     <a href={href} {...rest}>
       {children}
     </a>
@@ -20,7 +27,10 @@ describe("SiteFooter", () => {
 
   it("links a default candidate item to the right route", () => {
     render(<SiteFooter />);
-    expect(screen.getByRole("link", { name: "Browse jobs" })).toHaveAttribute("href", "/jobs");
+    expect(screen.getByRole("link", { name: "Browse jobs" })).toHaveAttribute(
+      "href",
+      "/jobs",
+    );
   });
 
   it("renders custom groups when provided", () => {
@@ -34,7 +44,10 @@ describe("SiteFooter", () => {
       />,
     );
     expect(screen.getByText("One")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Gamma" })).toHaveAttribute("href", "/c");
+    expect(screen.getByRole("link", { name: "Gamma" })).toHaveAttribute(
+      "href",
+      "/c",
+    );
     expect(screen.queryByText("Candidates")).not.toBeInTheDocument();
   });
 });

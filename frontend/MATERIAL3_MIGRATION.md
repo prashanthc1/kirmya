@@ -9,7 +9,7 @@ This project has been refactored to use **Material UI (MUI)** v6 with **Material
 ✅ Built-in theming and customization  
 ✅ Accessibility (WCAG 2.1 AA)  
 ✅ Responsive design out of the box  
-✅ Dark mode support (ready to implement)  
+✅ Dark mode support (ready to implement)
 
 ## What Was Changed
 
@@ -37,21 +37,25 @@ New file: `frontend/lib/theme.ts`
 ### Updated Components
 
 #### Notifications System (`components/Notifications.tsx`)
+
 - **Before**: Custom CSS with manual positioning
 - **After**: MUI Snackbar + Alert components
 - **Benefit**: Better accessibility, automatic stacking, smooth animations
 
 #### Navigation Component (`components/MuiNavigation.tsx`)
+
 - **New MUI Component**: AppBar + Toolbar
 - **Features**: User avatar menu, responsive navigation, icon buttons
 - **Replaces**: Custom CSS-based Navigation
 
 #### Modal/Dialog (`components/MuiModal.tsx`)
+
 - **New MUI Component**: Dialog with DialogTitle, DialogContent, DialogActions
 - **Features**: Automatic focus management, accessible keyboard navigation
 - **Replaces**: Custom Modal with CSS
 
 #### Layout Wrapper (`components/LayoutWrapper.tsx`)
+
 - Now includes ThemeProvider and CssBaseline
 - Provides consistent Material 3 styling across app
 - Automatic color scheme application
@@ -59,6 +63,7 @@ New file: `frontend/lib/theme.ts`
 ### New MUI Versions of Pages
 
 #### Home Page (`app/page-mui.tsx`)
+
 - Grid-based layout with MUI Grid component
 - Material 3 form inputs (TextField)
 - Card components for job previews
@@ -70,15 +75,15 @@ New file: `frontend/lib/theme.ts`
 
 ### Old → New
 
-| Old Component | New MUI Component | File |
-|---|---|---|
-| Custom Navigation | AppBar + Toolbar | `MuiNavigation.tsx` |
-| Custom Modal | Dialog | `MuiModal.tsx` |
-| Custom Notifications | Snackbar + Alert | `Notifications.tsx` |
-| Custom Input | TextField | `MuiModal.tsx`, `page-mui.tsx` |
-| Custom Button | Button | Various |
-| Custom Card | Card + CardContent | `page-mui.tsx` |
-| Custom Layout | Box + Container | Various |
+| Old Component        | New MUI Component  | File                           |
+| -------------------- | ------------------ | ------------------------------ |
+| Custom Navigation    | AppBar + Toolbar   | `MuiNavigation.tsx`            |
+| Custom Modal         | Dialog             | `MuiModal.tsx`                 |
+| Custom Notifications | Snackbar + Alert   | `Notifications.tsx`            |
+| Custom Input         | TextField          | `MuiModal.tsx`, `page-mui.tsx` |
+| Custom Button        | Button             | Various                        |
+| Custom Card          | Card + CardContent | `page-mui.tsx`                 |
+| Custom Layout        | Box + Container    | Various                        |
 
 ## Material 3 Design Features
 
@@ -89,7 +94,7 @@ New file: `frontend/lib/theme.ts`
 **Success**: Emerald (#10b981)  
 **Error**: Red (#ef4444)  
 **Warning**: Amber (#f59e0b)  
-**Info**: Sky (#0ea5e9)  
+**Info**: Sky (#0ea5e9)
 
 ### Typography
 
@@ -111,34 +116,41 @@ New file: `frontend/lib/theme.ts`
 ### Convert a CSS Module Page to MUI
 
 **Before:**
+
 ```tsx
 import styles from "./page.module.css";
 
 export default function JobsPage() {
-  return <div className={styles.container}>
-    <div className={styles.header}>
-      <h1>Jobs</h1>
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1>Jobs</h1>
+      </div>
     </div>
-  </div>;
+  );
 }
 ```
 
 **After:**
+
 ```tsx
 import { Box, Container, Typography } from "@mui/material";
 
 export default function JobsPage() {
-  return <Container>
-    <Box sx={{ py: 3 }}>
-      <Typography variant="h3">Jobs</Typography>
-    </Box>
-  </Container>;
+  return (
+    <Container>
+      <Box sx={{ py: 3 }}>
+        <Typography variant="h3">Jobs</Typography>
+      </Box>
+    </Container>
+  );
 }
 ```
 
 ### Common MUI Components
 
 **Layout:**
+
 ```tsx
 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 <Container maxWidth="lg">
@@ -146,12 +158,14 @@ export default function JobsPage() {
 ```
 
 **Forms:**
+
 ```tsx
 <TextField label="Email" fullWidth />
 <Button variant="contained">Submit</Button>
 ```
 
 **Content:**
+
 ```tsx
 <Card>
   <CardContent>
@@ -161,6 +175,7 @@ export default function JobsPage() {
 ```
 
 **Feedback:**
+
 ```tsx
 <Alert severity="success">Success message</Alert>
 <CircularProgress />
@@ -171,35 +186,36 @@ export default function JobsPage() {
 The `sx` prop allows inline styling with theme-aware values:
 
 ```tsx
-<Box sx={{
-  // Spacing
-  p: 2,                          // padding: 2*8px
-  mb: 2,                         // margin-bottom
-  gap: 1,                        // gap
+<Box
+  sx={{
+    // Spacing
+    p: 2, // padding: 2*8px
+    mb: 2, // margin-bottom
+    gap: 1, // gap
 
-  // Layout
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
+    // Layout
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
 
-  // Color
-  backgroundColor: "primary.main",
-  color: "text.secondary",
+    // Color
+    backgroundColor: "primary.main",
+    color: "text.secondary",
 
-  // Typography
-  fontSize: "1rem",
-  fontWeight: 600,
+    // Typography
+    fontSize: "1rem",
+    fontWeight: 600,
 
-  // Responsive
-  display: { xs: "none", sm: "block" },
+    // Responsive
+    display: { xs: "none", sm: "block" },
 
-  // Hover, Focus, etc.
-  "&:hover": {
-    backgroundColor: "primary.light",
-  },
-}}>
-</Box>
+    // Hover, Focus, etc.
+    "&:hover": {
+      backgroundColor: "primary.light",
+    },
+  }}
+></Box>
 ```
 
 ## Responsive Design
@@ -217,15 +233,18 @@ MUI uses breakpoints: xs, sm, md, lg, xl
 ## CSS Files Status
 
 ### Still Active
+
 - `frontend/globals.css` - Global styles, can be minimized
 - `frontend/app/*.module.css` - Some custom page styles
 
 ### Candidates for Removal
+
 - `frontend/components/Notifications.module.css` - Now using MUI
 - `frontend/components/Modal.module.css` - Now using MUI Dialog
 - `frontend/components/Navigation.module.css` - Now using MUI AppBar
 
 ### Migration Plan
+
 1. ✅ Convert Notifications → MUI Snackbar
 2. ✅ Create MuiNavigation component
 3. ✅ Create MuiModal component
@@ -252,7 +271,7 @@ palette: {
 ```typescript
 const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: "dark",
   },
 });
 ```
@@ -319,6 +338,7 @@ npm run dev
 ## Support
 
 For questions about MUI components, check:
+
 - MUI official docs
 - Component API reference
 - Examples in this codebase (`page-mui.tsx`, `MuiNavigation.tsx`)

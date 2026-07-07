@@ -28,58 +28,58 @@
 }
 
 :root {
-  --background: #FAFAFB;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #2563EB;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
-  --secondary-foreground: #64748B;
-  --muted: #F8FAFC;
-  --muted-foreground: #64748B;
-  --accent: #F1F5F9;
-  --accent-foreground: #0F172A;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #2563EB;
-  --success: #10B981;
-  --warning: #F59E0B;
+  --background: #fafafb;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #64748b;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
   --radius: 0.75rem;
 
-  --kirmya-bg: #FAFAFB;
-  --kirmya-ink: #0F172A;
+  --kirmya-bg: #fafafb;
+  --kirmya-ink: #0f172a;
 }
 
 .dark {
-  --background: #09090B;
-  --foreground: #F8FAFC;
+  --background: #09090b;
+  --foreground: #f8fafc;
   --card: #111318;
-  --card-foreground: #F8FAFC;
-  --popover: #18181B;
-  --popover-foreground: #F8FAFC;
-  --primary: #60A5FA;
-  --primary-foreground: #09090B;
-  --secondary: #18181B;
-  --secondary-foreground: #CBD5E1;
-  --muted: #18181B;
-  --muted-foreground: #CBD5E1;
-  --accent: #27272A;
-  --accent-foreground: #F8FAFC;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #27272A;
-  --input: #27272A;
-  --ring: #60A5FA;
-  --success: #10B981;
-  --warning: #F59E0B;
+  --card-foreground: #f8fafc;
+  --popover: #18181b;
+  --popover-foreground: #f8fafc;
+  --primary: #60a5fa;
+  --primary-foreground: #09090b;
+  --secondary: #18181b;
+  --secondary-foreground: #cbd5e1;
+  --muted: #18181b;
+  --muted-foreground: #cbd5e1;
+  --accent: #27272a;
+  --accent-foreground: #f8fafc;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #60a5fa;
+  --success: #10b981;
+  --warning: #f59e0b;
 
-  --kirmya-bg: #09090B;
-  --kirmya-ink: #F8FAFC;
+  --kirmya-bg: #09090b;
+  --kirmya-ink: #f8fafc;
 }
 
 /* Kirmya premium global baselines */
@@ -89,12 +89,24 @@ body {
   padding: 0;
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Geist', 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    "Geist",
+    "Inter",
+    "SF Pro Display",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   scroll-behavior: smooth;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 a {
@@ -194,7 +206,7 @@ a {
     rgba(255, 255, 255, 0) 100%
   );
   animation: shimmer 2s infinite;
-  content: '';
+  content: "";
 }
 
 .dark .animate-shimmer::after {

@@ -9,7 +9,9 @@ test("admin sees the console; non-admin does not", async ({ page }) => {
   await expect(adminLink).toBeVisible();
   await adminLink.click();
   await expect(page).toHaveURL(/\/admin/);
-  await expect(page.getByRole("heading", { name: "Admin Console" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Admin Console" }),
+  ).toBeVisible();
   await expect(page.getByText("Total").first()).toBeVisible(); // a stat card
 
   // Users tab lists accounts.

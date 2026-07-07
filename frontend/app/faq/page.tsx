@@ -12,9 +12,7 @@ export default function FaqPage() {
         overflowX: "hidden",
       }}
     >
-      <SiteNav
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "FAQ" }]}
-      />
+      <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "FAQ" }]} />
 
       {/* HERO */}
       <section
@@ -164,12 +162,30 @@ export default function FaqPage() {
                     gap: "16px",
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "17px", color: "#2B2620" }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "17px",
+                      color: "#2B2620",
+                    }}
+                  >
                     Is Kirmya really free for job-seekers?
                   </span>
-                  <span style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}>–</span>
+                  <span
+                    style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}
+                  >
+                    –
+                  </span>
                 </div>
-                <p style={{ margin: 0, padding: "0 24px 22px", fontSize: "16px", lineHeight: 1.65, color: "#5B554C" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "0 24px 22px",
+                    fontSize: "16px",
+                    lineHeight: 1.65,
+                    color: "#5B554C",
+                  }}
+                >
                   Yes — completely. Creating a profile, browsing roles, and
                   applying are always free. Recruiters and employers fund the
                   platform, so you never pay to find work.
@@ -192,12 +208,30 @@ export default function FaqPage() {
                     gap: "16px",
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "17px", color: "#2B2620" }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "17px",
+                      color: "#2B2620",
+                    }}
+                  >
                     I was laid off recently. Will that count against me?
                   </span>
-                  <span style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}>–</span>
+                  <span
+                    style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}
+                  >
+                    –
+                  </span>
                 </div>
-                <p style={{ margin: 0, padding: "0 24px 22px", fontSize: "16px", lineHeight: 1.65, color: "#5B554C" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "0 24px 22px",
+                    fontSize: "16px",
+                    lineHeight: 1.65,
+                    color: "#5B554C",
+                  }}
+                >
                   Never. Kirmya was built for exactly this moment. Recruiters
                   here understand that a layoff is about budgets and timing, not
                   your ability. Your profile leads with your work, not your
@@ -221,12 +255,30 @@ export default function FaqPage() {
                     gap: "16px",
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "17px", color: "#2B2620" }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "17px",
+                      color: "#2B2620",
+                    }}
+                  >
                     Will I actually hear back when I apply?
                   </span>
-                  <span style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}>–</span>
+                  <span
+                    style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}
+                  >
+                    –
+                  </span>
                 </div>
-                <p style={{ margin: 0, padding: "0 24px 22px", fontSize: "16px", lineHeight: 1.65, color: "#5B554C" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "0 24px 22px",
+                    fontSize: "16px",
+                    lineHeight: 1.65,
+                    color: "#5B554C",
+                  }}
+                >
                   Always. Every application gets a real response within five
                   business days — it&apos;s a guarantee we hold recruiters to.
                   No silent rejections, no black holes.
@@ -267,12 +319,30 @@ export default function FaqPage() {
                     gap: "16px",
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "17px", color: "#2B2620" }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "17px",
+                      color: "#2B2620",
+                    }}
+                  >
                     How are candidates vetted?
                   </span>
-                  <span style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}>–</span>
+                  <span
+                    style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}
+                  >
+                    –
+                  </span>
                 </div>
-                <p style={{ margin: 0, padding: "0 24px 22px", fontSize: "16px", lineHeight: 1.65, color: "#5B554C" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "0 24px 22px",
+                    fontSize: "16px",
+                    lineHeight: 1.65,
+                    color: "#5B554C",
+                  }}
+                >
                   Every professional completes an outcomes-based profile and is
                   reference-checked before appearing in search. You see verified
                   track records, not self-reported buzzwords.
@@ -295,12 +365,30 @@ export default function FaqPage() {
                     gap: "16px",
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "17px", color: "#2B2620" }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "17px",
+                      color: "#2B2620",
+                    }}
+                  >
                     How fast can I expect to hire?
                   </span>
-                  <span style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}>–</span>
+                  <span
+                    style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}
+                  >
+                    –
+                  </span>
                 </div>
-                <p style={{ margin: 0, padding: "0 24px 22px", fontSize: "16px", lineHeight: 1.65, color: "#5B554C" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "0 24px 22px",
+                    fontSize: "16px",
+                    lineHeight: 1.65,
+                    color: "#5B554C",
+                  }}
+                >
                   87% of roles posted on Kirmya fill within eight weeks. Because
                   candidates are pre-vetted and ready to start, your shortlist
                   is shorter and stronger from day one.
@@ -341,12 +429,30 @@ export default function FaqPage() {
                     gap: "16px",
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "17px", color: "#2B2620" }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "17px",
+                      color: "#2B2620",
+                    }}
+                  >
                     Can my current employer see my profile?
                   </span>
-                  <span style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}>–</span>
+                  <span
+                    style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}
+                  >
+                    –
+                  </span>
                 </div>
-                <p style={{ margin: 0, padding: "0 24px 22px", fontSize: "16px", lineHeight: 1.65, color: "#5B554C" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "0 24px 22px",
+                    fontSize: "16px",
+                    lineHeight: 1.65,
+                    color: "#5B554C",
+                  }}
+                >
                   You control your visibility. Private mode hides your profile
                   from specific companies and shows it only to recruiters you
                   choose to engage. Your data is never sold.
@@ -369,12 +475,30 @@ export default function FaqPage() {
                     gap: "16px",
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "17px", color: "#2B2620" }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "17px",
+                      color: "#2B2620",
+                    }}
+                  >
                     How do I delete my account?
                   </span>
-                  <span style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}>–</span>
+                  <span
+                    style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}
+                  >
+                    –
+                  </span>
                 </div>
-                <p style={{ margin: 0, padding: "0 24px 22px", fontSize: "16px", lineHeight: 1.65, color: "#5B554C" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "0 24px 22px",
+                    fontSize: "16px",
+                    lineHeight: 1.65,
+                    color: "#5B554C",
+                  }}
+                >
                   From Settings → Account, one click permanently removes your
                   profile and all associated data within 48 hours. No retention
                   games.
@@ -415,12 +539,30 @@ export default function FaqPage() {
                     gap: "16px",
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "17px", color: "#2B2620" }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "17px",
+                      color: "#2B2620",
+                    }}
+                  >
                     What does it cost to post roles?
                   </span>
-                  <span style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}>–</span>
+                  <span
+                    style={{ flex: "none", fontSize: "22px", color: "#C2683C" }}
+                  >
+                    –
+                  </span>
                 </div>
-                <p style={{ margin: 0, padding: "0 24px 22px", fontSize: "16px", lineHeight: 1.65, color: "#5B554C" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "0 24px 22px",
+                    fontSize: "16px",
+                    lineHeight: 1.65,
+                    color: "#5B554C",
+                  }}
+                >
                   Recruiters pay per active role or via an annual seat plan for
                   high-volume teams. There are no placement fees and no surprise
                   charges — talk to us and we&apos;ll size a plan to your

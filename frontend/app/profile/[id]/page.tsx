@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { 
-  User, 
-  MapPin, 
-  Clock, 
-  CheckCircle, 
-  UserPlus, 
-  UserCheck, 
-  X, 
-  Loader2, 
+import {
+  User,
+  MapPin,
+  Clock,
+  CheckCircle,
+  UserPlus,
+  UserCheck,
+  X,
+  Loader2,
   ArrowLeft,
   Mail,
   Calendar,
@@ -18,7 +18,7 @@ import {
   Bookmark,
   Layers,
   GraduationCap,
-  Globe
+  Globe,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import SiteNav from "@/components/shared/SiteNav";
@@ -34,7 +34,8 @@ export default function OtherProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUserID, setCurrentUserID] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusResponse | null>(null);
+  const [connectionStatus, setConnectionStatus] =
+    useState<ConnectionStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export default function OtherProfilePage() {
           setError(
             err instanceof ApiError
               ? err.message
-              : "Could not load profile. It might be private or not exist."
+              : "Could not load profile. It might be private or not exist.",
           );
         }
       } finally {
@@ -201,10 +202,14 @@ export default function OtherProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile" }]} />
+        <SiteNav
+          breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile" }]}
+        />
         <div className="flex-grow flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="h-8 w-8 text-primary animate-spin" />
-          <span className="text-sm font-semibold text-muted-foreground">Fetching professional timeline...</span>
+          <span className="text-sm font-semibold text-muted-foreground">
+            Fetching professional timeline...
+          </span>
         </div>
         <SiteFooter />
       </div>
@@ -214,11 +219,18 @@ export default function OtherProfilePage() {
   if (error || !profile) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile" }]} />
+        <SiteNav
+          breadcrumb={[{ label: "Home", href: "/" }, { label: "Profile" }]}
+        />
         <main className="flex-grow max-w-lg mx-auto w-full px-4 py-20">
           <div className="p-6 bg-destructive/10 border border-destructive/20 rounded-3xl text-destructive text-center space-y-3">
-            <p className="text-sm font-bold">{error || "Profile could not be loaded."}</p>
-            <button onClick={() => router.back()} className="px-4 py-2 bg-destructive text-destructive-foreground rounded-full text-xs font-bold">
+            <p className="text-sm font-bold">
+              {error || "Profile could not be loaded."}
+            </p>
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2 bg-destructive text-destructive-foreground rounded-full text-xs font-bold"
+            >
               Go Back
             </button>
           </div>
@@ -239,7 +251,6 @@ export default function OtherProfilePage() {
       />
 
       <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        
         {/* Core Profile Header */}
         <div className="bg-card border border-border/80 p-6 md:p-8 rounded-3xl shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -249,7 +260,9 @@ export default function OtherProfilePage() {
 
             <div className="flex-grow space-y-2 text-center md:text-left">
               <div className="flex flex-col md:flex-row items-center gap-2 justify-center md:justify-start">
-                <h1 className="text-xl md:text-2xl font-extrabold tracking-tight">{profile.headline || "Kirmya Professional"}</h1>
+                <h1 className="text-xl md:text-2xl font-extrabold tracking-tight">
+                  {profile.headline || "Kirmya Professional"}
+                </h1>
                 {profile.career_status && (
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-extrabold text-emerald-500 uppercase tracking-widest">
                     {profile.career_status.replace("_", " ")}
@@ -257,10 +270,13 @@ export default function OtherProfilePage() {
                 )}
               </div>
 
-              <p className="text-sm font-semibold text-muted-foreground">{profile.headline || "Career Transition & Development"}</p>
-              
+              <p className="text-sm font-semibold text-muted-foreground">
+                {profile.headline || "Career Transition & Development"}
+              </p>
+
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
-                {profile.bio || "Active community member focused on professional career comeback."}
+                {profile.bio ||
+                  "Active community member focused on professional career comeback."}
               </p>
 
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-2 text-xs">
@@ -286,7 +302,9 @@ export default function OtherProfilePage() {
 
           {/* Action Row */}
           <div className="border-t border-border/40 pt-4 flex items-center justify-between gap-4 flex-wrap">
-            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Messaging Gate status</span>
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+              Messaging Gate status
+            </span>
             {renderConnectionButton()}
           </div>
         </div>
@@ -295,37 +313,49 @@ export default function OtherProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {/* Left Column: Timeline & About */}
           <div className="md:col-span-2 space-y-8">
-            
             {/* About */}
             {profile.about && (
               <div className="space-y-3">
                 <h2 className="text-lg font-bold text-foreground">About</h2>
-                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{profile.about}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                  {profile.about}
+                </p>
               </div>
             )}
 
             {/* Experience timeline */}
             {profile.experiences && profile.experiences.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-lg font-bold text-foreground">Experience</h2>
+                <h2 className="text-lg font-bold text-foreground">
+                  Experience
+                </h2>
                 <div className="space-y-6">
                   {profile.experiences.map((exp, index) => (
                     <div key={exp.id || index} className="flex gap-4">
                       <div className="flex flex-col items-center shrink-0">
-                        <div className={`h-4 w-4 rounded-full border-2 ${
-                          index === 0 ? "border-primary bg-primary" : "border-border bg-card"
-                        }`} />
+                        <div
+                          className={`h-4 w-4 rounded-full border-2 ${
+                            index === 0
+                              ? "border-primary bg-primary"
+                              : "border-border bg-card"
+                          }`}
+                        />
                         {index < profile.experiences.length - 1 && (
                           <div className="w-[1px] bg-border/80 flex-grow my-1" />
                         )}
                       </div>
                       <div className="space-y-1 pb-2">
-                        <h3 className="text-sm font-bold text-foreground">{exp.title}</h3>
+                        <h3 className="text-sm font-bold text-foreground">
+                          {exp.title}
+                        </h3>
                         <p className="text-xs text-muted-foreground">
-                          {exp.company} &bull; {exp.start_date} &ndash; {exp.is_current ? "Present" : exp.end_date}
+                          {exp.company} &bull; {exp.start_date} &ndash;{" "}
+                          {exp.is_current ? "Present" : exp.end_date}
                         </p>
                         {exp.description && (
-                          <p className="text-xs text-muted-foreground/95 leading-relaxed mt-2">{exp.description}</p>
+                          <p className="text-xs text-muted-foreground/95 leading-relaxed mt-2">
+                            {exp.description}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -341,11 +371,15 @@ export default function OtherProfilePage() {
                 <div className="space-y-4">
                   {profile.educations.map((edu, index) => (
                     <div key={edu.id || index} className="space-y-1">
-                      <h3 className="text-sm font-bold text-foreground">{edu.school}</h3>
+                      <h3 className="text-sm font-bold text-foreground">
+                        {edu.school}
+                      </h3>
                       <p className="text-xs text-muted-foreground font-medium">
                         {edu.degree} &bull; {edu.field_of_study}
                       </p>
-                      <span className="text-[10px] text-muted-foreground block">{edu.start_date} &ndash; {edu.end_date}</span>
+                      <span className="text-[10px] text-muted-foreground block">
+                        {edu.start_date} &ndash; {edu.end_date}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -364,7 +398,10 @@ export default function OtherProfilePage() {
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {profile.skills.map((sk) => (
-                    <span key={sk.name} className="px-2.5 py-1 bg-secondary text-muted-foreground border border-border/40 rounded-full text-[10px] font-semibold">
+                    <span
+                      key={sk.name}
+                      className="px-2.5 py-1 bg-secondary text-muted-foreground border border-border/40 rounded-full text-[10px] font-semibold"
+                    >
                       {sk.name}
                     </span>
                   ))}
@@ -381,9 +418,14 @@ export default function OtherProfilePage() {
                 </h3>
                 <div className="space-y-2 text-xs">
                   {profile.languages.map((l) => (
-                    <div key={l.name} className="flex justify-between items-center">
+                    <div
+                      key={l.name}
+                      className="flex justify-between items-center"
+                    >
                       <span className="font-semibold">{l.name}</span>
-                      <span className="text-muted-foreground">{l.proficiency}</span>
+                      <span className="text-muted-foreground">
+                        {l.proficiency}
+                      </span>
                     </div>
                   ))}
                 </div>

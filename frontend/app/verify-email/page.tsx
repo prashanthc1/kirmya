@@ -92,7 +92,9 @@ function VerifyEmailInner() {
   // "missing" or "error": offer a resend.
   return (
     <Card>
-      <Heading>{status === "missing" ? "Missing verification token" : "Link expired"}</Heading>
+      <Heading>
+        {status === "missing" ? "Missing verification token" : "Link expired"}
+      </Heading>
       <p style={bodyStyle}>
         {message ??
           "This page needs a valid verification link. Enter your email and we'll send a fresh one."}
@@ -100,7 +102,8 @@ function VerifyEmailInner() {
 
       {resent ? (
         <p style={{ ...bodyStyle, color: "#2B7A4B", marginTop: "18px" }}>
-          If that email has a pending account, a new verification link is on its way.
+          If that email has a pending account, a new verification link is on its
+          way.
         </p>
       ) : (
         <form onSubmit={handleResend} noValidate>
@@ -117,7 +120,11 @@ function VerifyEmailInner() {
             placeholder="you@email.com"
             style={inputStyle}
           />
-          <button type="submit" disabled={resending} style={buttonStyle(resending)}>
+          <button
+            type="submit"
+            disabled={resending}
+            style={buttonStyle(resending)}
+          >
             {resending ? "Sending…" : "Resend verification email"}
           </button>
         </form>
