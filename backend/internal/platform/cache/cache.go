@@ -10,6 +10,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -26,8 +27,8 @@ type Cache interface {
 }
 
 // New returns a Redis-backed cache when REDIS_URL (or REDIS_ADDR) is configured
-// and reachable; otherwise it returns a no-op cache so the platform degrades
-// gracefully without Redis. It never returns an error.
+// and reachable; otherwise it returns a thread-safe in-memory cache so the
+// platform has working cache-aside even without Redis. It never returns an error.
 func New() Cache {
 	url := os.Getenv("REDIS_URL")
 	if url == "" {
@@ -36,23 +37,23 @@ func New() Cache {
 		}
 	}
 	if url == "" {
-		log.Printf("[cache] REDIS_URL not set; caching disabled (no-op)")
-		return Noop{}
+		log.Printf("[cache] REDIS_URL not set; falling back to in-memory cache")
+		return NewMemory()
 	}
 
 	opts, err := redis.ParseURL(url)
 	if err != nil {
-		log.Printf("[cache] invalid REDIS_URL (%v); caching disabled", err)
-		return Noop{}
+		log.Printf("[cache] invalid REDIS_URL (%v); falling back to in-memory cache", err)
+		return NewMemory()
 	}
 	client := redis.NewClient(opts)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	if err := client.Ping(ctx).Err(); err != nil {
-		log.Printf("[cache] Redis unreachable (%v); caching disabled", err)
+		log.Printf("[cache] Redis unreachable (%v); falling back to in-memory cache", err)
 		_ = client.Close()
-		return Noop{}
+		return NewMemory()
 	}
 
 	log.Printf("[cache] Redis connected; cache-aside enabled")
@@ -92,11 +93,76 @@ func (r *Redis) Delete(ctx context.Context, keys ...string) {
 	}
 }
 
-// Close releases the underlying client (Noop has nothing to close).
+// Close releases the underlying client (Noop/Memory has nothing to close).
 func (r *Redis) Close() error { return r.client.Close() }
 
-// Noop is the cache used when Redis is not configured. Every operation is a
-// no-op, so cache-aside code paths behave as straight pass-through reads.
+// Memory is a thread-safe, size-bounded in-memory Cache implementation.
+type Memory struct {
+	mu    sync.RWMutex
+	items map[string]memoryItem
+}
+
+type memoryItem struct {
+	value     []byte
+	expiresAt time.Time
+}
+
+// NewMemory returns a new initialized Memory cache.
+func NewMemory() *Memory {
+	return &Memory{
+		items: make(map[string]memoryItem),
+	}
+}
+
+func (m *Memory) Get(ctx context.Context, key string) ([]byte, bool) {
+	m.mu.RLock()
+	item, ok := m.items[key]
+	m.mu.RUnlock()
+
+	if !ok {
+		observability.RecordCacheMiss()
+		return nil, false
+	}
+	if time.Now().After(item.expiresAt) {
+		m.mu.Lock()
+		delete(m.items, key)
+		m.mu.Unlock()
+		observability.RecordCacheMiss()
+		return nil, false
+	}
+	observability.RecordCacheHit()
+	return item.value, true
+}
+
+func (m *Memory) Set(ctx context.Context, key string, value []byte, ttl time.Duration) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Evict expired items if size grows past threshold to prevent leaks
+	if len(m.items) > 1000 {
+		now := time.Now()
+		for k, item := range m.items {
+			if now.After(item.expiresAt) {
+				delete(m.items, k)
+			}
+		}
+	}
+
+	m.items[key] = memoryItem{
+		value:     value,
+		expiresAt: time.Now().Add(ttl),
+	}
+}
+
+func (m *Memory) Delete(ctx context.Context, keys ...string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, key := range keys {
+		delete(m.items, key)
+	}
+}
+
+// Noop is kept for backward compatibility (e.g. if code checks for type Noop).
 type Noop struct{}
 
 func (Noop) Get(context.Context, string) ([]byte, bool)         { return nil, false }

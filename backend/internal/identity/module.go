@@ -30,7 +30,7 @@ type Module struct {
 
 // NewModule builds the identity module. events must satisfy
 // domain.EventPublisher (the platform event bus does).
-func NewModule(db *sql.DB, events domain.EventPublisher) *Module {
+func NewModule(db *sql.DB, cache domain.Cache, events domain.EventPublisher) *Module {
 	tokens := jwtauth.NewFactory()
 
 	deps := application.Deps{
@@ -43,6 +43,7 @@ func NewModule(db *sql.DB, events domain.EventPublisher) *Module {
 		Hasher:    crypto.NewArgon2Hasher(),
 		Tokens:    tokens,
 		TOTP:      crypto.NewTOTPService("Kirmya"),
+		Cache:     cache,
 		Mailer:    buildMailer(),
 		Events:    events,
 		Providers: buildProviders(),

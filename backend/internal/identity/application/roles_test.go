@@ -19,7 +19,7 @@ func rolePresent(roles []string, target string) bool {
 
 func TestSetMyRoles(t *testing.T) {
 	f := newFakeUsers()
-	svc := NewService(Deps{Users: f, Events: noopEvents{}})
+	svc := NewService(Deps{Users: f, Cache: newFakeCache(), Events: noopEvents{}})
 	ctx := context.Background()
 
 	u := &domain.User{Email: "marcus@example.com", FullName: "Marcus", Status: domain.StatusActive}
@@ -66,7 +66,7 @@ func TestSetMyRoles(t *testing.T) {
 
 func TestSetMyRolesValidation(t *testing.T) {
 	f := newFakeUsers()
-	svc := NewService(Deps{Users: f, Events: noopEvents{}})
+	svc := NewService(Deps{Users: f, Cache: newFakeCache(), Events: noopEvents{}})
 	ctx := context.Background()
 
 	u := &domain.User{Email: "ada@example.com", FullName: "Ada", Status: domain.StatusActive}

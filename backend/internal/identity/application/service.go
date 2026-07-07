@@ -74,6 +74,7 @@ type Service struct {
 	hasher     domain.PasswordHasher
 	tokens     domain.TokenFactory
 	totp       domain.TOTP
+	cache      domain.Cache
 	mailer     domain.Mailer
 	events     domain.EventPublisher
 	providers  map[string]OAuthProvider
@@ -102,6 +103,7 @@ type Deps struct {
 	Hasher    domain.PasswordHasher
 	Tokens    domain.TokenFactory
 	TOTP      domain.TOTP
+	Cache     domain.Cache
 	Mailer    domain.Mailer
 	Events    domain.EventPublisher
 	Providers map[string]OAuthProvider
@@ -112,7 +114,7 @@ func NewService(d Deps) *Service {
 	return &Service{
 		users: d.Users, refresh: d.Refresh, verif: d.Verif, oauth: d.OAuth,
 		mfa: d.MFA, audit: d.Audit, hasher: d.Hasher, tokens: d.Tokens,
-		totp: d.TOTP, mailer: d.Mailer, events: d.Events, providers: d.Providers,
+		totp: d.TOTP, cache: d.Cache, mailer: d.Mailer, events: d.Events, providers: d.Providers,
 		tx:            d.Tx,
 		refreshTTL:    refreshTTL(),
 		requireVerify: emailVerificationRequired(),
@@ -242,6 +244,11 @@ func (s *Service) Login(ctx context.Context, in LoginInput) (AuthResult, error) 
 		if in.Code == "" {
 			return AuthResult{MFARequired: true}, nil
 		}
+		// Replay attack prevention: check if this OTP code was already used by this user.
+		cacheKey := "mfa:used:" + u.ID + ":" + in.Code
+		if _, ok := s.cache.Get(ctx, cacheKey); ok {
+			return AuthResult{}, ErrInvalidMFACode
+		}
 		// Rate-limit code submissions per account (L3) before validating.
 		if s.mfaThrottle != nil && !s.mfaThrottle.allow(u.ID) {
 			return AuthResult{}, ErrInvalidMFACode
@@ -250,6 +257,8 @@ func (s *Service) Login(ctx context.Context, in LoginInput) (AuthResult, error) 
 		if err != nil || !s.totp.Validate(cred.SecretEnc, in.Code) {
 			return AuthResult{}, ErrInvalidMFACode
 		}
+		// Mark code as spent for 90 seconds (validity window)
+		s.cache.Set(ctx, cacheKey, []byte("1"), 90*time.Second)
 		if s.mfaThrottle != nil {
 			s.mfaThrottle.reset(u.ID) // successful code clears the counter
 		}

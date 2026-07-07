@@ -128,6 +128,11 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (otpauthURL strin
 
 // ConfirmMFA validates the first TOTP code and enables MFA on the account.
 func (s *Service) ConfirmMFA(ctx context.Context, userID, code string) error {
+	cacheKey := "mfa:used:" + userID + ":" + code
+	if _, ok := s.cache.Get(ctx, cacheKey); ok {
+		return ErrInvalidMFACode
+	}
+
 	cred, err := s.mfa.Get(ctx, userID)
 	if err != nil {
 		return ErrInvalidMFACode
@@ -135,14 +140,22 @@ func (s *Service) ConfirmMFA(ctx context.Context, userID, code string) error {
 	if !s.totp.Validate(cred.SecretEnc, code) {
 		return ErrInvalidMFACode
 	}
+	if err := mfaConfirmWithSpent(ctx, s, userID, cacheKey); err != nil {
+		return err
+	}
+	s.record(ctx, userID, "user.enable_mfa", "user", userID, "")
+	_ = s.events.Publish(ctx, domain.EventMFAEnabled, userID, nil)
+	return nil
+}
+
+func mfaConfirmWithSpent(ctx context.Context, s *Service, userID, cacheKey string) error {
 	if err := s.mfa.Confirm(ctx, userID); err != nil {
 		return err
 	}
 	if err := s.users.SetMFAEnabled(ctx, userID, true); err != nil {
 		return err
 	}
-	s.record(ctx, userID, "user.enable_mfa", "user", userID, "")
-	_ = s.events.Publish(ctx, domain.EventMFAEnabled, userID, nil)
+	s.cache.Set(ctx, cacheKey, []byte("1"), 90*time.Second)
 	return nil
 }
 
@@ -157,6 +170,11 @@ func (s *Service) DisableMFA(ctx context.Context, userID, code string) error {
 	if !u.MFAEnabled {
 		return nil
 	}
+	cacheKey := "mfa:used:" + userID + ":" + code
+	if _, ok := s.cache.Get(ctx, cacheKey); ok {
+		return ErrInvalidMFACode
+	}
+
 	cred, err := s.mfa.Get(ctx, userID)
 	if err != nil || !s.totp.Validate(cred.SecretEnc, code) {
 		return ErrInvalidMFACode
@@ -164,6 +182,7 @@ func (s *Service) DisableMFA(ctx context.Context, userID, code string) error {
 	if err := s.users.SetMFAEnabled(ctx, userID, false); err != nil {
 		return err
 	}
+	s.cache.Set(ctx, cacheKey, []byte("1"), 90*time.Second)
 	s.record(ctx, userID, "user.disable_mfa", "user", userID, "")
 	_ = s.events.Publish(ctx, domain.EventMFADisabled, userID, nil)
 	return nil

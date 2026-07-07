@@ -72,7 +72,7 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 
 	// Identity is the composition root for auth. It replaces the former auth +
 	// user modules and provides the shared JWT auth middleware.
-	identityMod := identity.NewModule(db, outboxBus)
+	identityMod := identity.NewModule(db, cache, outboxBus)
 	identityMod.RegisterRoutes(mux)
 
 	// Redis-backed token bucket rate limiter for connections and messaging

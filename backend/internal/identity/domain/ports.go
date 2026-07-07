@@ -104,3 +104,9 @@ type TOTP interface {
 	Generate(accountEmail string) (secretEnc, otpauthURL string, err error)
 	Validate(secretEnc, code string) bool
 }
+
+// Cache is a decoupled caching port for identity context needs (e.g. spent code tracking).
+type Cache interface {
+	Get(ctx context.Context, key string) (value []byte, ok bool)
+	Set(ctx context.Context, key string, value []byte, ttl time.Duration)
+}

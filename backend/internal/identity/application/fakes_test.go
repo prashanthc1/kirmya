@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -347,4 +348,67 @@ func equalFold(a, b string) bool {
 		}
 	}
 	return true
+}
+
+type fakeCache struct {
+	mu    sync.Mutex
+	items map[string][]byte
+}
+
+func newFakeCache() *fakeCache {
+	return &fakeCache{items: map[string][]byte{}}
+}
+
+func (f *fakeCache) Get(_ context.Context, key string) ([]byte, bool) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	v, ok := f.items[key]
+	return v, ok
+}
+
+func (f *fakeCache) Set(_ context.Context, key string, value []byte, _ time.Duration) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.items[key] = value
+}
+
+// --- in-memory MFARepository ---
+
+type fakeMFA struct {
+	mu    sync.Mutex
+	byUID map[string]*domain.MFACredential
+}
+
+func newFakeMFA() *fakeMFA {
+	return &fakeMFA{byUID: map[string]*domain.MFACredential{}}
+}
+
+func (f *fakeMFA) Upsert(_ context.Context, c *domain.MFACredential) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	clone := *c
+	f.byUID[c.UserID] = &clone
+	return nil
+}
+
+func (f *fakeMFA) Get(_ context.Context, userID string) (*domain.MFACredential, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	c, ok := f.byUID[userID]
+	if !ok {
+		return nil, errors.New("mfa credential not found")
+	}
+	out := *c
+	return &out, nil
+}
+
+func (f *fakeMFA) Confirm(_ context.Context, userID string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	c, ok := f.byUID[userID]
+	if !ok {
+		return errors.New("mfa credential not found")
+	}
+	c.Confirmed = true
+	return nil
 }

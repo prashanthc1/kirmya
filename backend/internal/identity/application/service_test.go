@@ -21,9 +21,11 @@ func newTestService(t *testing.T) *Service {
 		Users:   newFakeUsers(),
 		Refresh: newFakeRefresh(),
 		Verif:   newFakeVerif(),
+		MFA:     newFakeMFA(),
 		Audit:   noopAudit{},
 		Hasher:  crypto.NewArgon2Hasher(),
 		Tokens:  jwtauth.NewFactory(),
+		Cache:   newFakeCache(),
 		Mailer:  newFakeMailer(),
 		Events:  noopEvents{},
 	})
@@ -144,9 +146,11 @@ func TestLoginBlockedUntilVerified(t *testing.T) {
 		Users:   newFakeUsers(),
 		Refresh: newFakeRefresh(),
 		Verif:   newFakeVerif(),
+		MFA:     newFakeMFA(),
 		Audit:   noopAudit{},
 		Hasher:  crypto.NewArgon2Hasher(),
 		Tokens:  jwtauth.NewFactory(),
+		Cache:   newFakeCache(),
 		Mailer:  newFakeMailer(),
 		Events:  noopEvents{},
 	})
