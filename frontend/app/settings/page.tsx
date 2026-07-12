@@ -1188,7 +1188,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div style={{ borderTop: "1px solid #EFE7DC", paddingTop: "20px" }}>
-                  <h3 style={{ margin: "0 0 12px 0", fontSize: "17px", fontWeight: 700 }}>Release Notes — What's New</h3>
+                  <h3 style={{ margin: "0 0 12px 0", fontSize: "17px", fontWeight: 700 }}>Release Notes — What&apos;s New</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", color: "#5B554C", fontSize: "14px", lineHeight: "1.5" }}>
                     <p style={{ margin: 0 }}><strong>🚀 v2.4.0 (Current Release):</strong> Fully refactored 15-Section profile builder aggregate structure with transactional draft-snapshots, NATS JetStream search indexing, and real-time Claude LLM streaming support.</p>
                     <p style={{ margin: 0 }}><strong>🔒 v2.3.0:</strong> Implemented time-step TOTP replay prevention, secure JWT token headers, and strict same-site cookies validation.</p>

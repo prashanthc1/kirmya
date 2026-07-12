@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
+import Link from "next/link";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 import { api } from "@/lib/api/client";
@@ -349,7 +350,7 @@ export default function CommunitySlugPage({ params }: CommunityPageProps) {
     return (
       <div style={{ background: "#FBF7F2", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
         <h2>Community not found</h2>
-        <a href="/communities" style={{ color: "#C2683C", fontWeight: 600 }}>Back to all circles</a>
+        <Link href="/communities" style={{ color: "#C2683C", fontWeight: 600 }}>Back to all circles</Link>
       </div>
     );
   }
