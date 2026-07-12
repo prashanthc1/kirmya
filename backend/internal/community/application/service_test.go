@@ -47,6 +47,14 @@ func (r *fakeRepo) GetBySlug(_ context.Context, slug string) (*domain.Community,
 	}
 	return c, nil
 }
+func (r *fakeRepo) CreateCommunity(_ context.Context, c *domain.Community, creatorUserID string) error {
+	r.seq++
+	c.ID = fmt.Sprintf("comm-%d", r.seq)
+	r.bySlug[c.Slug] = c
+	r.members[c.ID+"|"+creatorUserID] = true
+	r.roles[c.ID+"|"+creatorUserID] = "moderator"
+	return nil
+}
 func (r *fakeRepo) Join(_ context.Context, cid, uid string) error {
 	r.members[cid+"|"+uid] = true
 	return nil

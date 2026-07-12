@@ -7,6 +7,7 @@ import "context"
 type Repository interface {
 	ListCommunities(ctx context.Context) ([]Community, error)
 	GetBySlug(ctx context.Context, slug string) (*Community, error)
+	CreateCommunity(ctx context.Context, c *Community, creatorUserID string) error
 	Join(ctx context.Context, communityID, userID string) error
 	Leave(ctx context.Context, communityID, userID string) error
 	IsMember(ctx context.Context, communityID, userID string) (bool, error)

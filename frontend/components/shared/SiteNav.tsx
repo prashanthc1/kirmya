@@ -32,6 +32,7 @@ const MENU_LINKS = [
   { label: "Referrals", href: "/referrals", icon: Compass },
   { label: "Mentorship", href: "/mentorship", icon: GraduationCap },
   { label: "Communities", href: "/communities", icon: Users },
+  { label: "Network", href: "/network", icon: Users },
   { label: "AI Coach", href: "/coach", icon: Sparkles },
   { label: "Resume", href: "/resume", icon: FileText },
 ];

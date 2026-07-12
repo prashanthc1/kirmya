@@ -294,3 +294,29 @@ func (s *Service) HidePost(ctx context.Context, userID, slug, postID string) err
 	s.publish(ctx, domain.EventPostHidden, postID, map[string]any{"post_id": postID, "moderator_id": userID})
 	return nil
 }
+
+// CreateCommunity creates a new community with the caller as moderator.
+func (s *Service) CreateCommunity(ctx context.Context, creatorUserID, name, slug, description, category string) (*domain.Community, error) {
+	if strings.TrimSpace(name) == "" {
+		return nil, ValidationError{"name is required"}
+	}
+	if strings.TrimSpace(slug) == "" {
+		return nil, ValidationError{"slug is required"}
+	}
+	slug = strings.ToLower(strings.TrimSpace(slug))
+	slug = strings.ReplaceAll(slug, " ", "-")
+
+	c := &domain.Community{
+		Slug:        slug,
+		Name:        name,
+		Description: description,
+		Category:    category,
+	}
+
+	if err := s.repo.CreateCommunity(ctx, c, creatorUserID); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+

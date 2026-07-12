@@ -31,6 +31,7 @@ import (
 	"workspace-app/internal/settings"
 	settingsapp "workspace-app/internal/settings/application"
 	settingspg "workspace-app/internal/settings/infrastructure/postgres"
+	"workspace-app/internal/cookies"
 )
 
 // NewRouter builds the route map for the Kirmya platform.
@@ -68,7 +69,7 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 
 	// Stateless settings read-service shared by other modules to enforce a user's
 	// privacy and notification preferences.
-	settingsReader := settingsapp.NewService(settingspg.NewRepository(db), outboxBus)
+	settingsReader := settingsapp.NewService(settingspg.NewRepository(db), outboxBus, nil)
 
 	// Identity is the composition root for auth. It replaces the former auth +
 	// user modules and provides the shared JWT auth middleware.
@@ -88,12 +89,15 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 	mentorship.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	community.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	notifications.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, settingsReader)
-	settings.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
+	settings.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus, identityMod.Service)
 	admin.RegisterRoutes(mux, db, identityMod.AuthMiddleware, identityMod.AdminMiddleware)
 	search.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, searchEngine)
 	dashboard.RegisterRoutes(mux, db, identityMod.AuthMiddleware)
 	career.RegisterRoutes(mux, identityMod.AuthMiddleware)
 	network.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, redisLimiter.Limit)
+
+	cookiesMod := cookies.NewModule(db)
+	cookiesMod.RegisterRoutes(mux, identityMod.Tokens)
 
 	mux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("web/swagger-ui"))))
 	mux.Handle("/openapi.yaml", http.FileServer(http.Dir("docs")))

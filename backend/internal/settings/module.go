@@ -10,7 +10,7 @@ import (
 	"workspace-app/internal/settings/infrastructure/postgres"
 )
 
-func RegisterRoutes(mux *http.ServeMux, db *sql.DB, authMiddleware func(http.Handler) http.Handler, events application.EventPublisher) {
-	svc := application.NewService(postgres.NewRepository(db), events)
+func RegisterRoutes(mux *http.ServeMux, db *sql.DB, authMiddleware func(http.Handler) http.Handler, events application.EventPublisher, identitySvc application.PasswordChanger) {
+	svc := application.NewService(postgres.NewRepository(db), events, identitySvc)
 	api.RegisterRoutes(mux, api.NewHandler(svc), authMiddleware)
 }

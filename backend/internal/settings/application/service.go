@@ -20,14 +20,20 @@ type ValidationError struct{ Msg string }
 
 func (e ValidationError) Error() string { return e.Msg }
 
-// Service is the settings use-case service.
-type Service struct {
-	repo   domain.Repository
-	events EventPublisher
+type PasswordChanger interface {
+	ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error
+	DeactivateAccount(ctx context.Context, userID string) error
 }
 
-func NewService(repo domain.Repository, events EventPublisher) *Service {
-	return &Service{repo: repo, events: events}
+// Service is the settings use-case service.
+type Service struct {
+	repo        domain.Repository
+	events      EventPublisher
+	identitySvc PasswordChanger
+}
+
+func NewService(repo domain.Repository, events EventPublisher, identitySvc PasswordChanger) *Service {
+	return &Service{repo: repo, events: events, identitySvc: identitySvc}
 }
 
 // Get returns the caller's settings, materialising defaults on first access so
@@ -197,4 +203,122 @@ func (s *Service) ShowEmail(ctx context.Context, userID string) (bool, error) {
 		return false, err
 	}
 	return st.ShowEmail, nil
+}
+
+// UpdateAccessibility persists accessibility preferences.
+func (s *Service) UpdateAccessibility(ctx context.Context, userID string, fontSize string, highContrast, reducedMotion, compactMode, keyboardNav, screenReader, focusIndicators bool, defaultLanding string) (*domain.UserSettings, error) {
+	return s.mutate(ctx, userID, func(cur *domain.UserSettings) {
+		cur.FontSize = fontSize
+		cur.HighContrast = highContrast
+		cur.ReducedMotion = reducedMotion
+		cur.CompactMode = compactMode
+		cur.DefaultLandingPage = defaultLanding
+		cur.AccessibilityKeyboardNavigation = keyboardNav
+		cur.AccessibilityScreenReader = screenReader
+		cur.AccessibilityFocusIndicators = focusIndicators
+	}, domain.EventSettingsUpdated)
+}
+
+// UpdateAIPreferences persists AI assistant options.
+func (s *Service) UpdateAIPreferences(ctx context.Context, userID string, enableAI, jobRecs, resumeSugs, roadmapSugs, skillGap, interviewPrep, learningRecs bool) (*domain.UserSettings, error) {
+	return s.mutate(ctx, userID, func(cur *domain.UserSettings) {
+		cur.EnableAIAssistant = enableAI
+		cur.AIJobRecommendations = jobRecs
+		cur.AIResumeSuggestions = resumeSugs
+		cur.AIRoadmapSuggestions = roadmapSugs
+		cur.AISkillGapAnalysis = skillGap
+		cur.AIInterviewPrep = interviewPrep
+		cur.AILearningRecommendations = learningRecs
+	}, domain.EventSettingsUpdated)
+}
+
+// UpdateLearningPreferences persists learning preference options.
+func (s *Service) UpdateLearningPreferences(ctx context.Context, userID string, goals, techs, certs []string, reminders bool) (*domain.UserSettings, error) {
+	return s.mutate(ctx, userID, func(cur *domain.UserSettings) {
+		cur.LearningGoals = goals
+		cur.TechnologiesOfInterest = techs
+		cur.CertificationGoals = certs
+		cur.LearningReminders = reminders
+	}, domain.EventSettingsUpdated)
+}
+
+// Connected Accounts
+func (s *Service) ListConnectedAccounts(ctx context.Context, userID string) ([]domain.ConnectedAccount, error) {
+	return s.repo.ListConnectedAccounts(ctx, userID)
+}
+
+func (s *Service) DisconnectAccount(ctx context.Context, userID string, provider string) error {
+	return s.repo.DisconnectAccount(ctx, userID, provider)
+}
+
+// Cookie Consent
+func (s *Service) GetCookieConsent(ctx context.Context, userID string) (*domain.CookieConsent, error) {
+	return s.repo.GetCookieConsent(ctx, userID)
+}
+
+func (s *Service) SaveCookieConsent(ctx context.Context, userID string, functional, analytics, aiPersonalization bool) (*domain.CookieConsent, error) {
+	cc := &domain.CookieConsent{
+		UserID:            userID,
+		Essential:         true,
+		Functional:        functional,
+		Analytics:         analytics,
+		AIPersonalization: aiPersonalization,
+	}
+	if err := s.repo.SaveCookieConsent(ctx, cc); err != nil {
+		return nil, err
+	}
+	return cc, nil
+}
+
+// Active Sessions
+func (s *Service) ListActiveSessions(ctx context.Context, userID string) ([]domain.ActiveSession, error) {
+	return s.repo.ListActiveSessions(ctx, userID)
+}
+
+func (s *Service) RevokeSession(ctx context.Context, userID string, tokenID string) error {
+	return s.repo.RevokeSession(ctx, userID, tokenID)
+}
+
+// Security History
+func (s *Service) ListSecurityHistory(ctx context.Context, userID string) ([]domain.SecurityHistoryEntry, error) {
+	return s.repo.ListSecurityHistory(ctx, userID)
+}
+
+// Password Change & Account Actions
+func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, newPassword, ip string) error {
+	if s.identitySvc == nil {
+		return errors.New("identity service not wired")
+	}
+	if err := s.identitySvc.ChangePassword(ctx, userID, currentPassword, newPassword); err != nil {
+		return err
+	}
+	_ = s.repo.WriteSecurityLog(ctx, userID, "security.password_change", ip)
+	return nil
+}
+
+func (s *Service) DeactivateAccount(ctx context.Context, userID, ip string) error {
+	if s.identitySvc == nil {
+		return errors.New("identity service not wired")
+	}
+	if err := s.identitySvc.DeactivateAccount(ctx, userID); err != nil {
+		return err
+	}
+	_ = s.repo.WriteSecurityLog(ctx, userID, "security.account_deactivate", ip)
+	return nil
+}
+
+func (s *Service) GetProfileSettings(ctx context.Context, userID string) (username, customURL, profileVisibility string, fieldVisibility map[string]string, openToWork, referralEligible, willingToMentor bool, err error) {
+	return s.repo.GetProfileSettings(ctx, userID)
+}
+
+func (s *Service) UpdateProfileSettings(ctx context.Context, userID string, username, customURL, profileVisibility string, fieldVisibility map[string]string, openToWork, referralEligible, willingToMentor bool) error {
+	return s.repo.UpdateProfileSettings(ctx, userID, username, customURL, profileVisibility, fieldVisibility, openToWork, referralEligible, willingToMentor)
+}
+
+func (s *Service) UpdateUserSettings(ctx context.Context, settings *domain.UserSettings) (*domain.UserSettings, error) {
+	if err := s.repo.Update(ctx, settings); err != nil {
+		return nil, err
+	}
+	s.publish(ctx, domain.EventSettingsUpdated, settings.UserID, map[string]any{"user_id": settings.UserID})
+	return settings, nil
 }

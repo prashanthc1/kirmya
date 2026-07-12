@@ -330,3 +330,33 @@ func (h *Handler) ToggleReaction(w http.ResponseWriter, r *http.Request) {
 	}
 	common.WriteSuccess(w, http.StatusOK, map[string]bool{"reacted": reacted})
 }
+
+type createCommunityRequest struct {
+	Name        string `json:"name"`
+	Slug        string `json:"slug"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+}
+
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+	var req createCommunityRequest
+	if !decode(r, &req) {
+		common.WriteValidationError(w, "invalid request body")
+		return
+	}
+
+	userID := common.UserIDFromContext(r.Context())
+	if userID == "" {
+		common.WriteUnauthorizedError(w, "unauthorized")
+		return
+	}
+
+	c, err := h.svc.CreateCommunity(r.Context(), userID, req.Name, req.Slug, req.Description, req.Category)
+	if err != nil {
+		h.writeErr(w, err)
+		return
+	}
+
+	common.WriteSuccess(w, http.StatusCreated, toCommunity(c))
+}
+

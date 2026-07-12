@@ -75,6 +75,31 @@ type UserSettings struct {
 	// Security preferences
 	LoginAlerts bool
 
+	// Accessibility
+	FontSize                         string
+	HighContrast                     bool
+	ReducedMotion                    bool
+	CompactMode                      bool
+	DefaultLandingPage               string
+	AccessibilityKeyboardNavigation   bool
+	AccessibilityScreenReader        bool
+	AccessibilityFocusIndicators     bool
+
+	// AI Preferences
+	EnableAIAssistant          bool
+	AIJobRecommendations       bool
+	AIResumeSuggestions        bool
+	AIRoadmapSuggestions       bool
+	AISkillGapAnalysis         bool
+	AIInterviewPrep            bool
+	AILearningRecommendations  bool
+
+	// Learning Preferences
+	LearningGoals           []string
+	TechnologiesOfInterest  []string
+	CertificationGoals      []string
+	LearningReminders       bool
+
 	Version   int
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -99,6 +124,68 @@ func Defaults(userID string) UserSettings {
 			InAppJobs: true, InAppMentorship: true, InAppMessages: true, InAppReferrals: true,
 		},
 		LoginAlerts: true,
-		Version:     1,
+
+		// Accessibility defaults
+		FontSize:                         "medium",
+		HighContrast:                     false,
+		ReducedMotion:                    false,
+		CompactMode:                      false,
+		DefaultLandingPage:               "dashboard",
+		AccessibilityKeyboardNavigation:   false,
+		AccessibilityScreenReader:        false,
+		AccessibilityFocusIndicators:     false,
+
+		// AI Preferences defaults
+		EnableAIAssistant:          true,
+		AIJobRecommendations:       true,
+		AIResumeSuggestions:        true,
+		AIRoadmapSuggestions:       true,
+		AISkillGapAnalysis:         true,
+		AIInterviewPrep:            true,
+		AILearningRecommendations:  true,
+
+		// Learning Preferences defaults
+		LearningGoals:          []string{},
+		TechnologiesOfInterest: []string{},
+		CertificationGoals:     []string{},
+		LearningReminders:      true,
+
+		Version: 1,
 	}
+}
+
+// ConnectedAccount represents a linked external provider identity (OAuth).
+type ConnectedAccount struct {
+	ID          string    `json:"id"`
+	Provider    string    `json:"provider"`
+	ProviderUID string    `json:"provider_uid"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// CookieConsent represents the user's cookie preferences.
+type CookieConsent struct {
+	UserID            string    `json:"user_id"`
+	Essential         bool      `json:"essential"`
+	Functional        bool      `json:"functional"`
+	Analytics         bool      `json:"analytics"`
+	AIPersonalization bool      `json:"ai_personalization"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+// ActiveSession represents a logged-in session mapped to an unexpired refresh token.
+type ActiveSession struct {
+	ID        string    `json:"id"`
+	UserAgent string    `json:"user_agent"`
+	IPAddress string    `json:"ip_address"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+// SecurityHistoryEntry represents a logged security event or audit log.
+type SecurityHistoryEntry struct {
+	ID        string    `json:"id"`
+	Action    string    `json:"action"`
+	IPAddress string    `json:"ip_address"`
+	CreatedAt time.Time `json:"created_at"`
 }

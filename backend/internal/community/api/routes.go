@@ -7,6 +7,7 @@ func RegisterRoutes(mux *http.ServeMux, h *Handler, auth func(http.Handler) http
 		mux.Handle(pattern, auth(fn))
 	}
 	reg("GET /api/v1/communities", h.List)
+	reg("POST /api/v1/communities", h.Create)
 	reg("GET /api/v1/communities/{slug}", h.Get)
 	reg("POST /api/v1/communities/{slug}/join", h.ToggleJoin)
 	reg("GET /api/v1/communities/{slug}/posts", h.ListPosts)

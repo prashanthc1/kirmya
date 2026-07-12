@@ -26,6 +26,7 @@ type Module struct {
 	Service    *application.Service
 	Middleware *api.Middleware
 	handler    *api.Handler
+	Tokens     *jwtauth.Factory
 }
 
 // NewModule builds the identity module. events must satisfy
@@ -55,6 +56,7 @@ func NewModule(db *sql.DB, cache domain.Cache, events domain.EventPublisher) *Mo
 		Service:    svc,
 		Middleware: api.NewMiddleware(tokens),
 		handler:    api.NewHandler(svc),
+		Tokens:     tokens,
 	}
 }
 

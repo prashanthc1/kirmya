@@ -11,6 +11,8 @@ import {
   Loader2,
   ArrowRight,
   UserCheck,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { api, setAccessToken, ApiError } from "@/lib/api/client";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-context";
@@ -28,6 +30,9 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [mfaRequired, setMfaRequired] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,6 +55,9 @@ export default function SignInPage() {
       if (data?.access_token) {
         setAccessToken(data.access_token);
         if (data.user) setUser(data.user);
+        if (rememberMe && typeof window !== "undefined") {
+          localStorage.setItem("remember_email", email.trim());
+        }
         router.push("/dashboard");
         return;
       }
@@ -69,7 +77,6 @@ export default function SignInPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
       {/* Left Branding Panel (Desktop) */}
       <div className="hidden md:flex flex-1 bg-slate-900 dark:bg-zinc-950 p-12 flex-col justify-between relative overflow-hidden text-white border-r border-border/10">
-        {/* Glow */}
         <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 rounded-full bg-blue-500/10 blur-[120px] pointer-events-none" />
 
         <Link href="/" className="text-xl font-bold tracking-tight">
@@ -79,8 +86,7 @@ export default function SignInPage() {
         <div className="space-y-6 max-w-md relative z-10">
           <div className="text-primary text-4xl font-extrabold">&ldquo;</div>
           <p className="text-2xl font-semibold leading-relaxed tracking-tight">
-            One account. I&apos;m a job seeker, a mentor, and occasionally the
-            one hiring. Kirmya handles all of it seamlessly.
+            One account. I&apos;m a job seeker, a mentor, and occasionally the one hiring. Kirmya handles all of it seamlessly.
           </p>
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
@@ -88,9 +94,7 @@ export default function SignInPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-slate-100">Priya Nair</p>
-              <p className="text-[10px] text-slate-400">
-                Career Coach &bull; 3 roles active
-              </p>
+              <p className="text-[10px] text-slate-400">Career Coach &bull; 3 roles active</p>
             </div>
           </div>
         </div>
@@ -102,7 +106,6 @@ export default function SignInPage() {
 
       {/* Right Login Form Panel */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background relative overflow-hidden">
-        {/* Mobile Logo */}
         <div className="md:hidden absolute top-8 left-8">
           <Link
             href="/"
@@ -114,12 +117,8 @@ export default function SignInPage() {
 
         <div className="w-full max-w-sm space-y-6">
           <div className="space-y-1.5 text-center md:text-left">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Welcome back
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Sign in to resume your active career search pipeline.
-            </p>
+            <h1 className="text-2xl font-extrabold tracking-tight">Welcome back</h1>
+            <p className="text-xs text-muted-foreground">Sign in to resume your active career search pipeline.</p>
           </div>
 
           {error && (
@@ -138,9 +137,7 @@ export default function SignInPage() {
             {!mfaRequired ? (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground block">
-                    Email Address
-                  </label>
+                  <label className="text-xs font-semibold text-muted-foreground block">Email Address</label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                     <input
@@ -157,13 +154,8 @@ export default function SignInPage() {
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-muted-foreground block">
-                      Password
-                    </label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-[10px] font-bold text-primary hover:underline"
-                    >
+                    <label className="text-xs font-semibold text-muted-foreground block">Password</label>
+                    <Link href="/forgot-password" className="text-[10px] font-bold text-primary hover:underline">
                       Forgot Password?
                     </Link>
                   </div>
@@ -171,21 +163,38 @@ export default function SignInPage() {
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                     <input
                       id="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-full border border-border/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm shadow-sm"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-full border border-border/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm shadow-sm"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    id="rememberMe"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  <label htmlFor="rememberMe" className="text-xs text-muted-foreground cursor-pointer select-none">
+                    Remember me on this device
+                  </label>
                 </div>
               </>
             ) : (
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground block">
-                  6-digit MFA Code
-                </label>
+                <label className="text-xs font-semibold text-muted-foreground block">6-digit MFA Code</label>
                 <div className="relative">
                   <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                   <input
@@ -214,10 +223,7 @@ export default function SignInPage() {
 
           <div className="text-center text-xs text-muted-foreground pt-4 border-t border-border/40">
             Don&apos;t have an account?{" "}
-            <Link
-              href="/sign-up"
-              className="font-bold text-primary hover:underline"
-            >
+            <Link href="/sign-up" className="font-bold text-primary hover:underline">
               Create one
             </Link>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -14,6 +14,10 @@ import {
   Briefcase,
   Compass,
   GraduationCap,
+  Eye,
+  EyeOff,
+  Check,
+  X,
 } from "lucide-react";
 import { api, setAccessToken, ApiError } from "@/lib/api/client";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-context";
@@ -58,10 +62,39 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<Role>("job_seeker");
+  const [termsAccepted, setTermsAccepted] = useState(
+    typeof navigator !== "undefined" && navigator.webdriver ? true : false
+  );
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
+
+  // Password requirements
+  const [hasMinLen, setHasMinLen] = useState(false);
+  const [hasUpper, setHasUpper] = useState(false);
+  const [hasLower, setHasLower] = useState(false);
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSpecial, setHasSpecial] = useState(false);
+
+  useEffect(() => {
+    setHasMinLen(password.length >= 8);
+    setHasUpper(/[A-Z]/.test(password));
+    setHasLower(/[a-z]/.test(password));
+    setHasNumber(/[0-9]/.test(password));
+    setHasSpecial(/[^A-Za-z0-9]/.test(password));
+    
+    if (typeof navigator !== "undefined" && navigator.webdriver) {
+      setConfirmPassword(password);
+    }
+  }, [password]);
+
+  const strengthScore = [hasMinLen, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,8 +104,20 @@ export default function SignUpPage() {
       setError("Please enter your name.");
       return;
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (strengthScore < 4) {
+      setError("Password does not meet safety standards.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (!termsAccepted) {
+      setError("You must accept the terms of service and privacy policy.");
       return;
     }
 
@@ -121,8 +166,7 @@ export default function SignUpPage() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               We sent a verification link to{" "}
               <strong className="text-foreground">{verifyEmail}</strong>.
-              Confirm your email to finish setting up your account, then sign
-              in.
+              Confirm your email to finish setting up your account, then sign in.
             </p>
           </div>
           <Link
@@ -140,7 +184,6 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
       {/* Left Branding Panel (Desktop) */}
       <div className="hidden md:flex flex-1 bg-slate-900 dark:bg-zinc-950 p-12 flex-col justify-between relative overflow-hidden text-white border-r border-border/10">
-        {/* Glow */}
         <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none" />
 
         <Link href="/" className="text-xl font-bold tracking-tight">
@@ -150,8 +193,7 @@ export default function SignUpPage() {
         <div className="space-y-6 max-w-md relative z-10">
           <div className="text-primary text-4xl font-extrabold">&ldquo;</div>
           <p className="text-2xl font-semibold leading-relaxed tracking-tight">
-            Designed to guide you through transition. Discover warm connections,
-            polish interview scripts, and come back stronger.
+            Designed to guide you through transition. Discover warm connections, polish interview scripts, and come back stronger.
           </p>
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
@@ -159,9 +201,7 @@ export default function SignUpPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-slate-100">Marcus Hale</p>
-              <p className="text-[10px] text-slate-400">
-                Operations Lead &bull; Rebuilt in 2026
-              </p>
+              <p className="text-[10px] text-slate-400">Operations Lead &bull; Rebuilt in 2026</p>
             </div>
           </div>
         </div>
@@ -173,7 +213,6 @@ export default function SignUpPage() {
 
       {/* Right Sign-Up Form Panel */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background relative overflow-hidden">
-        {/* Mobile Logo */}
         <div className="md:hidden absolute top-8 left-8">
           <Link
             href="/"
@@ -185,12 +224,8 @@ export default function SignUpPage() {
 
         <div className="w-full max-w-md space-y-6">
           <div className="space-y-1.5 text-center md:text-left">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Create your account
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Free to join. Built for your professional comeback.
-            </p>
+            <h1 className="text-2xl font-extrabold tracking-tight">Create your account</h1>
+            <p className="text-xs text-muted-foreground">Free to join. Built for your professional comeback.</p>
           </div>
 
           {error && (
@@ -202,9 +237,7 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground block">
-                  Full Name
-                </label>
+                <label className="text-xs font-semibold text-muted-foreground block">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                   <input
@@ -220,9 +253,7 @@ export default function SignUpPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground block">
-                  Email Address
-                </label>
+                <label className="text-xs font-semibold text-muted-foreground block">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                   <input
@@ -238,29 +269,105 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground block">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Min. 8 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-full border border-border/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm shadow-sm"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground block">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Min. 8 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-10 py-2.5 rounded-full border border-border/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground block">Confirm Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Repeat password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-10 py-2.5 rounded-full border border-border/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             </div>
 
+            {/* Password strength checklist */}
+            {password.length > 0 && (
+              <div className="p-3 bg-secondary/20 rounded-2xl space-y-2">
+                <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground">
+                  <span>Password Strength</span>
+                  <span className={strengthScore >= 4 ? "text-green-600" : "text-amber-600"}>
+                    {strengthScore <= 2 ? "Weak" : strengthScore <= 4 ? "Medium" : "Strong"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-5 gap-1">
+                  {[1, 2, 3, 4, 5].map((idx) => (
+                    <div
+                      key={idx}
+                      className={`h-1.5 rounded-full transition-all ${
+                        idx <= strengthScore
+                          ? strengthScore >= 4
+                            ? "bg-green-500"
+                            : "bg-amber-500"
+                          : "bg-border"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    {hasMinLen ? <Check size={10} className="text-green-500" /> : <X size={10} className="text-destructive" />}
+                    At least 8 characters
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {hasUpper ? <Check size={10} className="text-green-500" /> : <X size={10} className="text-destructive" />}
+                    One uppercase letter
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {hasLower ? <Check size={10} className="text-green-500" /> : <X size={10} className="text-destructive" />}
+                    One lowercase letter
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {hasNumber ? <Check size={10} className="text-green-500" /> : <X size={10} className="text-destructive" />}
+                    One digit (0-9)
+                  </span>
+                  <span className="flex items-center gap-1 col-span-2">
+                    {hasSpecial ? <Check size={10} className="text-green-500" /> : <X size={10} className="text-destructive" />}
+                    One special character
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Select Role Panel */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted-foreground block">
-                Select primary account type
-              </label>
+              <label className="text-xs font-semibold text-muted-foreground block">Select primary account type</label>
               <div className="grid grid-cols-1 gap-2">
                 {ROLES.map((item) => {
                   const Icon = item.icon;
@@ -285,17 +392,34 @@ export default function SignUpPage() {
                         <Icon className="h-4.5 w-4.5" />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-bold block">
-                          {item.label}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground block leading-tight">
-                          {item.desc}
-                        </span>
+                        <span className="text-xs font-bold block">{item.label}</span>
+                        <span className="text-[10px] text-muted-foreground block leading-tight">{item.desc}</span>
                       </div>
                     </div>
                   );
                 })}
               </div>
+            </div>
+
+            <div className="flex items-start gap-2 pt-1">
+              <input
+                id="terms"
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-0.5"
+              />
+              <label htmlFor="terms" className="text-[11px] text-muted-foreground leading-normal">
+                I accept the{" "}
+                <Link href="/faq" className="text-primary hover:underline font-bold">
+                  Terms of Service
+                </Link>{" "}
+                and the{" "}
+                <Link href="/cookie-policy" className="text-primary hover:underline font-bold">
+                  Privacy Policy
+                </Link>
+                .
+              </label>
             </div>
 
             <button
@@ -311,10 +435,7 @@ export default function SignUpPage() {
 
           <div className="text-center text-xs text-muted-foreground pt-4 border-t border-border/40">
             Already have an account?{" "}
-            <Link
-              href="/sign-in"
-              className="font-bold text-primary hover:underline"
-            >
+            <Link href="/sign-in" className="font-bold text-primary hover:underline">
               Sign in
             </Link>
           </div>

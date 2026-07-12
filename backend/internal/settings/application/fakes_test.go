@@ -63,6 +63,37 @@ func (f *fakeRepo) Update(_ context.Context, s *domain.UserSettings) error {
 	return nil
 }
 
+func (f *fakeRepo) ListConnectedAccounts(_ context.Context, _ string) ([]domain.ConnectedAccount, error) {
+	return nil, nil
+}
+func (f *fakeRepo) DisconnectAccount(_ context.Context, _, _ string) error {
+	return nil
+}
+func (f *fakeRepo) GetCookieConsent(_ context.Context, userID string) (*domain.CookieConsent, error) {
+	return &domain.CookieConsent{UserID: userID, Essential: true}, nil
+}
+func (f *fakeRepo) SaveCookieConsent(_ context.Context, _ *domain.CookieConsent) error {
+	return nil
+}
+func (f *fakeRepo) ListActiveSessions(_ context.Context, _ string) ([]domain.ActiveSession, error) {
+	return nil, nil
+}
+func (f *fakeRepo) RevokeSession(_ context.Context, _, _ string) error {
+	return nil
+}
+func (f *fakeRepo) ListSecurityHistory(_ context.Context, _ string) ([]domain.SecurityHistoryEntry, error) {
+	return nil, nil
+}
+func (f *fakeRepo) WriteSecurityLog(_ context.Context, _, _, _ string) error {
+	return nil
+}
+func (f *fakeRepo) GetProfileSettings(_ context.Context, _ string) (string, string, string, map[string]string, bool, bool, bool, error) {
+	return "", "", "", nil, false, false, false, nil
+}
+func (f *fakeRepo) UpdateProfileSettings(_ context.Context, _ string, _, _, _ string, _ map[string]string, _, _, _ bool) error {
+	return nil
+}
+
 // recordingEvents captures published events for assertions.
 type recordingEvents struct {
 	mu     sync.Mutex

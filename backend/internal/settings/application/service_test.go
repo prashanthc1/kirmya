@@ -8,10 +8,19 @@ import (
 	"workspace-app/internal/settings/domain"
 )
 
+type fakePasswordChanger struct{}
+
+func (f *fakePasswordChanger) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	return nil
+}
+func (f *fakePasswordChanger) DeactivateAccount(ctx context.Context, userID string) error {
+	return nil
+}
+
 func newSvc() (*Service, *fakeRepo, *recordingEvents) {
 	repo := newFakeRepo()
 	ev := &recordingEvents{}
-	return NewService(repo, ev), repo, ev
+	return NewService(repo, ev, &fakePasswordChanger{}), repo, ev
 }
 
 func TestGetMaterialisesDefaults(t *testing.T) {
@@ -130,7 +139,7 @@ func TestUpdatePropagatesOptimisticLock(t *testing.T) {
 }
 
 func TestNilEventBusIsSafe(t *testing.T) {
-	svc := NewService(newFakeRepo(), nil)
+	svc := NewService(newFakeRepo(), nil, &fakePasswordChanger{})
 	if _, err := svc.UpdateSecurity(context.Background(), "u", SecurityInput{LoginAlerts: true}); err != nil {
 		t.Fatalf("nil bus should be safe: %v", err)
 	}

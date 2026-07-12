@@ -49,6 +49,33 @@ func (r *Repository) GetBySlug(ctx context.Context, slug string) (*domain.Commun
 	return &c, nil
 }
 
+func (r *Repository) CreateCommunity(ctx context.Context, c *domain.Community, creatorUserID string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.QueryRowContext(ctx, `
+		INSERT INTO communities (slug, name, description, category)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, created_at`,
+		c.Slug, c.Name, c.Description, c.Category).Scan(&c.ID, &c.CreatedAt)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO community_members (community_id, user_id, role)
+		VALUES ($1, $2, 'moderator')`,
+		c.ID, creatorUserID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (r *Repository) Join(ctx context.Context, communityID, userID string) error {
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO community_members (community_id, user_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
