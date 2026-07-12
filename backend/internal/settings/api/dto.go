@@ -49,31 +49,31 @@ type securityDTO struct {
 }
 
 type accessibilityDTO struct {
-	FontSize                         string `json:"font_size"`
-	HighContrast                     bool   `json:"high_contrast"`
-	ReducedMotion                    bool   `json:"reduced_motion"`
-	CompactMode                      bool   `json:"compact_mode"`
-	DefaultLandingPage               string `json:"default_landing_page"`
-	AccessibilityKeyboardNavigation   bool   `json:"accessibility_keyboard_navigation"`
-	AccessibilityScreenReader        bool   `json:"accessibility_screen_reader"`
-	AccessibilityFocusIndicators     bool   `json:"accessibility_focus_indicators"`
+	FontSize                        string `json:"font_size"`
+	HighContrast                    bool   `json:"high_contrast"`
+	ReducedMotion                   bool   `json:"reduced_motion"`
+	CompactMode                     bool   `json:"compact_mode"`
+	DefaultLandingPage              string `json:"default_landing_page"`
+	AccessibilityKeyboardNavigation bool   `json:"accessibility_keyboard_navigation"`
+	AccessibilityScreenReader       bool   `json:"accessibility_screen_reader"`
+	AccessibilityFocusIndicators    bool   `json:"accessibility_focus_indicators"`
 }
 
 type aiDTO struct {
-	EnableAIAssistant          bool `json:"enable_ai_assistant"`
-	AIJobRecommendations       bool `json:"ai_job_recommendations"`
-	AIResumeSuggestions        bool `json:"ai_resume_suggestions"`
-	AIRoadmapSuggestions       bool `json:"ai_roadmap_suggestions"`
-	AISkillGapAnalysis         bool `json:"ai_skill_gap_analysis"`
-	AIInterviewPrep            bool `json:"ai_interview_prep"`
-	AILearningRecommendations  bool `json:"ai_learning_recommendations"`
+	EnableAIAssistant         bool `json:"enable_ai_assistant"`
+	AIJobRecommendations      bool `json:"ai_job_recommendations"`
+	AIResumeSuggestions       bool `json:"ai_resume_suggestions"`
+	AIRoadmapSuggestions      bool `json:"ai_roadmap_suggestions"`
+	AISkillGapAnalysis        bool `json:"ai_skill_gap_analysis"`
+	AIInterviewPrep           bool `json:"ai_interview_prep"`
+	AILearningRecommendations bool `json:"ai_learning_recommendations"`
 }
 
 type learningDTO struct {
-	LearningGoals           []string `json:"learning_goals"`
-	TechnologiesOfInterest  []string `json:"technologies_of_interest"`
-	CertificationGoals      []string `json:"certification_goals"`
-	LearningReminders       bool     `json:"learning_reminders"`
+	LearningGoals          []string `json:"learning_goals"`
+	TechnologiesOfInterest []string `json:"technologies_of_interest"`
+	CertificationGoals     []string `json:"certification_goals"`
+	LearningReminders      bool     `json:"learning_reminders"`
 }
 
 type connectedAccountDTO struct {
@@ -84,9 +84,9 @@ type connectedAccountDTO struct {
 }
 
 type cookieConsentDTO struct {
-	Functional        bool `json:"functional"`
-	Analytics         bool `json:"analytics"`
-	AIPersonalization bool `json:"ai_personalization"`
+	Functional        bool   `json:"functional"`
+	Analytics         bool   `json:"analytics"`
+	AIPersonalization bool   `json:"ai_personalization"`
 	UpdatedAt         string `json:"updated_at,omitempty"`
 }
 
@@ -137,14 +137,14 @@ func toDTO(s *domain.UserSettings) settingsDTO {
 		Notifications: toNotificationsDTO(s.Notifications),
 		Security:      securityDTO{LoginAlerts: s.LoginAlerts},
 		Accessibility: accessibilityDTO{
-			FontSize:                         s.FontSize,
-			HighContrast:                     s.HighContrast,
-			ReducedMotion:                    s.ReducedMotion,
-			CompactMode:                      s.CompactMode,
-			DefaultLandingPage:               s.DefaultLandingPage,
-			AccessibilityKeyboardNavigation:   s.AccessibilityKeyboardNavigation,
-			AccessibilityScreenReader:        s.AccessibilityScreenReader,
-			AccessibilityFocusIndicators:     s.AccessibilityFocusIndicators,
+			FontSize:                        s.FontSize,
+			HighContrast:                    s.HighContrast,
+			ReducedMotion:                   s.ReducedMotion,
+			CompactMode:                     s.CompactMode,
+			DefaultLandingPage:              s.DefaultLandingPage,
+			AccessibilityKeyboardNavigation: s.AccessibilityKeyboardNavigation,
+			AccessibilityScreenReader:       s.AccessibilityScreenReader,
+			AccessibilityFocusIndicators:    s.AccessibilityFocusIndicators,
 		},
 		AI: aiDTO{
 			EnableAIAssistant:         s.EnableAIAssistant,

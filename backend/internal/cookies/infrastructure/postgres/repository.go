@@ -152,7 +152,7 @@ func (r *Repository) Merge(ctx context.Context, anonymousID string, userID strin
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// 1. Fetch anonymous record
 	var essential, functional, analytics, marketing, performance, personalization, aiPref bool

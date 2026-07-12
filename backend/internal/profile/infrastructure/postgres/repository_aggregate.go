@@ -44,12 +44,13 @@ func (r *Repository) UpdateAggregate(ctx context.Context, userID string, expecte
 				SET preferred_name = $2, timezone = $3, nationality = $4,
 				    headline = $5, bio = $6, photo_url = $7, cover_url = $8,
 				    work_auth_status = $9, passport_nationality = $10,
-				    preferred_contact_channel = $11, video_intro_url = $12
+				    preferred_contact_channel = $11, video_intro_url = $12,
+				    location = $13
 				WHERE user_id = $1`,
 				userID, id.PreferredName, id.TimeZone, id.Nationality,
 				id.Headline, id.Bio, id.PhotoURL, id.CoverURL,
 				id.WorkAuthorization, id.Nationality,
-				id.PreferredContactChannel, id.CoverURL)
+				id.PreferredContactChannel, id.CoverURL, id.Location)
 			if err != nil {
 				return err
 			}
@@ -365,12 +366,8 @@ func isValidUUID(s string) bool {
 }
 
 func insertExperienceQ(ctx context.Context, q querier, userID string, e *domain.WorkExperience) error {
-	achs, _ := json.Marshal(e.Achievements)
-	kpis, _ := json.Marshal(e.KPIs)
-	techs, _ := json.Marshal(e.Technologies)
-	skills, _ := json.Marshal(e.SkillsUsed)
-	atts, _ := json.Marshal(e.Attachments)
-
+	// achievements/kpis/technologies/skills_used/attachments are Postgres text[]
+	// columns; pgx encodes a Go []string to text[] directly (see loadExperiences).
 	var start, end sql.NullTime
 	if !e.StartDate.IsZero() {
 		start = sql.NullTime{Time: e.StartDate, Valid: true}
@@ -383,16 +380,10 @@ func insertExperienceQ(ctx context.Context, q querier, userID string, e *domain.
 		INSERT INTO work_experiences (user_id, company, company_logo, position, employment_type, location, remote_type, start_date, end_date, is_current, responsibilities, achievements, kpis, technologies, skills_used, team_size, attachments)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
 		RETURNING id`,
-		userID, e.Company, e.CompanyLogo, e.Position, e.EmploymentType, e.Location, e.RemoteType, start, end, e.IsCurrent, e.Responsibilities, achs, kpis, techs, skills, e.TeamSize, atts).Scan(&e.ID)
+		userID, e.Company, e.CompanyLogo, e.Position, e.EmploymentType, e.Location, e.RemoteType, start, end, e.IsCurrent, e.Responsibilities, e.Achievements, e.KPIs, e.Technologies, e.SkillsUsed, e.TeamSize, e.Attachments).Scan(&e.ID)
 }
 
 func updateExperienceQ(ctx context.Context, q querier, userID string, e domain.WorkExperience) error {
-	achs, _ := json.Marshal(e.Achievements)
-	kpis, _ := json.Marshal(e.KPIs)
-	techs, _ := json.Marshal(e.Technologies)
-	skills, _ := json.Marshal(e.SkillsUsed)
-	atts, _ := json.Marshal(e.Attachments)
-
 	var start, end sql.NullTime
 	if !e.StartDate.IsZero() {
 		start = sql.NullTime{Time: e.StartDate, Valid: true}
@@ -405,7 +396,7 @@ func updateExperienceQ(ctx context.Context, q querier, userID string, e domain.W
 		UPDATE work_experiences
 		SET company=$3, company_logo=$4, position=$5, employment_type=$6, location=$7, remote_type=$8, start_date=$9, end_date=$10, is_current=$11, responsibilities=$12, achievements=$13, kpis=$14, technologies=$15, skills_used=$16, team_size=$17, attachments=$18, updated_at=now()
 		WHERE id=$1 AND user_id=$2`,
-		e.ID, userID, e.Company, e.CompanyLogo, e.Position, e.EmploymentType, e.Location, e.RemoteType, start, end, e.IsCurrent, e.Responsibilities, achs, kpis, techs, skills, e.TeamSize, atts)
+		e.ID, userID, e.Company, e.CompanyLogo, e.Position, e.EmploymentType, e.Location, e.RemoteType, start, end, e.IsCurrent, e.Responsibilities, e.Achievements, e.KPIs, e.Technologies, e.SkillsUsed, e.TeamSize, e.Attachments)
 	return owned(res, err)
 }
 

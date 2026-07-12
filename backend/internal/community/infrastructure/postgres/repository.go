@@ -54,7 +54,7 @@ func (r *Repository) CreateCommunity(ctx context.Context, c *domain.Community, c
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	err = tx.QueryRowContext(ctx, `
 		INSERT INTO communities (slug, name, description, category)

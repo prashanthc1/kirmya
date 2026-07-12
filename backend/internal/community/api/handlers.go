@@ -359,4 +359,3 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	common.WriteSuccess(w, http.StatusCreated, toCommunity(c))
 }
-

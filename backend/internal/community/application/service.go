@@ -319,4 +319,3 @@ func (s *Service) CreateCommunity(ctx context.Context, creatorUserID, name, slug
 
 	return c, nil
 }
-

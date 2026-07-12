@@ -10,6 +10,7 @@ import (
 	"workspace-app/internal/career"
 	"workspace-app/internal/common"
 	"workspace-app/internal/community"
+	"workspace-app/internal/cookies"
 	"workspace-app/internal/dashboard"
 	"workspace-app/internal/identity"
 	identitydomain "workspace-app/internal/identity/domain"
@@ -31,7 +32,6 @@ import (
 	"workspace-app/internal/settings"
 	settingsapp "workspace-app/internal/settings/application"
 	settingspg "workspace-app/internal/settings/infrastructure/postgres"
-	"workspace-app/internal/cookies"
 )
 
 // NewRouter builds the route map for the Kirmya platform.

@@ -118,6 +118,10 @@ POST /api/v1/auth/refresh        // refresh_token cookie sent automatically
 | POST/PUT/DELETE | `/profiles/me/references[/:id]` | bearer | CRUD professional references. |
 | POST | `/profiles/me/consent` | bearer | Save user consent tracking. |
 | POST | `/profiles/me/endorsements` | bearer | Endorse another user's profile. |
+| GET | `/profiles/me/analytics` | bearer | Own profile analytics (views/engagement summary). |
+| GET | `/profiles/me/versions` | bearer | List saved profile versions/snapshots. |
+| POST | `/profiles/me/publish` | bearer | Publish the current draft profile (snapshots a new version). |
+| POST | `/profiles/me/rollback` | bearer | Roll back the profile to a previous published version. |
 
 
 > The profile response includes both `about` and `bio` (currently duplicative;
@@ -191,6 +195,7 @@ implemented.
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | GET | `/communities` | bearer | List/search communities. |
+| POST | `/communities` | bearer | Create a community. |
 | GET | `/communities/:slug` | bearer | Community detail. |
 | POST | `/communities/:slug/join` | bearer | Join/leave (toggle). |
 | GET | `/communities/:slug/posts` | bearer | Feed. Optional `?tag=` filter. |
@@ -308,10 +313,22 @@ returns the full updated settings object. Writes are optimistic-locked on
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | GET | `/settings` | bearer | Full settings: `{ general, privacy, notifications, security, version, updated_at }`. Materialises defaults on first access. |
+| PATCH | `/settings` | bearer | Unified partial update: patch any of the general/privacy/notification/security fields in one call; returns the full updated settings object. |
 | PATCH | `/settings/general` | bearer | Replace general section: `{ language, timezone, theme, email_digest }`. `theme∈{light,dark,system}`, `email_digest∈{off,daily,weekly}`. |
 | PATCH | `/settings/privacy` | bearer | Replace privacy section: `{ profile_visibility, show_email, discoverable, allow_messages }`. `profile_visibility∈{public,network,private}`, `allow_messages∈{everyone,network,none}`. |
 | PATCH | `/settings/notifications` | bearer | Replace notification toggles: `{ email_jobs, email_mentorship, email_messages, email_referrals, inapp_jobs, inapp_mentorship, inapp_messages, inapp_referrals }` (all booleans). |
 | PATCH | `/settings/security` | bearer | Replace security preferences: `{ login_alerts }` (boolean). Password and MFA are managed via the `/auth/*` endpoints in §2. |
+| GET | `/profile/settings` | bearer | Profile-specific settings/controls (visibility and profile display preferences). |
+| PATCH | `/profile/settings` | bearer | Update profile settings/controls. |
+| GET | `/privacy/settings` | bearer | Read the privacy section directly. |
+| PATCH | `/privacy/settings` | bearer | Update the privacy section directly. |
+| GET | `/notifications/preferences` | bearer | Read notification preferences. |
+| PATCH | `/notifications/preferences` | bearer | Update notification preferences. |
+| GET | `/security/activity` | bearer | Recent security activity and active sessions/devices. |
+| POST | `/security/password/change` | bearer | Change the account password. |
+| POST | `/security/logout-device` | bearer | Revoke a specific active session/device. |
+| GET | `/privacy/cookies` | bearer | Read the user's cookie-consent selections. |
+| POST/PATCH | `/privacy/cookies` | bearer | Save/update cookie-consent selections. |
 
 > Section-level events are published on the bus: `SettingsUpdated`,
 > `PrivacySettingsChanged`, `NotificationSettingsChanged`.

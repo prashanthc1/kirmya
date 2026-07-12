@@ -6,8 +6,9 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/lib/pq"
 	"workspace-app/internal/settings/domain"
+
+	"github.com/lib/pq"
 )
 
 type Repository struct{ db *sql.DB }
@@ -301,14 +302,30 @@ func (r *Repository) UpdateProfileSettings(ctx context.Context, userID string, u
 	vr := fieldVisibility["references"]
 
 	// Set defaults if empty
-	if vs == "" { vs = "private" }
-	if vt == "" { vt = "private" }
-	if vex == "" { vex = "public" }
-	if ved == "" { ved = "public" }
-	if vc == "" { vc = "public" }
-	if vsks == "" { vsks = "public" }
-	if vp == "" { vp = "public" }
-	if vr == "" { vr = "private" }
+	if vs == "" {
+		vs = "private"
+	}
+	if vt == "" {
+		vt = "private"
+	}
+	if vex == "" {
+		vex = "public"
+	}
+	if ved == "" {
+		ved = "public"
+	}
+	if vc == "" {
+		vc = "public"
+	}
+	if vsks == "" {
+		vsks = "public"
+	}
+	if vp == "" {
+		vp = "public"
+	}
+	if vr == "" {
+		vr = "private"
+	}
 
 	var dbCustomURL *string
 	if customURL != "" {

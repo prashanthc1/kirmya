@@ -76,29 +76,29 @@ type UserSettings struct {
 	LoginAlerts bool
 
 	// Accessibility
-	FontSize                         string
-	HighContrast                     bool
-	ReducedMotion                    bool
-	CompactMode                      bool
-	DefaultLandingPage               string
-	AccessibilityKeyboardNavigation   bool
-	AccessibilityScreenReader        bool
-	AccessibilityFocusIndicators     bool
+	FontSize                        string
+	HighContrast                    bool
+	ReducedMotion                   bool
+	CompactMode                     bool
+	DefaultLandingPage              string
+	AccessibilityKeyboardNavigation bool
+	AccessibilityScreenReader       bool
+	AccessibilityFocusIndicators    bool
 
 	// AI Preferences
-	EnableAIAssistant          bool
-	AIJobRecommendations       bool
-	AIResumeSuggestions        bool
-	AIRoadmapSuggestions       bool
-	AISkillGapAnalysis         bool
-	AIInterviewPrep            bool
-	AILearningRecommendations  bool
+	EnableAIAssistant         bool
+	AIJobRecommendations      bool
+	AIResumeSuggestions       bool
+	AIRoadmapSuggestions      bool
+	AISkillGapAnalysis        bool
+	AIInterviewPrep           bool
+	AILearningRecommendations bool
 
 	// Learning Preferences
-	LearningGoals           []string
-	TechnologiesOfInterest  []string
-	CertificationGoals      []string
-	LearningReminders       bool
+	LearningGoals          []string
+	TechnologiesOfInterest []string
+	CertificationGoals     []string
+	LearningReminders      bool
 
 	Version   int
 	CreatedAt time.Time
@@ -126,23 +126,23 @@ func Defaults(userID string) UserSettings {
 		LoginAlerts: true,
 
 		// Accessibility defaults
-		FontSize:                         "medium",
-		HighContrast:                     false,
-		ReducedMotion:                    false,
-		CompactMode:                      false,
-		DefaultLandingPage:               "dashboard",
-		AccessibilityKeyboardNavigation:   false,
-		AccessibilityScreenReader:        false,
-		AccessibilityFocusIndicators:     false,
+		FontSize:                        "medium",
+		HighContrast:                    false,
+		ReducedMotion:                   false,
+		CompactMode:                     false,
+		DefaultLandingPage:              "dashboard",
+		AccessibilityKeyboardNavigation: false,
+		AccessibilityScreenReader:       false,
+		AccessibilityFocusIndicators:    false,
 
 		// AI Preferences defaults
-		EnableAIAssistant:          true,
-		AIJobRecommendations:       true,
-		AIResumeSuggestions:        true,
-		AIRoadmapSuggestions:       true,
-		AISkillGapAnalysis:         true,
-		AIInterviewPrep:            true,
-		AILearningRecommendations:  true,
+		EnableAIAssistant:         true,
+		AIJobRecommendations:      true,
+		AIResumeSuggestions:       true,
+		AIRoadmapSuggestions:      true,
+		AISkillGapAnalysis:        true,
+		AIInterviewPrep:           true,
+		AILearningRecommendations: true,
 
 		// Learning Preferences defaults
 		LearningGoals:          []string{},

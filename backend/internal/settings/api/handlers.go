@@ -264,10 +264,10 @@ func (h *Handler) GetPrivacySettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	common.WriteSuccess(w, http.StatusOK, map[string]any{
-		"profile_visibility": s.ProfileVisibility,
-		"show_email":         s.ShowEmail,
-		"discoverable":       s.Discoverable,
-		"allow_messages":     s.AllowMessages,
+		"profile_visibility":  s.ProfileVisibility,
+		"show_email":          s.ShowEmail,
+		"discoverable":        s.Discoverable,
+		"allow_messages":      s.AllowMessages,
 		"enable_ai_assistant": s.EnableAIAssistant,
 	})
 }

@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/lib/pq"
+
 	"workspace-app/internal/profile/domain"
 	"workspace-app/internal/profile/infrastructure/crypto"
 )
@@ -209,12 +211,14 @@ func (r *Repository) loadExperiences(ctx context.Context, userID string) ([]doma
 	for rows.Next() {
 		var e domain.WorkExperience
 		var start, end sql.NullTime
-		var achs, kpis, techs, skills, atts []byte
+		// achievements/kpis/technologies/skills_used/attachments are Postgres
+		// text[] columns; the pgx stdlib driver surfaces them as the raw array
+		// literal, so pq.Array parses them back into []string.
 		if err := rows.Scan(
 			&e.ID, &e.Company, &e.CompanyLogo, &e.Position, &e.EmploymentType,
 			&e.Location, &e.RemoteType, &start, &end, &e.IsCurrent,
-			&e.Responsibilities, &achs, &kpis, &techs, &skills,
-			&e.TeamSize, &atts,
+			&e.Responsibilities, pq.Array(&e.Achievements), pq.Array(&e.KPIs), pq.Array(&e.Technologies), pq.Array(&e.SkillsUsed),
+			&e.TeamSize, pq.Array(&e.Attachments),
 		); err != nil {
 			return nil, err
 		}
@@ -224,11 +228,6 @@ func (r *Repository) loadExperiences(ctx context.Context, userID string) ([]doma
 		if end.Valid {
 			e.EndDate = end.Time
 		}
-		_ = json.Unmarshal(achs, &e.Achievements)
-		_ = json.Unmarshal(kpis, &e.KPIs)
-		_ = json.Unmarshal(techs, &e.Technologies)
-		_ = json.Unmarshal(skills, &e.SkillsUsed)
-		_ = json.Unmarshal(atts, &e.Attachments)
 
 		out = append(out, e)
 	}
