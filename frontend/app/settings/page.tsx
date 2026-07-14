@@ -30,8 +30,8 @@ interface NavSection {
   icon: string;
 }
 
-export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabType>("general");
+export default function SettingsPage({ initialTab }: { initialTab?: TabType }) {
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab || "general");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [rateLimitWarning, setRateLimitWarning] = useState<string | null>(null);
@@ -99,8 +99,9 @@ export default function SettingsPage() {
       setCustomURLInput(pData.custom_url || "");
 
       // Apply initial accessibility settings
-      if (sData.accessibility) {
-        applyAccessibilityStyles(sData.accessibility);
+      if (sData.accessibility && typeof window !== "undefined") {
+        window.localStorage.setItem("kirmya-accessibility", JSON.stringify(sData.accessibility));
+        window.dispatchEvent(new CustomEvent("kirmya-accessibility-changed", { detail: sData.accessibility }));
       }
     } catch (err: any) {
       if (err.status === 429) {
@@ -112,64 +113,14 @@ export default function SettingsPage() {
     }
   };
 
-  const applyAccessibilityStyles = (acc: any) => {
-    if (typeof document === "undefined") return;
-    let styleTag = document.getElementById("accessibility-styles");
-    if (!styleTag) {
-      styleTag = document.createElement("style");
-      styleTag.id = "accessibility-styles";
-      document.head.appendChild(styleTag);
-    }
-
-    let css = "";
-    if (acc.font_size === "small") {
-      css += "body, html { font-size: 14px !important; }";
-    } else if (acc.font_size === "large") {
-      css += "body, html { font-size: 18px !important; }";
-    } else if (acc.font_size === "extra-large") {
-      css += "body, html { font-size: 20px !important; }";
-    } else {
-      css += "body, html { font-size: 16px !important; }";
-    }
-
-    if (acc.high_contrast) {
-      css += `
-        body, html {
-          filter: contrast(1.25) !important;
-          background: #FFFFFF !important;
-          color: #000000 !important;
-        }
-        button, input, select, textarea {
-          border: 2px solid #000000 !important;
-          color: #000000 !important;
-          background: #FFFFFF !important;
-        }
-      `;
-    }
-
-    if (acc.reduced_motion) {
-      css += `
-        *, *::before, *::after {
-          animation-delay: -1ms !important;
-          animation-duration: 1ms !important;
-          animation-iteration-count: 1 !important;
-          background-attachment: initial !important;
-          scroll-behavior: auto !important;
-          transition-duration: 0s !important;
-          transition-delay: 0s !important;
-        }
-      `;
-    }
-    styleTag.innerHTML = css;
-  };
-
   const saveSettingsSegment = async (segment: string, payload: any) => {
     try {
       const updated = await api.patch<any>("/settings", { [segment]: payload });
       setSettings(updated);
       showNotification("Settings updated successfully", "success");
-      if (segment === "accessibility") {
-        applyAccessibilityStyles(payload);
+      if (segment === "accessibility" && typeof window !== "undefined") {
+        window.localStorage.setItem("kirmya-accessibility", JSON.stringify(payload));
+        window.dispatchEvent(new CustomEvent("kirmya-accessibility-changed", { detail: payload }));
       }
     } catch (err: any) {
       if (err.status === 429) {

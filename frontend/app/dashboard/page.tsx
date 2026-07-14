@@ -22,6 +22,9 @@ import {
   ArrowRight,
   Send,
   Loader2,
+  Clock,
+  FileText,
+  GraduationCap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SiteNav from "@/components/shared/SiteNav";
@@ -252,6 +255,37 @@ function DashboardContent() {
               </div>
             );
           })}
+        </div>
+
+        {/* Quick Access Navigation Cards */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Quick Actions</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+            {[
+              { label: "My Applications", href: "/applications", icon: CheckCircle, color: "text-blue-500 bg-blue-500/10" },
+              { label: "Saved Jobs", href: "/jobs/saved", icon: Bookmark, color: "text-indigo-500 bg-indigo-500/10" },
+              { label: "Resume Score", href: "/resume", icon: FileText, color: "text-emerald-500 bg-emerald-500/10" },
+              { label: "Recommended Jobs", href: "/jobs", icon: Briefcase, color: "text-amber-500 bg-amber-500/10" },
+              { label: "Communities", href: "/communities", icon: Users, color: "text-violet-500 bg-violet-500/10" },
+              { label: "Messages", href: "/messages", icon: MessageSquare, color: "text-pink-500 bg-pink-500/10" },
+              { label: "Upcoming Interviews", href: "/jobs", icon: Clock, color: "text-cyan-500 bg-cyan-500/10" },
+              { label: "Mentors", href: "/mentorship", icon: GraduationCap, color: "text-rose-500 bg-rose-500/10" },
+            ].map((card, idx) => {
+              const Icon = card.icon;
+              return (
+                <Link
+                  key={idx}
+                  href={card.href}
+                  className="flex flex-col items-center justify-center text-center p-4 bg-card border border-border/60 hover:border-primary/40 rounded-2xl shadow-sm hover:shadow transition-all group"
+                >
+                  <div className={`p-2.5 rounded-xl ${card.color} mb-2.5 group-hover:scale-110 transition-transform`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-[11px] font-bold text-foreground line-clamp-2 leading-snug">{card.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
         {/* Main Content Areas */}

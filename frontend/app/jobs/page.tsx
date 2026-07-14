@@ -64,14 +64,14 @@ const getMockJobData = (job: Job) => {
   return { matchScore, difficulty, matchedSkills, missingSkills };
 };
 
-export default function JobsPage() {
+export default function JobsPage({ initialJobId }: { initialJobId?: string | null }) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All Types");
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(initialJobId || null);
 
   useEffect(() => {
     let active = true;
@@ -82,7 +82,7 @@ export default function JobsPage() {
           const list = data?.jobs ?? [];
           setJobs(list);
           if (list.length > 0) {
-            setSelectedJobId(list[0].id);
+            setSelectedJobId(initialJobId || list[0].id);
           }
         }
       } catch (err) {

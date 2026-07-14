@@ -37,11 +37,11 @@ interface Professional {
   connectionId?: string;
 }
 
-export default function NetworkPage() {
+export default function NetworkPage({ initialTab }: { initialTab?: "discover" | "connections" | "requests" }) {
   const { user } = useAuth();
   const { showNotification } = useNotifications();
 
-  const [activeTab, setActiveTab] = useState<"discover" | "connections" | "requests">("discover");
+  const [activeTab, setActiveTab] = useState<"discover" | "connections" | "requests">(initialTab || "discover");
   const [loading, setLoading] = useState(true);
 
   // Lists

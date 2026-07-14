@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/auth-context";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -107,10 +109,18 @@ const FAQS = [
 ];
 
 export default function HomePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [resumeScore, setResumeScore] = useState<number | null>(null);
   const [scanning, setScanning] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, loading, router]);
 
   const handleMockScan = () => {
     if (scanning) return;

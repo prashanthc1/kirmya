@@ -1,0 +1,128 @@
+{
+  "project": {
+    "name": "Kirmya",
+    "mission": "To help people who have recently lost their jobs regroup and find new opportunities, build meaningful professional connections, receive AI-powered career guidance, develop missing skills, obtain employee referrals, optimize resumes, prepare for interviews, analyze salaries, discover companies, track applications, grow professionally, and ultimately become the world's most trusted professional networking and career platform.",
+    "longTermGoals": [
+      "Become a modern competitor in professional networking, communities, messaging, mentorship, learning, AI-powered career development, and recruitment.",
+      "Maintain a unique platform identity optimized for career recovery rather than copycatting LinkedIn, Indeed, Naukri, or Glassdoor."
+    ]
+  },
+  "frontend_stack": {
+    "framework": "Next.js (App Router)",
+    "ui_library": "MUI v6",
+    "styling": "Vanilla CSS & Emotion (Never use Tailwind CSS, Bootstrap, Chakra UI, Ant Design, or competing CSS frameworks for new components)",
+    "languages": ["TypeScript", "strict React 19"],
+    "design_tokens": {
+      "light": {
+        "background": "#FAFAFB",
+        "card": "#FFFFFF",
+        "text_primary": "#0F172A",
+        "text_secondary": "#64748B",
+        "accent": "#2563EB",
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444"
+      },
+      "dark": {
+        "background": "#09090B",
+        "card": "#111318",
+        "text_primary": "#F8FAFC",
+        "text_secondary": "#CBD5E1",
+        "accent": "#60A5FA",
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444"
+      },
+      "typography": {
+        "font_families": ["Geist", "Inter", "SF Pro Display", "Manrope"]
+      }
+    },
+    "guidelines": [
+      "Mobile-First Responsive Design",
+      "Subtle micro-animations (Framer Motion) prioritizing fade, slide, scale, ripple, and skeleton loading (avoid flashy motions)",
+      "Strict WCAG Accessibility (Semantic HTML, aria-label, focus states, keyboard navigation)",
+      "SEO best practices (Title tags, meta descriptions, correct heading hierarchy, single H1 per page)",
+      "Performance budgets (Lazy loading, code splitting, virtual lists, image optimization, optimized bundle sizes)"
+    ]
+  },
+  "backend_stack": {
+    "language": "Go 1.26",
+    "web_framework": "Gin Framework (Target / Migrating from net/http Mux)",
+    "database": "PostgreSQL (pgx pool)",
+    "orm": "GORM / SQL-ready ORM (Target / Migrating from raw SQL)",
+    "cache": "Redis",
+    "messaging": "NATS",
+    "search": "OpenSearch",
+    "deployment": {
+      "environment": "Docker, Kubernetes-ready",
+      "hosting": "Railway"
+    },
+    "architecture": [
+      "Modular Monolith (microservices ready)",
+      "Domain-Driven Design (DDD) & Clean Architecture",
+      "Repository Pattern & Service Layer with Dependency Injection"
+    ],
+    "observability": [
+      "OpenTelemetry & Prometheus metrics",
+      "Request IDs, Correlation IDs, and Structured Logging (slog)",
+      "Distributed Tracing & Health Checks"
+    ],
+    "api_design": [
+      "REST APIs with Swagger/OpenAPI documentation (docs/openapi.yaml)",
+      "API Versioning (base path /api/v1)",
+      "Standard Response Schema (success `{ \"data\": ... }` and error `{ \"error\": { \"code\": ..., \"message\": ..., \"details\": ... } }`)",
+      "Cursor Pagination, Filtering, Sorting, and input validations",
+      "Idempotency and Rate Limiting"
+    ]
+  },
+  "development_philosophy": {
+    "core": [
+      "Enterprise Grade & Production Ready",
+      "Secure by Default",
+      "AI First & Mobile First",
+      "Future Proof & Highly Scalable",
+      "Modular & Extensible",
+      "Backward Compatible",
+      "Fully Tested & Well Documented",
+      "Zero Technical Debt"
+    ],
+    "coding_standards": [
+      "SOLID Principles, Clean Architecture, DRY, KISS, YAGNI",
+      "Conventional Commits workflow",
+      "Strict ESLint, Prettier, and TypeScript checks",
+      "Gofmt compliance and proper Go code structuring",
+      "No duplicate code, no unused code, no unnecessary dependencies",
+      "Zero TODOs or placeholder implementations in committed code",
+      "Zero mock APIs unless explicitly requested",
+      "Zero console errors or TypeScript compilation warnings"
+    ]
+  },
+  "security_standards": [
+    "JWT Authentication with rotated, family-revocable httpOnly Refresh Token cookies",
+    "Double-Submit Cookie CSRF Protection",
+    "Content Security Policy (CSP) Headers and strict CORS",
+    "RBAC (Role-Based Access Control) and Audit Logging",
+    "OWASP Top 10 compliance: input validation, output encoding, password hashing (argon2), secure file uploads"
+  ],
+  "user_roles": [
+    "Guest",
+    "Job Seeker",
+    "User",
+    "Recruiter",
+    "Company",
+    "Community Admin",
+    "Moderator",
+    "Support Agent",
+    "Super Admin"
+  ],
+  "ai_generation_settings": {
+    "rules": [
+      "Always update frontend, backend, tests, swagger/OpenAPI spec, database migrations, and .env.example together in a single coordinated change.",
+      "Never rewrite working code unnecessarily.",
+      "Always produce complete, production-ready enterprise-grade implementations rather than partial or placeholder solutions.",
+      "Strictly preserve backward compatibility for existing APIs and models.",
+      "Ensure all new interactive elements have unique, descriptive IDs for browser automation testing.",
+      "Maintain documentation parity across memory.md, settings.json, README.md, CHANGELOG.md, and ARCHITECTURE.md."
+    ]
+  }
+}

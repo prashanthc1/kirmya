@@ -3,12 +3,13 @@ package platform
 import (
 	"database/sql"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"workspace-app/internal/admin"
 	"workspace-app/internal/ai"
 	"workspace-app/internal/career"
-	"workspace-app/internal/common"
 	"workspace-app/internal/community"
 	"workspace-app/internal/cookies"
 	"workspace-app/internal/dashboard"
@@ -34,20 +35,34 @@ import (
 	settingspg "workspace-app/internal/settings/infrastructure/postgres"
 )
 
-// NewRouter builds the route map for the Kirmya platform.
-func NewRouter(db *sql.DB) *http.ServeMux {
-	mux := http.NewServeMux()
+// NewRouter builds the route map for the Kirmya platform using the Gin framework.
+// It wraps the legacy *http.ServeMux as a fallback route to support incremental migration.
+func NewRouter(db *sql.DB) http.Handler {
+	// Initialize Gin Mode
+	if os.Getenv("APP_ENV") == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		gin.SetMode(gin.DebugMode)
+	}
 
-	mux.HandleFunc("/api/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		common.WriteSuccess(w, http.StatusOK, map[string]string{
+	// Create master Gin engine
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	// Native health check on Gin
+	r.GET("/api/v1/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
 			"status":  "healthy",
 			"service": "kirmya",
 		})
 	})
 
-	// Prometheus metrics endpoint + DB connection-pool gauges.
-	mux.Handle("GET /metrics", observability.Handler())
+	// Prometheus metrics endpoint registered directly on Gin
+	r.GET("/metrics", gin.WrapH(observability.Handler()))
 	observability.RegisterDBStats(db)
+
+	// Create legacy ServeMux for backward compatibility
+	mux := http.NewServeMux()
 
 	// Event bus (in-process; NATS-ready). Modules publish/subscribe here.
 	bus := eventbus.New()
@@ -106,5 +121,8 @@ func NewRouter(db *sql.DB) *http.ServeMux {
 		http.Redirect(w, r, "/swagger-ui/", http.StatusTemporaryRedirect)
 	})
 
-	return mux
+	// Wrap and fallback all unmatched routes to legacy http.ServeMux
+	r.NoRoute(gin.WrapH(mux))
+
+	return r
 }

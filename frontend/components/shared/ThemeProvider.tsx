@@ -13,9 +13,86 @@ interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
+function applyGlobalAccessibilityStyles(acc: any) {
+  if (typeof document === "undefined" || !acc) return;
+  let styleTag = document.getElementById("accessibility-styles");
+  if (!styleTag) {
+    styleTag = document.createElement("style");
+    styleTag.id = "accessibility-styles";
+    document.head.appendChild(styleTag);
+  }
+
+  let css = "";
+  if (acc.font_size === "small") {
+    css += "body, html { font-size: 14px !important; }";
+  } else if (acc.font_size === "large") {
+    css += "body, html { font-size: 18px !important; }";
+  } else if (acc.font_size === "extra-large") {
+    css += "body, html { font-size: 20px !important; }";
+  } else {
+    css += "body, html { font-size: 16px !important; }";
+  }
+
+  if (acc.high_contrast) {
+    css += `
+      body, html {
+        filter: contrast(1.25) !important;
+        background: #FFFFFF !important;
+        color: #000000 !important;
+      }
+      button, input, select, textarea {
+        border: 2px solid #000000 !important;
+        color: #000000 !important;
+        background: #FFFFFF !important;
+      }
+    `;
+  }
+
+  if (acc.reduced_motion) {
+    css += `
+      *, *::before, *::after {
+        animation-delay: -1ms !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        background-attachment: initial !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0s !important;
+        transition-delay: 0s !important;
+      }
+    `;
+  }
+  styleTag.innerHTML = css;
+}
+
 function ThemeProviderInner({ children }: { children: React.ReactNode }) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+
+  // Sync accessibility styles from localStorage and setup event listener
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = window.localStorage.getItem("kirmya-accessibility");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          applyGlobalAccessibilityStyles(parsed);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      const handler = (e: any) => {
+        if (e.detail) {
+          applyGlobalAccessibilityStyles(e.detail);
+        }
+      };
+
+      window.addEventListener("kirmya-accessibility-changed", handler);
+      return () => {
+        window.removeEventListener("kirmya-accessibility-changed", handler);
+      };
+    }
+  }, []);
 
   // Sync MUI palette mode with next-themes resolved mode
   const dynamicMuiTheme = React.useMemo(() => {
