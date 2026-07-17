@@ -32,6 +32,7 @@ import SiteFooter from "@/components/shared/SiteFooter";
 import { api } from "@/lib/api/client";
 import { profileClient, Profile } from "@/lib/api/profile";
 import { networkClient, Connection } from "@/lib/api/network";
+import SuggestionsCarousel from "@/components/connections/SuggestionsCarousel";
 
 interface DashboardSummary {
   unread_notifications: number;
@@ -337,6 +338,11 @@ function DashboardContent() {
                   </Link>
                 </div>
               </div>
+            </div>
+
+            {/* Recommendations Widget */}
+            <div className="bg-card border border-border/80 p-6 rounded-3xl shadow-sm">
+              <SuggestionsCarousel />
             </div>
 
             {/* Pending Requests Widget */}

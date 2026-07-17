@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import ThemeProvider from "@/components/shared/ThemeProvider";
 import { CookieProvider, CookieConsentPopup, CookieSettingsModal } from "@/components/shared/CookieConsent";
+import Providers from "@/components/shared/Providers";
 
 const publicSans = Public_Sans({
   subsets: ["latin"],
@@ -30,9 +31,11 @@ export default function RootLayout({
         <AuthProvider>
           <CookieProvider>
             <ThemeProvider>
-              {children}
-              <CookieConsentPopup />
-              <CookieSettingsModal />
+              <Providers>
+                {children}
+                <CookieConsentPopup />
+                <CookieSettingsModal />
+              </Providers>
             </ThemeProvider>
           </CookieProvider>
         </AuthProvider>

@@ -9,6 +9,10 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { useNotifications } from "@/components/shared/Notifications";
 import { CircularProgress } from "@mui/material";
 import { Search, Filter, SlidersHorizontal, Check, UserMinus, Ban, Send, MessageSquare } from "lucide-react";
+import ConnectionsList from "@/components/connections/ConnectionsList";
+import PendingRequestsPanel from "@/components/connections/PendingRequestsPanel";
+import SuggestionsCarousel from "@/components/connections/SuggestionsCarousel";
+import ConnectButton from "@/components/connections/ConnectButton";
 
 interface ConnectionUser {
   id: string;
@@ -118,80 +122,6 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
     }
   };
 
-  const handleConnect = async (receiverId: string) => {
-    try {
-      await api.post("/network/requests", {
-        receiver_id: receiverId,
-        origin: "manual_request",
-      });
-      showNotification("Connection request sent!", "success");
-      // Update professional local status
-      setProfessionals((prev) =>
-        prev.map((p) => (p.id === receiverId ? { ...p, connectionStatus: "pending" } : p))
-      );
-    } catch (err: any) {
-      showNotification(err.message || "Failed to send connection request", "error");
-    }
-  };
-
-  const handleAccept = async (requestId: string) => {
-    try {
-      await api.put(`/network/requests/${requestId}/accept`, {});
-      showNotification("Connection request accepted!", "success");
-      // Refresh Lists
-      loadData();
-    } catch (err: any) {
-      showNotification("Failed to accept request", "error");
-    }
-  };
-
-  const handleReject = async (requestId: string) => {
-    try {
-      await api.put(`/network/requests/${requestId}/reject`, {});
-      showNotification("Request declined.", "success");
-      // Refresh Lists
-      loadData();
-    } catch (err: any) {
-      showNotification("Failed to decline request", "error");
-    }
-  };
-
-  const handleUnconnect = async (targetUserId: string) => {
-    if (!window.confirm("Are you sure you want to remove this connection?")) return;
-    try {
-      await api.delete(`/network/connections/${targetUserId}`);
-      showNotification("Connection removed.", "success");
-      loadData();
-    } catch (err: any) {
-      showNotification("Failed to remove connection", "error");
-    }
-  };
-
-  const handleBlock = async (targetUserId: string) => {
-    if (!window.confirm("Are you sure you want to block this professional?")) return;
-    try {
-      await api.post("/network/block", {
-        blocked_id: targetUserId,
-      });
-      showNotification("Professional blocked.", "success");
-      loadData();
-    } catch (err: any) {
-      showNotification("Failed to block professional", "error");
-    }
-  };
-
-  const handleStartChat = async (targetUserId: string, targetName: string) => {
-    try {
-      const conv = await api.post<any>("/conversations", {
-        participant_ids: [targetUserId],
-        title: targetName,
-      });
-      window.location.href = `/inbox?convId=${conv.id}`;
-    } catch (err: any) {
-      showNotification("Failed to start conversation", "error");
-    }
-  };
-
   return (
     <AuthGuard>
       <div
@@ -259,6 +189,9 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
               {/* DISCOVER TAB */}
               {activeTab === "discover" && (
                 <div>
+                  <div className="mb-8">
+                    <SuggestionsCarousel />
+                  </div>
                   {/* Search Bar & Filters */}
                   <form onSubmit={handleSearch} style={{ background: "#ffffff", border: "1px solid #EFE7DC", borderRadius: "20px", padding: "18px 24px", display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px", boxShadow: "0 4px 12px rgba(43, 38, 32, 0.02)" }}>
                     <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
@@ -358,39 +291,13 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
                           <div style={{ fontSize: "13px", color: "#5B554C" }}>📍 {prof.location}</div>
                         </div>
 
-                        <div style={{ borderTop: "1px solid #F6EFE6", paddingTop: "14px", display: "flex", gap: "10px" }}>
-                          <button
-                            onClick={() => handleConnect(prof.id)}
-                            disabled={prof.connectionStatus === "pending"}
-                            style={{
-                              flex: 1,
-                              border: "none",
-                              background: prof.connectionStatus === "pending" ? "rgba(43,38,32,0.08)" : "#C2683C",
-                              color: prof.connectionStatus === "pending" ? "#8A8175" : "#fff",
-                              padding: "10px 16px",
-                              borderRadius: "100px",
-                              fontWeight: 600,
-                              fontSize: "13px",
-                              cursor: prof.connectionStatus === "pending" ? "not-allowed" : "pointer",
-                            }}
-                          >
-                            {prof.connectionStatus === "pending" ? "Pending..." : "Connect"}
-                          </button>
-                          <button
-                            onClick={() => handleStartChat(prof.id, prof.full_name)}
-                            style={{
-                              border: "1px solid #E2D9CC",
-                              background: "transparent",
-                              color: "#C2683C",
-                              padding: "10px 16px",
-                              borderRadius: "100px",
-                              fontWeight: 600,
-                              fontSize: "13px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Message
-                          </button>
+                        <div style={{ borderTop: "1px solid #F6EFE6", paddingTop: "14px", display: "flex", gap: "10px", justifyContent: "flex-end", alignItems: "center" }}>
+                          <ConnectButton
+                            targetUserId={prof.id}
+                            targetUserName={prof.full_name}
+                            currentConnectionStatus={prof.connectionStatus as any || "none"}
+                            connectionId={prof.connectionId}
+                          />
                         </div>
                       </div>
                     ))}
@@ -400,170 +307,12 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
 
               {/* CONNECTIONS TAB */}
               {activeTab === "connections" && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "24px" }}>
-                  {connections.map((c) => {
-                    const isReq = c.requester_id === user?.id;
-                    const partnerName = isReq ? c.receiver_name : c.requester_name;
-                    const partnerHeadline = isReq ? c.receiver_headline : c.requester_headline;
-                    const partnerId = isReq ? c.receiver_id : c.requester_id;
-
-                    return (
-                      <div
-                        key={c.id}
-                        style={{
-                          background: "#ffffff",
-                          border: "1px solid #EFE7DC",
-                          borderRadius: "20px",
-                          padding: "24px",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "space-between",
-                          gap: "18px",
-                          boxShadow: "0 4px 12px rgba(43, 38, 32, 0.03)",
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: "flex", gap: "14px", alignItems: "center", marginBottom: "12px" }}>
-                            <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#C2683C", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700 }}>
-                              {partnerName?.charAt(0) || "P"}
-                            </div>
-                            <div>
-                              <h3 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "#2B2620" }}>{partnerName}</h3>
-                              <p style={{ fontSize: "13px", color: "#8A8175", margin: 0 }}>{partnerHeadline}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div style={{ borderTop: "1px solid #F6EFE6", paddingTop: "14px", display: "flex", gap: "10px" }}>
-                          <button
-                            onClick={() => handleStartChat(partnerId, partnerName || "Partner")}
-                            style={{
-                              flex: 1,
-                              border: "none",
-                              background: "#C2683C",
-                              color: "#fff",
-                              padding: "10px 16px",
-                              borderRadius: "100px",
-                              fontWeight: 600,
-                              fontSize: "13px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Chat
-                          </button>
-                          <button
-                            onClick={() => handleUnconnect(partnerId)}
-                            style={{
-                              border: "1px solid #E2D9CC",
-                              background: "transparent",
-                              color: "#8A8175",
-                              padding: "10px 12px",
-                              borderRadius: "100px",
-                              cursor: "pointer",
-                            }}
-                            title="Remove Connection"
-                          >
-                            <UserMinus size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleBlock(partnerId)}
-                            style={{
-                              border: "1px solid #E2D9CC",
-                              background: "transparent",
-                              color: "#A8472A",
-                              padding: "10px 12px",
-                              borderRadius: "100px",
-                              cursor: "pointer",
-                            }}
-                            title="Block User"
-                          >
-                            <Ban size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {connections.length === 0 && (
-                    <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "64px 24px", color: "#8A8175" }}>
-                      <span style={{ fontSize: "40px" }}>👥</span>
-                      <h3 style={{ margin: "16px 0 6px", fontSize: "18px", fontWeight: 700, color: "#2B2620" }}>No connections yet</h3>
-                      <p style={{ margin: 0, fontSize: "14px" }}>Start discovering other professionals and build your network.</p>
-                    </div>
-                  )}
-                </div>
+                <ConnectionsList />
               )}
 
               {/* REQUESTS TAB */}
               {activeTab === "requests" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {incomingRequests.map((req) => (
-                    <div
-                      key={req.id}
-                      style={{
-                        background: "#ffffff",
-                        border: "1px solid #EFE7DC",
-                        borderRadius: "18px",
-                        padding: "20px 24px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        flexWrap: "wrap",
-                        gap: "16px",
-                        boxShadow: "0 4px 12px rgba(43, 38, 32, 0.02)",
-                      }}
-                    >
-                      <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
-                        <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#4F7C6A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 700 }}>
-                          {req.requester_name?.charAt(0) || "R"}
-                        </div>
-                        <div>
-                          <h3 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "#2B2620" }}>{req.requester_name}</h3>
-                          <p style={{ fontSize: "13px", color: "#8A8175", margin: 0 }}>{req.requester_headline}</p>
-                        </div>
-                      </div>
-
-                      <div style={{ display: "flex", gap: "10px" }}>
-                        <button
-                          onClick={() => handleAccept(req.id)}
-                          style={{
-                            border: "none",
-                            background: "#C2683C",
-                            color: "#fff",
-                            padding: "10px 20px",
-                            borderRadius: "100px",
-                            fontWeight: 600,
-                            fontSize: "13px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => handleReject(req.id)}
-                          style={{
-                            border: "1px solid #E2D9CC",
-                            background: "transparent",
-                            color: "#5B554C",
-                            padding: "10px 20px",
-                            borderRadius: "100px",
-                            fontWeight: 600,
-                            fontSize: "13px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {incomingRequests.length === 0 && (
-                    <div style={{ textAlign: "center", padding: "64px 24px", color: "#8A8175" }}>
-                      <span style={{ fontSize: "40px" }}>📥</span>
-                      <h3 style={{ margin: "16px 0 6px", fontSize: "18px", fontWeight: 700, color: "#2B2620" }}>No pending requests</h3>
-                      <p style={{ margin: 0, fontSize: "14px" }}>Incoming connection invites will appear here.</p>
-                    </div>
-                  )}
-                </div>
+                <PendingRequestsPanel />
               )}
             </>
           )}

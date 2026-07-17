@@ -11,6 +11,7 @@ import (
 	"workspace-app/internal/ai"
 	"workspace-app/internal/career"
 	"workspace-app/internal/community"
+	"workspace-app/internal/connections"
 	"workspace-app/internal/cookies"
 	"workspace-app/internal/dashboard"
 	"workspace-app/internal/identity"
@@ -110,6 +111,7 @@ func NewRouter(db *sql.DB) http.Handler {
 	dashboard.RegisterRoutes(mux, db, identityMod.AuthMiddleware)
 	career.RegisterRoutes(mux, identityMod.AuthMiddleware)
 	network.RegisterRoutes(mux, db, identityMod.AuthMiddleware, bus, redisLimiter.Limit)
+	connections.RegisterRoutes(r, db, identityMod.AuthMiddleware, outboxBus)
 
 	cookiesMod := cookies.NewModule(db)
 	cookiesMod.RegisterRoutes(mux, identityMod.Tokens)

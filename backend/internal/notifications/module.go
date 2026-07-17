@@ -50,6 +50,14 @@ func subscribe(bus *eventbus.Bus, svc *application.Service) {
 			}
 		}
 	})
+	bus.Subscribe("ConnectionRequested", func(ctx context.Context, e eventbus.Event) {
+		_ = svc.Notify(ctx, str(e.Payload, "receiver_id"), "connection_request",
+			"New connection request", "Someone sent you a connection request.", "/network")
+	})
+	bus.Subscribe("ConnectionAccepted", func(ctx context.Context, e eventbus.Event) {
+		_ = svc.Notify(ctx, str(e.Payload, "requester_id"), "connection_accepted",
+			"Connection accepted 🎉", "Someone accepted your connection request.", "/network")
+	})
 }
 
 func str(p map[string]any, key string) string {

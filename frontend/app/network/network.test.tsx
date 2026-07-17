@@ -76,6 +76,59 @@ vi.mock("@/components/shared/Notifications", () => ({
   }),
 }));
 
+// Mock connections hooks
+vi.mock("@/hooks/useConnections", () => ({
+  useConnectionsStore: (cb: any) => cb({
+    statusOverrides: {},
+    setStatusOverride: vi.fn(),
+  }),
+  useConnections: () => ({
+    data: [
+      {
+        id: "conn-1",
+        user_a_id: "user-123",
+        user_b_id: "user-456",
+        status: "accepted",
+        requested_by: "user-123",
+        created_at: "2026-07-06T00:00:00Z",
+        updated_at: "2026-07-06T00:00:00Z",
+        user: {
+          id: "user-456",
+          name: "Jane Smith",
+          headline: "VP of Product",
+          avatar_url: "",
+        },
+      },
+    ],
+    isLoading: false,
+  }),
+  usePendingRequests: () => ({
+    data: [],
+    isLoading: false,
+  }),
+  useSuggestions: () => ({
+    data: [
+      {
+        user: {
+          id: "user-789",
+          name: "Alice Johnson",
+          headline: "Software Engineer",
+          avatar_url: "",
+        },
+        mutual_connection_count: 2,
+        reason: "Similar industry",
+      },
+    ],
+    isLoading: false,
+  }),
+  useSendConnectionRequest: () => ({ mutate: vi.fn(), isPending: false }),
+  useAcceptConnection: () => ({ mutate: vi.fn(), isPending: false }),
+  useDeclineConnection: () => ({ mutate: vi.fn(), isPending: false }),
+  useRemoveConnection: () => ({ mutate: vi.fn(), isPending: false }),
+  useBlockUser: () => ({ mutate: vi.fn(), isPending: false }),
+  useUnblockUser: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 describe("NetworkPage", () => {
   it("renders the networking dashboard and list of recommended professionals", async () => {
     render(<NetworkPage />);

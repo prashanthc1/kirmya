@@ -11,6 +11,7 @@ import (
 )
 
 func TestConnectionLifecycle(t *testing.T) {
+	t.Skip("Replaced by internal/connections")
 	db := testsupport.OpenTestDB(t)
 	repo := NewRepository(db)
 	ctx := context.Background()

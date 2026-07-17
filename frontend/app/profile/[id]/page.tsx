@@ -26,6 +26,9 @@ import SiteFooter from "@/components/shared/SiteFooter";
 import { profileClient, Profile } from "@/lib/api/profile";
 import { networkClient, ConnectionStatusResponse } from "@/lib/api/network";
 import { ApiError } from "@/lib/api/client";
+import { useConnectionStatus } from "@/hooks/useConnections";
+import ConnectButton from "@/components/connections/ConnectButton";
+import MutualConnectionsStrip from "@/components/connections/MutualConnectionsStrip";
 
 export default function OtherProfilePage() {
   const params = useParams();
@@ -34,10 +37,8 @@ export default function OtherProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUserID, setCurrentUserID] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] =
-    useState<ConnectionStatusResponse | null>(null);
+  const { data: connectionStatus } = useConnectionStatus(id);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,9 +56,6 @@ export default function OtherProfilePage() {
 
         const data = await profileClient.getByID(id);
         if (active) setProfile(data);
-
-        const conn = await networkClient.getConnectionStatus(id);
-        if (active) setConnectionStatus(conn);
       } catch (err) {
         if (active) {
           setError(
@@ -74,130 +72,6 @@ export default function OtherProfilePage() {
       active = false;
     };
   }, [id, router]);
-
-  const handleConnect = async () => {
-    if (!id || actionLoading) return;
-    setActionLoading(true);
-    try {
-      await networkClient.sendRequest(id);
-      const conn = await networkClient.getConnectionStatus(id);
-      setConnectionStatus(conn);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleAcceptConnection = async (reqID: string) => {
-    if (!reqID || actionLoading) return;
-    setActionLoading(true);
-    try {
-      await networkClient.acceptRequest(reqID);
-      const conn = await networkClient.getConnectionStatus(id);
-      setConnectionStatus(conn);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleRejectConnection = async (reqID: string) => {
-    if (!reqID || actionLoading) return;
-    setActionLoading(true);
-    try {
-      await networkClient.rejectRequest(reqID);
-      const conn = await networkClient.getConnectionStatus(id);
-      setConnectionStatus(conn);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const renderConnectionButton = () => {
-    if (!connectionStatus) return null;
-
-    const { status, requester_id } = connectionStatus;
-
-    if (status === "accepted") {
-      return (
-        <button
-          disabled
-          className="px-6 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-1.5"
-        >
-          <UserCheck className="h-4 w-4" />
-          Connected
-        </button>
-      );
-    }
-
-    if (status === "pending") {
-      if (requester_id === currentUserID) {
-        return (
-          <button
-            disabled
-            className="px-6 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-1.5"
-          >
-            <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-            Pending Approval
-          </button>
-        );
-      } else {
-        return (
-          <div className="flex items-center gap-2">
-            <button
-              disabled={actionLoading}
-              onClick={async () => {
-                try {
-                  const reqs = await networkClient.getIncomingRequests();
-                  const found = reqs.find((r) => r.requester_id === id);
-                  if (found) {
-                    await handleAcceptConnection(found.id);
-                  }
-                } catch (e) {
-                  console.error(e);
-                }
-              }}
-              className="px-5 py-2 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold shadow-sm"
-            >
-              Accept
-            </button>
-            <button
-              disabled={actionLoading}
-              onClick={async () => {
-                try {
-                  const reqs = await networkClient.getIncomingRequests();
-                  const found = reqs.find((r) => r.requester_id === id);
-                  if (found) {
-                    await handleRejectConnection(found.id);
-                  }
-                } catch (e) {
-                  console.error(e);
-                }
-              }}
-              className="px-5 py-2 rounded-full border border-border hover:bg-secondary text-xs font-bold"
-            >
-              Ignore
-            </button>
-          </div>
-        );
-      }
-    }
-
-    return (
-      <button
-        disabled={actionLoading}
-        onClick={handleConnect}
-        className="px-6 py-2 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold shadow-sm shadow-blue-500/10 flex items-center gap-1.5"
-      >
-        <UserPlus className="h-4 w-4" />
-        Connect to Message
-      </button>
-    );
-  };
 
   if (loading) {
     return (
@@ -305,7 +179,19 @@ export default function OtherProfilePage() {
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
               Messaging Gate status
             </span>
-            {renderConnectionButton()}
+            <div className="flex items-center gap-3">
+              <MutualConnectionsStrip userId={id} />
+              <ConnectButton
+                targetUserId={id}
+                targetUserName={profile.headline || "User"}
+                currentConnectionStatus={
+                  connectionStatus?.status === "pending"
+                    ? (connectionStatus.requested_by === currentUserID ? "pending_outgoing" : "pending_incoming")
+                    : (connectionStatus?.status || "none") as any
+                }
+                connectionId={connectionStatus?.connection_id}
+              />
+            </div>
           </div>
         </div>
 
