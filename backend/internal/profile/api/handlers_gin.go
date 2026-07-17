@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"workspace-app/internal/common"
 	"workspace-app/internal/connections"
 	"workspace-app/internal/platform/cache"
@@ -286,17 +287,17 @@ func (h *GinHandler) filterPublicProfile(p *domain.Profile, isConnection, viewer
 
 // PATCH /api/profile/me/basic-info
 type patchBasicInfoRequest struct {
-	PreferredName           *string               `json:"preferred_name"`
-	TimeZone                *string               `json:"timezone"`
-	Nationality             *string               `json:"nationality"`
-	Headline                *string               `json:"headline"`
-	Bio                     *string               `json:"bio"`
-	PhotoURL                *string               `json:"photo_url"`
-	CoverURL                *string               `json:"cover_url"`
-	WorkAuthorization       *string               `json:"work_authorization"`
-	PreferredContactChannel *string               `json:"preferred_contact_channel"`
-	VideoIntroURL           *string               `json:"video_intro_url"`
-	Location                *string               `json:"location"`
+	PreferredName           *string                `json:"preferred_name"`
+	TimeZone                *string                `json:"timezone"`
+	Nationality             *string                `json:"nationality"`
+	Headline                *string                `json:"headline"`
+	Bio                     *string                `json:"bio"`
+	PhotoURL                *string                `json:"photo_url"`
+	CoverURL                *string                `json:"cover_url"`
+	WorkAuthorization       *string                `json:"work_authorization"`
+	PreferredContactChannel *string                `json:"preferred_contact_channel"`
+	VideoIntroURL           *string                `json:"video_intro_url"`
+	Location                *string                `json:"location"`
 	Languages               *[]domain.LanguageItem `json:"languages"`
 }
 

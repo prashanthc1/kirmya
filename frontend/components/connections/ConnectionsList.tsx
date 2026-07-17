@@ -65,7 +65,7 @@ export default function ConnectionsList() {
           <Search className="w-10 h-10 text-gray-600 mb-3" />
           <h4 className="text-sm font-bold text-gray-400">No matching connections</h4>
           <p className="text-xs text-gray-500 mt-1">
-            We couldn't find anyone matching "{searchQuery}".
+            We couldn&apos;t find anyone matching &quot;{searchQuery}&quot;.
           </p>
         </div>
       ) : (

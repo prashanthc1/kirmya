@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+
 	"workspace-app/internal/common"
 )
 
@@ -303,9 +304,10 @@ func (h *Handler) writeError(c *gin.Context, err error) {
 	mapped := MapError(err)
 	if appErr, ok := mapped.(*common.AppError); ok {
 		// Set Retry-After header for rate limits and cooldowns if applicable
-		if appErr.Code == "RATE_LIMITED" {
+		switch appErr.Code {
+		case "RATE_LIMITED":
 			c.Header("Retry-After", "86400") // 24h cooldown retry after
-		} else if appErr.Code == "COOLDOWN_ACTIVE" {
+		case "COOLDOWN_ACTIVE":
 			c.Header("Retry-After", "2592000") // 30 days cooldown retry after
 		}
 

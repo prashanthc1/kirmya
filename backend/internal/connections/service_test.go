@@ -82,7 +82,7 @@ func TestConnectionsLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to accept connection request: %v", err)
 	}
-	
+
 	// Verify they can message
 	ok, err := CanMessage(ctx, db, userA, userB)
 	if err != nil || !ok {

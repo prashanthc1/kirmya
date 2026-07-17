@@ -32,16 +32,16 @@ type PublicProfileSummary struct {
 
 // Connection represents a relationship between two users
 type Connection struct {
-	ID          string               `json:"id"`
-	UserAID     string               `json:"user_a_id"`
-	UserBID     string               `json:"user_b_id"`
-	Status      ConnectionStatus     `json:"status"`
-	RequestedBy string               `json:"requested_by"`
-	CreatedAt   time.Time            `json:"created_at"`
-	RespondedAt *time.Time           `json:"responded_at,omitempty"`
-	UpdatedAt   time.Time            `json:"updated_at"`
-	Note        *string              `json:"note,omitempty"`
-	Source      *ConnectionSource    `json:"source,omitempty"`
+	ID          string                `json:"id"`
+	UserAID     string                `json:"user_a_id"`
+	UserBID     string                `json:"user_b_id"`
+	Status      ConnectionStatus      `json:"status"`
+	RequestedBy string                `json:"requested_by"`
+	CreatedAt   time.Time             `json:"created_at"`
+	RespondedAt *time.Time            `json:"responded_at,omitempty"`
+	UpdatedAt   time.Time             `json:"updated_at"`
+	Note        *string               `json:"note,omitempty"`
+	Source      *ConnectionSource     `json:"source,omitempty"`
 	User        *PublicProfileSummary `json:"user,omitempty"`
 }
 

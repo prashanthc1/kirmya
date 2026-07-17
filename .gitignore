@@ -23,3 +23,6 @@ backend/uploads/
 
 # Gemini/Antigravity local cache and brain artifacts
 .gemini/
+
+# graphify skill generated output (knowledge graph artifacts, cache)
+graphify-out/

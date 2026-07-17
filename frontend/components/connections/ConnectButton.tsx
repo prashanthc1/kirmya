@@ -12,6 +12,7 @@ import {
 } from "@/hooks/useConnections";
 import ConnectionNoteModal from "./ConnectionNoteModal";
 import BlockConfirmDialog from "./BlockConfirmDialog";
+import { api } from "@/lib/api/client";
 import { UserCheck, Clock, UserX, ShieldAlert, ChevronDown, MessageSquare } from "lucide-react";
 
 interface ConnectButtonProps {
@@ -123,8 +124,7 @@ export default function ConnectButton({
 
   const handleStartChat = async () => {
     try {
-      const api = require("@/lib/api/client").api;
-      const conv = await api.post("/conversations", {
+      const conv = await api.post<{ id: string }>("/conversations", {
         participant_ids: [targetUserId],
         title: targetUserName,
       });

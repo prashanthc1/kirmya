@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	"workspace-app/internal/profile/api"
 	"workspace-app/internal/profile/application"
 	"workspace-app/internal/profile/infrastructure/postgres"
