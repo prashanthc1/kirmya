@@ -60,6 +60,7 @@ type IdentitySection struct {
 	Languages               []LanguageItem `json:"languages"`
 	Phone                   string         `json:"phone"`
 	Email                   string         `json:"email"`
+	Address                 string         `json:"address"`
 	SocialLinks             SocialLinks    `json:"social_links"`
 	Availability            string         `json:"availability"`
 	WorkAuthorization       string         `json:"work_authorization"`

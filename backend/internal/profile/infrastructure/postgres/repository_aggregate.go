@@ -39,18 +39,23 @@ func (r *Repository) UpdateAggregate(ctx context.Context, userID string, expecte
 		// 1. Update identity scalars if present
 		if u.Identity != nil {
 			id := u.Identity
+			emailEnc, _ := r.crypt.Encrypt(id.Email)
+			phoneEnc, _ := r.crypt.Encrypt(id.Phone)
+			addressEnc, _ := r.crypt.Encrypt(id.Address)
+
 			_, err := tx.ExecContext(ctx, `
 				UPDATE profiles
 				SET preferred_name = $2, timezone = $3, nationality = $4,
 				    headline = $5, bio = $6, photo_url = $7, cover_url = $8,
 				    work_auth_status = $9, passport_nationality = $10,
 				    preferred_contact_channel = $11, video_intro_url = $12,
-				    location = $13
+				    location = $13, email_enc = $14, phone_enc = $15, address_enc = $16
 				WHERE user_id = $1`,
 				userID, id.PreferredName, id.TimeZone, id.Nationality,
 				id.Headline, id.Bio, id.PhotoURL, id.CoverURL,
 				id.WorkAuthorization, id.Nationality,
-				id.PreferredContactChannel, id.CoverURL, id.Location)
+				id.PreferredContactChannel, id.CoverURL, id.Location,
+				emailEnc, phoneEnc, addressEnc)
 			if err != nil {
 				return err
 			}

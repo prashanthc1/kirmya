@@ -64,6 +64,10 @@ type profileResponse struct {
 	AccessibilityNeeds      string `json:"accessibility_needs,omitempty"`
 	VideoIntroURL           string `json:"video_intro_url"`
 
+	Email   string `json:"email,omitempty"`
+	Phone   string `json:"phone,omitempty"`
+	Address string `json:"address,omitempty"`
+
 	// Mentorship
 	WillingToMentor bool `json:"willing_to_mentor"`
 
@@ -265,6 +269,7 @@ func toResponse(p *domain.Profile) profileResponse {
 		DrivingLicenseBool: p.Verification.IdentityVerified, DrivingLicenseType: p.Identity.VisaStatus,
 		PreferredContactChannel: p.Identity.PreferredContactChannel, AccessibilityNeeds: p.Identity.VisaStatus,
 		VideoIntroURL: p.Identity.CoverURL, WillingToMentor: p.Verification.IdentityVerified,
+		Email: p.Identity.Email, Phone: p.Identity.Phone, Address: p.Identity.Address,
 		AvgResponseTimeHours: float64(p.Analytics.ProfileViews), ProfileCompletenessScore: p.ProfileCompletenessScore,
 		LastActiveAt: p.LastActiveAt.Format(time.RFC3339), BackgroundCheckConsent: p.Verification.IdentityVerified,
 		BackgroundCheckConsentAt: "", JobAlertFrequency: p.Identity.VisaStatus,

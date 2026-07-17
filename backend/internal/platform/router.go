@@ -97,6 +97,7 @@ func NewRouter(db *sql.DB) http.Handler {
 
 	// Feature modules — all on Postgres/DDD, sharing identity's auth middleware.
 	profile.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus, cache, settingsReader)
+	profile.RegisterGinRoutes(r, db, identityMod.AuthMiddleware, outboxBus, cache)
 	jobs.RegisterRoutes(mux, db, identityMod.AuthMiddleware, identityMod.RoleMiddleware(identitydomain.RoleRecruiter), outboxBus, cache)
 	referrals.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)
 	resume.RegisterRoutes(mux, db, identityMod.AuthMiddleware, outboxBus)

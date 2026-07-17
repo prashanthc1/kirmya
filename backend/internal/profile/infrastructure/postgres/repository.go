@@ -58,7 +58,7 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 	var availability sql.NullTime
 	var lastActive time.Time
 	var consentAt sql.NullTime
-	var transReasonEnc, salMinEnc, salMaxEnc, salCurrEnc string
+	var transReasonEnc, salMinEnc, salMaxEnc, salCurrEnc, emailEnc, phoneEnc, addressEnc string
 	var visProfile, visSalary, visTransReason, visExp, visEdu, visCert, visSkills, visPortfolio, visRef string
 
 	err := r.db.QueryRowContext(ctx, `
@@ -84,7 +84,8 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 		       COALESCE(p.bio_optimized, ''), COALESCE(p.executive_summary, ''), COALESCE(p.career_objectives, ''),
 		       COALESCE(p.personal_brand_statement, ''), COALESCE(p.elevator_pitch, ''),
 		       p.email_verified, p.employment_verified, p.education_verified, p.certification_verified,
-		       COALESCE(p.travel_willingness, '')
+		       COALESCE(p.travel_willingness, ''),
+		       COALESCE(p.email_enc, ''), COALESCE(p.phone_enc, ''), COALESCE(p.address_enc, '')
 		FROM profiles p
 		WHERE p.user_id = $1 AND p.deleted_at IS NULL`, userID).Scan(
 		&p.Identity.Headline, &p.Identity.Bio, &p.Identity.PhotoURL,
@@ -110,6 +111,7 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 		&p.Summary.PersonalBrandStatement, &p.Summary.ElevatorPitch,
 		&p.Verification.EmailVerified, &p.Verification.EmploymentVerified, &p.Verification.EducationVerified, &p.Verification.CertificationVerified,
 		&p.Preferences.TravelWillingness,
+		&emailEnc, &phoneEnc, &addressEnc,
 	)
 	if err != nil {
 		return nil, err
@@ -133,6 +135,15 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 	// Decrypt sensitive fields
 	if transReasonEnc != "" {
 		p.Identity.Bio, _ = r.crypt.Decrypt(transReasonEnc)
+	}
+	if emailEnc != "" {
+		p.Identity.Email, _ = r.crypt.Decrypt(emailEnc)
+	}
+	if phoneEnc != "" {
+		p.Identity.Phone, _ = r.crypt.Decrypt(phoneEnc)
+	}
+	if addressEnc != "" {
+		p.Identity.Address, _ = r.crypt.Decrypt(addressEnc)
 	}
 	if salCurrEnc != "" {
 		p.Preferences.SalaryCurrency, _ = r.crypt.Decrypt(salCurrEnc)

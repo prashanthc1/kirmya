@@ -23,7 +23,7 @@ import {
 import { motion } from "framer-motion";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
-import { profileClient, Profile } from "@/lib/api/profile";
+import { profileClient, Profile, PublicProfileResponse } from "@/lib/api/profile";
 import { networkClient, ConnectionStatusResponse } from "@/lib/api/network";
 import { ApiError } from "@/lib/api/client";
 import { useConnectionStatus } from "@/hooks/useConnections";
@@ -35,7 +35,7 @@ export default function OtherProfilePage() {
   const router = useRouter();
   const id = params.id as string;
 
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<PublicProfileResponse | null>(null);
   const [currentUserID, setCurrentUserID] = useState<string | null>(null);
   const { data: connectionStatus } = useConnectionStatus(id);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,7 @@ export default function OtherProfilePage() {
           return;
         }
 
-        const data = await profileClient.getByID(id);
+        const data = await profileClient.getPublicProfile(id);
         if (active) setProfile(data);
       } catch (err) {
         if (active) {
@@ -226,7 +226,7 @@ export default function OtherProfilePage() {
                               : "border-border bg-card"
                           }`}
                         />
-                        {index < profile.experiences.length - 1 && (
+                        {index < (profile.experiences?.length || 0) - 1 && (
                           <div className="w-[1px] bg-border/80 flex-grow my-1" />
                         )}
                       </div>
@@ -314,6 +314,36 @@ export default function OtherProfilePage() {
                       </span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Contact details card (connections only) */}
+            {profile.is_connection && (profile.email || profile.phone || profile.address) && (
+              <div className="bg-card border border-border/80 p-6 rounded-3xl shadow-sm space-y-4">
+                <h3 className="text-sm font-bold flex items-center gap-1.5 text-primary">
+                  <Mail className="h-4.5 w-4.5" />
+                  Contact Information (Connected)
+                </h3>
+                <div className="space-y-2 text-xs">
+                  {profile.email && (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Email</span>
+                      <a href={`mailto:${profile.email}`} className="text-primary hover:underline">{profile.email}</a>
+                    </div>
+                  )}
+                  {profile.phone && (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Phone</span>
+                      <span className="text-foreground">{profile.phone}</span>
+                    </div>
+                  )}
+                  {profile.address && (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Address</span>
+                      <span className="text-foreground">{profile.address}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -71,6 +71,9 @@ export interface Profile {
   preferred_contact_channel: "email" | "whatsapp" | "in_app" | "";
   accessibility_needs?: string;
   video_intro_url: string;
+  email?: string;
+  phone?: string;
+  address?: string;
 
   // Mentorship
   willing_to_mentor: boolean;
@@ -194,10 +197,23 @@ export interface ConsentLog {
   created_at?: string;
 }
 
+export interface PublicProfileResponse extends Partial<Profile> {
+  user_id: string;
+  is_connection: boolean;
+  viewer_can_message: boolean;
+}
+
 // API functions
 export const profileClient = {
-  getMe: () => api.get<Profile>("/profiles/me"),
+  getMe: () => api.get<Profile>("/api/profile/me"),
 
+  getPublicProfile: (userId: string) =>
+    api.get<PublicProfileResponse>(`/api/profile/public/${userId}`),
+
+  patchSection: (section: string, data: any) =>
+    api.patch<Profile>(`/api/profile/me/${section}`, data),
+
+  // Legacy fallback compatibility
   updateMe: (data: Partial<Profile>) => api.put<Profile>("/profiles/me", data),
 
   getByID: (id: string) => api.get<Profile>(`/profiles/${id}`),
