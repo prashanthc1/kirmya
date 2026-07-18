@@ -55,7 +55,7 @@ export const MOCK_PROFILE: ExtendedProfile = {
   linkedin_verified: true,
   id_verified: true,
   email: "marcus.hale@kirmya.net",
-  phone: "+1 (303) 555-0148",
+  phone: "+13035550148",
 
   // AI Coach & Narrative
   career_narrative:

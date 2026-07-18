@@ -588,6 +588,11 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                               My Resume
                             </MenuItemLink>
 
+                            <MenuItemLink href="/referrals" role="menuitem" onClick={() => setProfileMenuOpen(false)}>
+                              <CornerDownLeft style={{ height: "14px", width: "14px" }} />
+                              Referrals
+                            </MenuItemLink>
+
                             <MenuItemLink href="/jobs/saved" role="menuitem" onClick={() => setProfileMenuOpen(false)}>
                               <Briefcase style={{ height: "14px", width: "14px" }} />
                               Saved Jobs
