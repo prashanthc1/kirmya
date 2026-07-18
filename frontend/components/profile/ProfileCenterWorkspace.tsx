@@ -48,6 +48,93 @@ interface ProfileCenterWorkspaceProps {
   onUpdateField: (updatedFields: Partial<ExtendedProfile>) => void;
 }
 
+// Common dial codes; the value is stored as a full E.164 string (+<cc><number>).
+const DIAL_CODES: [string, string][] = [
+  ["+1", "US/CA"],
+  ["+44", "UK"],
+  ["+91", "IN"],
+  ["+61", "AU"],
+  ["+49", "DE"],
+  ["+33", "FR"],
+  ["+81", "JP"],
+  ["+86", "CN"],
+  ["+971", "AE"],
+  ["+65", "SG"],
+  ["+27", "ZA"],
+  ["+55", "BR"],
+  ["+7", "RU"],
+  ["+34", "ES"],
+  ["+39", "IT"],
+];
+
+// E.164: leading '+', country digit 1-9, then up to 14 more digits.
+export const isValidE164 = (v: string) => /^\+[1-9]\d{7,14}$/.test(v);
+
+function PhoneField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const dial =
+    DIAL_CODES.find(([d]) => value.startsWith(d))?.[0] || "+1";
+  const national = (value.startsWith(dial)
+    ? value.slice(dial.length)
+    : value.replace(/^\+/, "")
+  ).replace(/\D/g, "");
+  const valid = isValidE164(value);
+  const compose = (d: string, n: string) => onChange(d + n.replace(/\D/g, ""));
+
+  return (
+    <div>
+      <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+        Phone (International)
+      </label>
+      <div className="flex gap-2">
+        <select
+          value={dial}
+          onChange={(e) => compose(e.target.value, national)}
+          className="bg-secondary/40 border border-border focus:border-primary rounded-xl px-2 py-2 outline-none shrink-0"
+        >
+          {DIAL_CODES.map(([d, label]) => (
+            <option key={d} value={d}>
+              {d} {label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="tel"
+          inputMode="numeric"
+          value={national}
+          placeholder="9876543210"
+          onChange={(e) => compose(dial, e.target.value)}
+          className={`w-full bg-secondary/40 border rounded-xl px-3.5 py-2 outline-none ${
+            value && !valid
+              ? "border-destructive focus:border-destructive"
+              : "border-border focus:border-primary"
+          }`}
+        />
+      </div>
+      <p
+        className={`mt-1 text-[10px] font-semibold ${
+          !value
+            ? "text-muted-foreground/60"
+            : valid
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-destructive"
+        }`}
+      >
+        {!value
+          ? "Select country code and enter your number"
+          : valid
+            ? `✓ Valid — stored as ${value}`
+            : "Enter a valid international number (7–15 digits)"}
+      </p>
+    </div>
+  );
+}
+
 export default function ProfileCenterWorkspace({
   profile,
   activeSectionId,
@@ -165,13 +252,9 @@ export default function ProfileCenterWorkspace({
                       </label>
                       <input
                         type="text"
-                        value={
-                          profile.headline
-                            ? profile.headline.split(" · ")[0]
-                            : ""
-                        }
+                        value={profile.full_name || ""}
                         onChange={(e) =>
-                          handleInputChange("preferred_name", e.target.value)
+                          handleInputChange("full_name", e.target.value)
                         }
                         className="w-full bg-secondary/40 border border-border focus:border-primary rounded-xl px-3.5 py-2 outline-none"
                       />
@@ -228,19 +311,10 @@ export default function ProfileCenterWorkspace({
                         className="w-full bg-secondary/40 border border-border focus:border-primary rounded-xl px-3.5 py-2 outline-none"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
-                        Phone
-                      </label>
-                      <input
-                        type="text"
-                        value={profile.phone || ""}
-                        onChange={(e) =>
-                          handleInputChange("phone", e.target.value)
-                        }
-                        className="w-full bg-secondary/40 border border-border focus:border-primary rounded-xl px-3.5 py-2 outline-none"
-                      />
-                    </div>
+                    <PhoneField
+                      value={profile.phone || ""}
+                      onChange={(v) => handleInputChange("phone", v)}
+                    />
                     <div>
                       <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
                         Email
@@ -890,8 +964,42 @@ export default function ProfileCenterWorkspace({
                             />
                           </div>
                         </div>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => {
+                              const updated = profile.educations.filter(
+                                (_, idx) => idx !== i,
+                              );
+                              handleInputChange("educations", updated);
+                            }}
+                            className="text-destructive hover:underline font-bold"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
                     ))}
+                    <button
+                      onClick={() => {
+                        const newEdu: Education & { id: string } = {
+                          id: "edu_new_" + Date.now(),
+                          school: "New Institution",
+                          degree: "Degree",
+                          field_of_study: "Field of Study",
+                          start_date: "2019-09",
+                          end_date: "2023-06",
+                          grade: "",
+                          description: "",
+                        };
+                        handleInputChange("educations", [
+                          ...profile.educations,
+                          newEdu,
+                        ]);
+                      }}
+                      className="w-full border border-dashed border-border hover:border-primary text-primary font-bold py-2.5 rounded-xl flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" /> Add Education
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-6 text-xs">

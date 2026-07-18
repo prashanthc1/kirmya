@@ -49,13 +49,15 @@ func (r *Repository) UpdateAggregate(ctx context.Context, userID string, expecte
 				    headline = $5, bio = $6, photo_url = $7, cover_url = $8,
 				    work_auth_status = $9, passport_nationality = $10,
 				    preferred_contact_channel = $11, video_intro_url = $12,
-				    location = $13, email_enc = $14, phone_enc = $15, address_enc = $16
+				    location = $13, email_enc = $14, phone_enc = $15, address_enc = $16,
+				    full_name = $17, about = $18, pronouns = $19, career_status = $20
 				WHERE user_id = $1`,
 				userID, id.PreferredName, id.TimeZone, id.Nationality,
 				id.Headline, id.Bio, id.PhotoURL, id.CoverURL,
 				id.WorkAuthorization, id.Nationality,
 				id.PreferredContactChannel, id.CoverURL, id.Location,
-				emailEnc, phoneEnc, addressEnc)
+				emailEnc, phoneEnc, addressEnc,
+				id.FullName, id.About, id.Pronouns, id.CareerStatus)
 			if err != nil {
 				return err
 			}
@@ -468,25 +470,22 @@ func updateCertificationQ(ctx context.Context, q querier, userID string, c domai
 }
 
 func insertProjectQ(ctx context.Context, q querier, userID string, p *domain.ProjectItem) error {
-	screens, _ := json.Marshal(p.Images)
-	techs, _ := json.Marshal(p.Technologies)
-
+	// screenshots/technologies are Postgres text[] columns; pass the []string
+	// slices directly (like work_experiences) rather than JSON-marshalling them,
+	// which produced malformed array literals.
 	return q.QueryRowContext(ctx, `
 		INSERT INTO profile_projects (user_id, title, description, repository_url, live_demo_url, video_url, screenshots, technologies, timeline, team_size, metrics, awards, business_impact)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
 		RETURNING id`,
-		userID, p.Title, p.Description, p.RepositoryURL, p.LiveDemoURL, p.VideoURL, screens, techs, p.Timeline, len(p.TeamMembers), p.Metrics, p.Awards, p.BusinessImpact).Scan(&p.ID)
+		userID, p.Title, p.Description, p.RepositoryURL, p.LiveDemoURL, p.VideoURL, p.Images, p.Technologies, p.Timeline, len(p.TeamMembers), p.Metrics, p.Awards, p.BusinessImpact).Scan(&p.ID)
 }
 
 func updateProjectQ(ctx context.Context, q querier, userID string, p domain.ProjectItem) error {
-	screens, _ := json.Marshal(p.Images)
-	techs, _ := json.Marshal(p.Technologies)
-
 	res, err := q.ExecContext(ctx, `
 		UPDATE profile_projects
 		SET title=$3, description=$4, repository_url=$5, live_demo_url=$6, video_url=$7, screenshots=$8, technologies=$9, timeline=$10, team_size=$11, metrics=$12, awards=$13, business_impact=$14, updated_at=now()
 		WHERE id=$1 AND user_id=$2`,
-		p.ID, userID, p.Title, p.Description, p.RepositoryURL, p.LiveDemoURL, p.VideoURL, screens, techs, p.Timeline, len(p.TeamMembers), p.Metrics, p.Awards, p.BusinessImpact)
+		p.ID, userID, p.Title, p.Description, p.RepositoryURL, p.LiveDemoURL, p.VideoURL, p.Images, p.Technologies, p.Timeline, len(p.TeamMembers), p.Metrics, p.Awards, p.BusinessImpact)
 	return owned(res, err)
 }
 

@@ -99,6 +99,7 @@ export interface ProfileAnalytics {
 
 export interface ExtendedProfile extends BaseProfile {
   // Section 1: Additional Identity fields
+  full_name?: string;
   preferred_name?: string;
   cover_banner?: string;
   nationality?: string;

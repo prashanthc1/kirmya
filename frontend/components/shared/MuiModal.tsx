@@ -55,10 +55,10 @@ export default function MuiModal({
         elevation: 0,
         sx: {
           borderRadius: 4,
-          border: "1px solid rgba(43, 38, 32, 0.08)",
-          boxShadow: "0 24px 64px -12px rgba(43, 38, 32, 0.16)",
+          border: "1px solid var(--border)",
+          boxShadow: "0 24px 64px -12px rgba(0, 0, 0, 0.16)",
           padding: 1.5,
-          background: "#FFFFFF",
+          background: "var(--card)",
         },
       }}
     >
@@ -75,6 +75,7 @@ export default function MuiModal({
       >
         <Typography
           variant="h5"
+          component="span"
           sx={{
             fontFamily: "var(--font-public-sans), sans-serif",
             fontWeight: 800,

@@ -53,6 +53,9 @@ type IdentitySection struct {
 	CurrentTitle            string         `json:"current_title"`
 	CurrentEmployer         string         `json:"current_employer"`
 	Bio                     string         `json:"bio"`
+	About                   string         `json:"about"`
+	Pronouns                string         `json:"pronouns"`
+	CareerStatus            string         `json:"career_status"`
 	Location                string         `json:"location"`
 	Country                 string         `json:"country"`
 	TimeZone                string         `json:"timezone"`

@@ -26,6 +26,32 @@ A modular-monolith Go platform for connecting job seekers, recruiters, founders,
 4. View the API contract at `http://localhost:8080/openapi.yaml`.
 5. Open the Swagger UI at `http://localhost:8080/swagger-ui/`.
 
+## Local Development (Hot Reload)
+
+We use [Air](https://github.com/air-verse/air) for hot-reloading the Go backend server on save.
+
+### Installation
+Install Air globally on your system (dev dependency only, not in `go.mod`):
+```bash
+go install github.com/air-verse/air@latest
+```
+
+### Running with Hot Reload
+- To run the **full stack** (backend with hot-reload + Next.js frontend) from the workspace root:
+  ```bash
+  make dev
+  ```
+- To run the **backend only** with hot-reload from the workspace root:
+  ```bash
+  make backend-dev
+  ```
+- Or run `air` directly from the `backend/` directory:
+  ```bash
+  cd backend && air
+  ```
+
+Build errors during local development are reported directly in the terminal; the active server process is kept alive (`stop_on_error = true`) so your development environment is not interrupted.
+
 ## Notes
 
 This repository is designed as a modular monolith with microservice-ready principles:

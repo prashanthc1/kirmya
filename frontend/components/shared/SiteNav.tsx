@@ -46,10 +46,6 @@ const PRIMARY_LINKS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Jobs", href: "/jobs", icon: Briefcase },
   { label: "Network", href: "/network", icon: Users },
-  { label: "Communities", href: "/communities", icon: Users },
-  { label: "Mentorship", href: "/mentorship", icon: GraduationCap },
-  { label: "Referrals", href: "/referrals", icon: Compass },
-  { label: "Resume Builder", href: "/resume", icon: FileText },
   { label: "AI Coach", href: "/ai-coach", icon: Sparkles },
 ];
 
@@ -87,7 +83,7 @@ const FlexBetween = styled("div")({
   display: "flex",
   height: "100%",
   alignItems: "center",
-  justifyContent: "between",
+  justifyContent: "space-between",
   gap: "16px",
 });
 
@@ -524,17 +520,6 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
                     <MessageSquare style={{ height: "16px", width: "16px" }} />
                   </ActionButton>
 
-                  {/* AI Coach */}
-                  <ActionButton
-                    onClick={() => router.push("/ai-coach")}
-                    style={{
-                      backgroundColor: pathname.startsWith("/ai-coach") || pathname.startsWith("/coach") ? "rgba(128, 128, 128, 0.12)" : "transparent"
-                    }}
-                    title="AI Coach"
-                  >
-                    <Sparkles style={{ height: "16px", width: "16px", color: "#F59E0B" }} />
-                  </ActionButton>
-
                   {/* Profile Menu Trigger */}
                   <div style={{ position: "relative" }}>
                     <button
@@ -738,32 +723,7 @@ export default function SiteNav({ breadcrumb }: SiteNavProps) {
         </Container>
       </Header>
 
-      {/* Breadcrumb bar */}
-      {breadcrumb && breadcrumb.length > 0 && (
-        <BreadcrumbBar>
-          <div style={{ marginLeft: "auto", marginRight: "auto", maxWidth: "1280px" }}>
-            <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--mui-palette-text-secondary)" }}>
-              {breadcrumb.map((item, idx) => {
-                const isLast = idx === breadcrumb.length - 1;
-                return (
-                  <React.Fragment key={idx}>
-                    {idx > 0 && <ChevronRight style={{ height: "12px", width: "12px", opacity: 0.45 }} />}
-                    {item.href ? (
-                      <Link href={item.href} style={{ textDecoration: "none", color: "inherit", fontWeight: 500 }} className="breadcrumb-link">
-                        {item.label}
-                      </Link>
-                    ) : (
-                      <span style={{ color: "var(--mui-palette-text-primary)", fontWeight: 600 }} {...(isLast ? { "aria-current": "page" } : {})}>
-                        {item.label}
-                      </span>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </nav>
-          </div>
-        </BreadcrumbBar>
-      )}
+
 
       {/* MOBILE EXPANDED MENU DRAWER */}
       <AnimatePresence>

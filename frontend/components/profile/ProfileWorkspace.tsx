@@ -44,16 +44,6 @@ export default function ProfileWorkspace() {
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
-          // Calculate completeness score
-          const filledFields = Object.keys(dataToSave).filter(
-            (k) => !!(dataToSave as unknown as Record<string, unknown>)[k],
-          ).length;
-          const totalFields = 20; // estimate
-          dataToSave.profile_completeness_score = Math.min(
-            98,
-            Math.round((filledFields / totalFields) * 100),
-          );
-
           // Save locally
           localStorage.setItem(
             "kirmya_profile_data",
@@ -67,12 +57,25 @@ export default function ProfileWorkspace() {
             // the next autosave passes the optimistic-concurrency check.
             if (saved && typeof saved.version === "number") {
               dataToSave.version = saved.version;
+              // Backend recomputes the readiness score from the persisted
+              // aggregate; mirror it so the UI shows the real value.
+              if (typeof saved.profile_completeness_score === "number") {
+                dataToSave.profile_completeness_score =
+                  saved.profile_completeness_score;
+              }
               localStorage.setItem(
                 "kirmya_profile_data",
                 JSON.stringify(dataToSave),
               );
               setProfile((prev) =>
-                prev ? { ...prev, version: saved.version } : prev,
+                prev
+                  ? {
+                      ...prev,
+                      version: saved.version,
+                      profile_completeness_score:
+                        saved.profile_completeness_score,
+                    }
+                  : prev,
               );
             }
           }

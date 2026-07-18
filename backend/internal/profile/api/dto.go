@@ -10,6 +10,7 @@ import (
 
 type profileResponse struct {
 	UserID   string `json:"user_id"`
+	FullName string `json:"full_name"`
 	Headline string `json:"headline"`
 	About    string `json:"about"`
 	PhotoURL string `json:"photo_url"`
@@ -176,6 +177,7 @@ type referenceDTO struct {
 
 // Request DTOs
 type updateProfileRequest struct {
+	FullName string `json:"full_name"`
 	Headline string `json:"headline"`
 	About    string `json:"about"`
 	PhotoURL string `json:"photo_url"`
@@ -235,6 +237,20 @@ type updateProfileRequest struct {
 	VisibilitySkills           string `json:"visibility_skills"`
 	VisibilityPortfolio        string `json:"visibility_portfolio"`
 	VisibilityReferences       string `json:"visibility_references"`
+
+	// Contact + collections. Nil (JSON key absent) leaves the section untouched;
+	// a present array (even empty) replaces it. The editor autosave sends the
+	// whole profile, so these carry every section the older subset silently dropped.
+	Email   *string `json:"email"`
+	Phone   *string `json:"phone"`
+	Address *string `json:"address"`
+
+	Experiences    []experienceDTO    `json:"experiences"`
+	Educations     []educationDTO     `json:"educations"`
+	Certifications []certificationDTO `json:"certifications"`
+	Skills         []skillDTO         `json:"skills"`
+	Languages      []languageDTO      `json:"languages"`
+	Portfolio      []portfolioLinkDTO `json:"portfolio"`
 }
 
 type skillsRequest struct {
@@ -253,10 +269,10 @@ type portfolioRequest struct {
 
 func toResponse(p *domain.Profile) profileResponse {
 	r := profileResponse{
-		UserID: p.UserID, Headline: p.Identity.Headline, About: p.Identity.Bio, PhotoURL: p.Identity.PhotoURL,
+		UserID: p.UserID, FullName: p.Identity.FullName, Headline: p.Identity.Headline, About: p.Identity.About, PhotoURL: p.Identity.PhotoURL,
 		Bio: p.Identity.Bio, Location: p.Identity.Location, Website: p.Identity.SocialLinks.Website, Version: p.Version,
-		Pronouns: p.Identity.VisaStatus, CareerStatus: p.Identity.Availability,
-		TransitionReason: p.Identity.Bio, TargetComebackTimeline: p.Identity.Availability,
+		Pronouns: p.Identity.Pronouns, CareerStatus: p.Identity.CareerStatus,
+		TransitionReason: "", TargetComebackTimeline: p.Identity.Availability,
 		SupportsNeeded: []string{}, OpenToRemote: p.Preferences.OpenToRelocation, OpenToRelocation: p.Preferences.OpenToRelocation,
 		RelocationLocations: []string{}, DesiredRoles: p.Preferences.DesiredRoles, DesiredIndustries: p.Preferences.DesiredIndustries,
 		EmploymentType: p.Preferences.NoticePeriod, SalaryMin: p.Preferences.SalaryMin, SalaryMax: p.Preferences.SalaryMax,
@@ -383,14 +399,21 @@ func (d consentDTO) toDomain() domain.ConsentLog {
 	}
 }
 
+// parseFlexDate accepts the date formats the profile editor emits: full
+// YYYY-MM-DD, month-only YYYY-MM, and year-only YYYY. Returns the zero time for
+// unparseable/sentinel values (e.g. "Present").
+func parseFlexDate(s string) time.Time {
+	for _, layout := range []string{"2006-01-02", "2006-01", "2006"} {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t
+		}
+	}
+	return time.Time{}
+}
+
 func (d experienceDTO) toDomain() domain.WorkExperience {
-	var start, end time.Time
-	if d.StartDate != "" {
-		start, _ = time.Parse("2006-01-02", d.StartDate)
-	}
-	if d.EndDate != "" {
-		end, _ = time.Parse("2006-01-02", d.EndDate)
-	}
+	start := parseFlexDate(d.StartDate)
+	end := parseFlexDate(d.EndDate)
 	return domain.WorkExperience{
 		ID:               d.ID,
 		Position:         d.Title,
@@ -406,10 +429,7 @@ func (d experienceDTO) toDomain() domain.WorkExperience {
 }
 
 func (d educationDTO) toDomain() domain.Education {
-	var grad time.Time
-	if d.EndDate != "" {
-		grad, _ = time.Parse("2006-01-02", d.EndDate)
-	}
+	grad := parseFlexDate(d.EndDate)
 	gpaVal, _ := strconv.ParseFloat(d.Grade, 64)
 	return domain.Education{
 		ID:                 d.ID,
@@ -424,13 +444,8 @@ func (d educationDTO) toDomain() domain.Education {
 }
 
 func (d certificationDTO) toDomain() domain.CertificationItem {
-	var issue, expiry time.Time
-	if d.IssueDate != "" {
-		issue, _ = time.Parse("2006-01-02", d.IssueDate)
-	}
-	if d.ExpiryDate != "" {
-		expiry, _ = time.Parse("2006-01-02", d.ExpiryDate)
-	}
+	issue := parseFlexDate(d.IssueDate)
+	expiry := parseFlexDate(d.ExpiryDate)
 	return domain.CertificationItem{
 		ID:              d.ID,
 		Name:            d.Name,
@@ -487,16 +502,39 @@ func (d referenceDTO) toDomain() domain.Reference {
 
 func (r updateProfileRequest) toDomain() domain.AggregateUpdate {
 	isDraft := true
-	return domain.AggregateUpdate{
-		Identity: &domain.IdentitySection{
-			Headline:                r.Headline,
-			Bio:                     r.Bio,
-			PhotoURL:                r.PhotoURL,
-			Location:                r.Location,
-			PreferredContactChannel: r.PreferredContactChannel,
-			WorkAuthorization:       r.WorkAuthStatus,
-			Nationality:             r.PassportNationality,
-		},
+	identity := &domain.IdentitySection{
+		FullName:                r.FullName,
+		Headline:                r.Headline,
+		About:                   r.About,
+		Bio:                     r.Bio,
+		Pronouns:                r.Pronouns,
+		CareerStatus:            r.CareerStatus,
+		PhotoURL:                r.PhotoURL,
+		CoverURL:                r.VideoIntroURL,
+		Location:                r.Location,
+		PreferredContactChannel: r.PreferredContactChannel,
+		WorkAuthorization:       r.WorkAuthStatus,
+		Nationality:             r.PassportNationality,
+	}
+	if r.Email != nil {
+		identity.Email = *r.Email
+	}
+	if r.Phone != nil {
+		identity.Phone = *r.Phone
+	}
+	if r.Address != nil {
+		identity.Address = *r.Address
+	}
+	if r.Languages != nil {
+		langs := make([]domain.LanguageItem, 0, len(r.Languages))
+		for _, l := range r.Languages {
+			langs = append(langs, l.toDomain())
+		}
+		identity.Languages = langs
+	}
+
+	upd := domain.AggregateUpdate{
+		Identity: identity,
 		Summary: &domain.SummarySection{
 			ExecutiveSummary: r.About,
 		},
@@ -525,4 +563,43 @@ func (r updateProfileRequest) toDomain() domain.AggregateUpdate {
 		},
 		IsDraft: &isDraft,
 	}
+
+	// Collections: only replace a section the client actually sent (non-nil).
+	if r.Experiences != nil {
+		exps := make([]domain.WorkExperience, 0, len(r.Experiences))
+		for _, e := range r.Experiences {
+			exps = append(exps, e.toDomain())
+		}
+		upd.Experiences = &exps
+	}
+	if r.Educations != nil {
+		edus := make([]domain.Education, 0, len(r.Educations))
+		for _, e := range r.Educations {
+			edus = append(edus, e.toDomain())
+		}
+		upd.Educations = &edus
+	}
+	if r.Certifications != nil {
+		certs := make([]domain.CertificationItem, 0, len(r.Certifications))
+		for _, c := range r.Certifications {
+			certs = append(certs, c.toDomain())
+		}
+		upd.Certifications = &certs
+	}
+	if r.Skills != nil {
+		skills := make([]domain.SkillItem, 0, len(r.Skills))
+		for _, s := range r.Skills {
+			skills = append(skills, s.toDomain())
+		}
+		upd.Skills = &skills
+	}
+	if r.Portfolio != nil {
+		projs := make([]domain.ProjectItem, 0, len(r.Portfolio))
+		for _, p := range r.Portfolio {
+			projs = append(projs, p.toDomain())
+		}
+		upd.Projects = &projs
+	}
+
+	return upd
 }

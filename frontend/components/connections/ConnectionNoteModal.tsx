@@ -33,7 +33,7 @@ export default function ConnectionNoteModal({
       maxWidth="xs"
     >
       <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Adding a note about why you want to connect makes it more likely they accept.
         </p>
 
@@ -44,11 +44,11 @@ export default function ConnectionNoteModal({
             placeholder="Type your message here..."
             rows={4}
             disabled={isSubmitting}
-            className="w-full p-3 text-sm rounded-xl bg-gray-900/60 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none transition-colors"
+            className="w-full p-3 text-sm rounded-xl bg-secondary/15 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none transition-colors"
           />
           <div
             className={`absolute bottom-2 right-3 text-xs ${
-              note.length >= 280 ? "text-orange-500 font-bold" : "text-gray-500"
+              note.length >= 280 ? "text-destructive font-bold" : "text-muted-foreground/80"
             }`}
           >
             {note.length} / 300
@@ -60,14 +60,14 @@ export default function ConnectionNoteModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm rounded-xl font-medium border border-white/10 hover:bg-white/5 transition-colors cursor-pointer text-gray-300"
+            className="px-4 py-2 text-sm rounded-xl font-medium border border-border hover:bg-secondary/40 transition-colors cursor-pointer text-foreground"
           >
             Skip & Send
           </button>
           <button
             type="submit"
             disabled={isSubmitting || note.length > 300}
-            className="px-5 py-2 text-sm rounded-xl font-medium bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 transition-colors text-white disabled:opacity-50 cursor-pointer shadow-lg shadow-orange-500/10"
+            className="px-5 py-2 text-sm rounded-xl font-medium bg-primary hover:bg-primary/95 transition-colors text-primary-foreground disabled:opacity-50 cursor-pointer shadow-sm"
           >
             {isSubmitting ? "Sending..." : "Send Note"}
           </button>

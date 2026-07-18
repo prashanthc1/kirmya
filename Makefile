@@ -117,13 +117,13 @@ dev:
 	@echo "$(YELLOW)Frontend: http://localhost:3000$(NC)"
 	@echo "$(YELLOW)Press Ctrl+C to stop$(NC)"
 	@bash -c 'trap "trap - TERM; kill 0" TERM; \
-		(cd backend && go run ./cmd/workspace-app/main.go) & \
+		(cd backend && air) & \
 		(cd frontend && npm run dev) & \
 		wait'
 
 dev-bg:
 	@echo "$(BLUE)Starting backend and frontend in background...$(NC)"
-	@cd backend && go run ./cmd/workspace-app/main.go > logs/backend.log 2>&1 &
+	@cd backend && air > logs/backend.log 2>&1 &
 	@cd frontend && npm run dev > logs/frontend.log 2>&1 &
 	@echo "$(GREEN)✓ Services started in background$(NC)"
 	@echo "$(YELLOW)View logs: make logs$(NC)"
@@ -137,7 +137,7 @@ backend-run:
 
 backend-dev:
 	@echo "$(BLUE)Starting backend with watch mode...$(NC)"
-	@cd backend && make run-dev
+	@cd backend && air
 
 frontend-run:
 	@echo "$(BLUE)Starting frontend dev server...$(NC)"

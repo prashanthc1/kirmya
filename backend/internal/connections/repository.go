@@ -313,7 +313,7 @@ func (r *Repository) GetConnections(ctx context.Context, userID string, page, li
 	}
 	defer rows.Close()
 
-	var conns []Connection
+	conns := []Connection{}
 	for rows.Next() {
 		var conn Connection
 		var note sql.NullString
@@ -377,7 +377,7 @@ func (r *Repository) GetPendingRequests(ctx context.Context, userID string, dire
 	}
 	defer rows.Close()
 
-	var conns []Connection
+	conns := []Connection{}
 	for rows.Next() {
 		var conn Connection
 		var note sql.NullString
@@ -458,7 +458,7 @@ func (r *Repository) GetMutualConnections(ctx context.Context, userA, userB stri
 	}
 	defer rows.Close()
 
-	var summaries []PublicProfileSummary
+	summaries := []PublicProfileSummary{}
 	for rows.Next() {
 		var s PublicProfileSummary
 		if err := rows.Scan(&s.ID, &s.Name, &s.Headline, &s.AvatarURL); err != nil {
@@ -528,7 +528,7 @@ func (r *Repository) GetSuggestions(ctx context.Context, userID string, limit in
 	}
 	defer rows.Close()
 
-	var suggestions []Suggestion
+	suggestions := []Suggestion{}
 	for rows.Next() {
 		var s Suggestion
 		var sameMatch bool

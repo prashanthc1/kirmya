@@ -124,34 +124,25 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
 
   return (
     <AuthGuard>
-      <div
-        style={{
-          background: "#FBF7F2",
-          fontFamily: "'Public Sans', sans-serif",
-          color: "#2B2620",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
         <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Network Center" }]} />
 
         {/* Hero Section */}
-        <section style={{ maxWidth: "920px", margin: "0 auto", padding: "clamp(56px,7vw,100px) 40px clamp(40px,5vw,56px)", textAlign: "center" }}>
-          <div style={{ display: "inline-block", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#C2683C", background: "rgba(194,104,60,0.12)", padding: "8px 16px", borderRadius: "100px", marginBottom: "26px" }}>
+        <section className="max-w-4xl mx-auto px-6 py-12 md:py-20 text-center space-y-6">
+          <div className="inline-block text-xs font-bold tracking-widest uppercase text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-full">
             Professional Networking
           </div>
-          <h1 style={{ fontWeight: 800, fontSize: "clamp(40px,6.5vw,72px)", lineHeight: 1.02, letterSpacing: "-0.025em", margin: "0 auto 22px", maxWidth: "760px" }}>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-foreground max-w-3xl mx-auto">
             Connect with verified practitioners.
           </h1>
-          <p style={{ fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.6, color: "#5B554C", maxWidth: "600px", margin: "0 auto 34px" }}>
+          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
             Grow your professional network, share insider job openings, schedule mock interviews, and trade referrals without premium restrictions.
           </p>
         </section>
 
         {/* Navigation Tabs bar */}
-        <section style={{ maxWidth: "1240px", margin: "0 auto", width: "100%", padding: "0 40px", borderBottom: "1px solid #EFE7DC" }}>
-          <div style={{ display: "flex", gap: "24px" }}>
+        <section className="max-w-7xl mx-auto w-full px-6 border-b border-border">
+          <div className="flex gap-6 overflow-x-auto scrollbar-none">
             {[
               { id: "discover", label: `🔍 Discover People` },
               { id: "connections", label: `👥 My Connections (${connections.length})` },
@@ -160,16 +151,11 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id as any)}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  padding: "16px 8px",
-                  fontSize: "15px",
-                  fontWeight: activeTab === t.id ? 700 : 500,
-                  color: activeTab === t.id ? "#C2683C" : "#5B554C",
-                  borderBottom: activeTab === t.id ? "3px solid #C2683C" : "none",
-                  cursor: "pointer",
-                }}
+                className={`py-4 px-1 text-sm font-semibold border-b-2 cursor-pointer transition-all ${
+                  activeTab === t.id
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
               >
                 {t.label}
               </button>
@@ -178,11 +164,11 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
         </section>
 
         {/* Main Content Area */}
-        <section style={{ maxWidth: "1240px", margin: "32px auto", width: "100%", padding: "0 40px clamp(48px,6vw,72px)", flex: 1 }}>
+        <section className="max-w-7xl mx-auto w-full px-6 py-8 flex-grow">
           
           {loading ? (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "64px" }}>
-              <CircularProgress style={{ color: "#C2683C" }} />
+            <div className="flex justify-center items-center py-20">
+              <CircularProgress className="text-primary" />
             </div>
           ) : (
             <>
@@ -193,51 +179,51 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
                     <SuggestionsCarousel />
                   </div>
                   {/* Search Bar & Filters */}
-                  <form onSubmit={handleSearch} style={{ background: "#ffffff", border: "1px solid #EFE7DC", borderRadius: "20px", padding: "18px 24px", display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px", boxShadow: "0 4px 12px rgba(43, 38, 32, 0.02)" }}>
-                    <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
-                      <div style={{ flex: 1, minWidth: "260px", display: "flex", alignItems: "center", gap: "10px", border: "1px solid #E2D9CC", borderRadius: "10px", padding: "12px 14px", background: "#FCFAF7" }}>
-                        <Search size={18} color="#8A8175" />
+                  <form onSubmit={handleSearch} className="bg-card border border-border/80 rounded-3xl p-6 flex flex-col gap-4 mb-8 shadow-sm">
+                    <div className="flex gap-4 flex-wrap items-center">
+                      <div className="flex-grow min-w-[260px] flex items-center gap-3 border border-border bg-secondary/10 rounded-2xl px-4 py-2.5">
+                        <Search size={16} className="text-muted-foreground" />
                         <input
                           type="text"
                           placeholder="Search professionals by name, title, company, or skills..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          style={{ border: "none", outline: "none", background: "transparent", fontSize: "15px", color: "#2B2620", width: "100%", fontFamily: "inherit" }}
+                          className="border-none outline-none bg-transparent text-sm text-foreground w-full placeholder:text-muted-foreground"
                         />
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowFilters(!showFilters)}
-                        style={{ display: "flex", alignItems: "center", gap: "8px", border: "1px solid #E2D9CC", background: "transparent", color: "#5B554C", padding: "12px 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "14px" }}
+                        className="flex items-center gap-2 border border-border hover:bg-secondary/40 text-foreground px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition-all"
                       >
-                        <SlidersHorizontal size={16} /> Filters
+                        <SlidersHorizontal size={14} /> Filters
                       </button>
                       <button
                         type="submit"
-                        style={{ border: "none", background: "#C2683C", color: "#fff", padding: "12px 28px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "14px" }}
+                        className="border-none bg-primary hover:bg-primary/95 text-primary-foreground px-6 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition-all shadow-sm"
                       >
                         Search
                       </button>
                     </div>
 
                     {showFilters && (
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", borderTop: "1px solid #F6EFE6", paddingTop: "16px" }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-border/40 pt-4">
                         <div>
-                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#8A8175", marginBottom: "6px" }}>Location</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Location</label>
                           <input
                             type="text"
                             placeholder="e.g. San Francisco, CA"
                             value={selectedLocation}
                             onChange={(e) => setSelectedLocation(e.target.value)}
-                            style={{ width: "100%", border: "1px solid #E2D9CC", borderRadius: "8px", padding: "10px", fontSize: "14px", background: "#FCFAF7", outline: "none" }}
+                            className="w-full border border-border rounded-xl px-3 py-2 text-sm bg-secondary/15 text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
                           />
                         </div>
                         <div>
-                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#8A8175", marginBottom: "6px" }}>Category</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Category</label>
                           <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
-                            style={{ width: "100%", border: "1px solid #E2D9CC", borderRadius: "8px", padding: "10px", fontSize: "14px", background: "#FCFAF7", outline: "none" }}
+                            className="w-full border border-border rounded-xl px-3 py-2 text-sm bg-secondary/15 text-foreground outline-none focus:ring-1 focus:ring-primary"
                           >
                             <option value="">All Categories</option>
                             <option value="tech">Technology</option>
@@ -246,11 +232,11 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
                           </select>
                         </div>
                         <div>
-                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#8A8175", marginBottom: "6px" }}>Sort By</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Sort By</label>
                           <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            style={{ width: "100%", border: "1px solid #E2D9CC", borderRadius: "8px", padding: "10px", fontSize: "14px", background: "#FCFAF7", outline: "none" }}
+                            className="w-full border border-border rounded-xl px-3 py-2 text-sm bg-secondary/15 text-foreground outline-none focus:ring-1 focus:ring-primary"
                           >
                             <option value="relevance">Relevance</option>
                             <option value="connections">Most Connected</option>
@@ -262,36 +248,28 @@ export default function NetworkPage({ initialTab }: { initialTab?: "discover" | 
                   </form>
 
                   {/* Grid layout for discovery */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "24px" }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {professionals.map((prof) => (
                       <div
                         key={prof.id}
-                        style={{
-                          background: "#ffffff",
-                          border: "1px solid #EFE7DC",
-                          borderRadius: "20px",
-                          padding: "24px",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "space-between",
-                          gap: "18px",
-                          boxShadow: "0 4px 12px rgba(43, 38, 32, 0.03)",
-                        }}
+                        className="bg-card border border-border/80 rounded-3xl p-6 flex flex-col justify-between gap-4 shadow-sm hover:border-border transition-all"
                       >
                         <div>
-                          <div style={{ display: "flex", gap: "14px", alignItems: "center", marginBottom: "12px" }}>
-                            <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#4F7C6A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700 }}>
+                          <div className="flex gap-4 items-center mb-2">
+                            <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-base select-none uppercase">
                               {prof.full_name.charAt(0)}
                             </div>
-                            <div>
-                              <h3 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "#2B2620" }}>{prof.full_name}</h3>
-                              <p style={{ fontSize: "13px", color: "#8A8175", margin: 0 }}>{prof.headline}</p>
+                            <div className="min-w-0">
+                              <h3 className="text-sm font-bold text-foreground truncate">{prof.full_name}</h3>
+                              <p className="text-xs text-muted-foreground truncate">{prof.headline}</p>
                             </div>
                           </div>
-                          <div style={{ fontSize: "13px", color: "#5B554C" }}>📍 {prof.location}</div>
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span>📍 {prof.location}</span>
+                          </div>
                         </div>
 
-                        <div style={{ borderTop: "1px solid #F6EFE6", paddingTop: "14px", display: "flex", gap: "10px", justifyContent: "flex-end", alignItems: "center" }}>
+                        <div className="border-t border-border/40 pt-4 flex gap-2 justify-end items-center">
                           <ConnectButton
                             targetUserId={prof.id}
                             targetUserName={prof.full_name}
