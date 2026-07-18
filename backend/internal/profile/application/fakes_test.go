@@ -234,3 +234,11 @@ func (r *fakeRepo) SetVerificationStatus(ctx context.Context, userID string, fie
 	}
 	return nil
 }
+
+func (r *fakeRepo) UpdateCompletenessScore(ctx context.Context, userID string, score int) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	p := r.get(userID)
+	p.ProfileCompletenessScore = score
+	return nil
+}

@@ -61,6 +61,13 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 	var transReasonEnc, salMinEnc, salMaxEnc, salCurrEnc, emailEnc, phoneEnc, addressEnc string
 	var bioOptimized string
 	var visProfile, visSalary, visTransReason, visExp, visEdu, visCert, visSkills, visPortfolio, visRef string
+	var drivingLicenseBool bool
+	var drivingLicenseType string
+	var accessibilityNeeds string
+	var jobAlertFrequency, jobAlertChannel string
+	var backgroundCheckConsent bool
+	var passportNationality string
+	var linkedinVerified bool
 
 	err := r.db.QueryRowContext(ctx, `
 		SELECT COALESCE(p.headline,''), COALESCE(p.about,''), COALESCE(p.photo_url,''),
@@ -87,26 +94,27 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 		       p.email_verified, p.employment_verified, p.education_verified, p.certification_verified,
 		       COALESCE(p.travel_willingness, ''),
 		       COALESCE(p.email_enc, ''), COALESCE(p.phone_enc, ''), COALESCE(p.address_enc, ''),
-		       COALESCE(p.full_name, '')
+		       COALESCE(p.full_name, ''), COALESCE(p.cover_url, ''), COALESCE(p.linkedin_url, ''),
+		       COALESCE(p.github_url, ''), COALESCE(p.industry, ''), p.anonymous_mode
 		FROM profiles p
 		WHERE p.user_id = $1 AND p.deleted_at IS NULL`, userID).Scan(
 		&p.Identity.Headline, &p.Identity.About, &p.Identity.PhotoURL,
 		&p.Identity.Bio, &p.Identity.Location, &p.Identity.SocialLinks.Website, &p.Version,
 		&p.Identity.Pronouns, &p.Identity.CareerStatus, &transReasonEnc,
-		&p.Identity.Availability, &p.Preferences.OpenToRelocation, &p.Preferences.OpenToRelocation,
-		&p.Preferences.NoticePeriod, &salMinEnc, &salMaxEnc,
-		&salCurrEnc, &p.Preferences.OpenToRelocation, &p.Preferences.RemotePreference,
-		&availability, &p.Preferences.NoticePeriod, &p.Verification.IdentityVerified,
+		&p.Identity.Availability, &p.Preferences.OpenToRemote, &p.Preferences.OpenToRelocation,
+		&p.Preferences.EmploymentType, &salMinEnc, &salMaxEnc,
+		&salCurrEnc, &p.Preferences.SalaryVisible, &p.Preferences.RemotePreference,
+		&availability, &p.Preferences.NoticePeriod, &p.Preferences.ReferralEligible,
 		&p.AICareerAssistant.GapAnalysis, &p.AICareerAssistant.InterviewPrep, &p.Identity.WorkAuthorization,
-		&p.Identity.Nationality, &p.Verification.IdentityVerified, &p.Identity.VisaStatus,
-		&p.Identity.PreferredContactChannel, &p.Identity.VisaStatus, &p.Identity.CoverURL,
-		&p.Identity.VisaStatus, &p.Analytics.ProfileViews, &p.ProfileCompletenessScore,
-		&lastActive, &p.Verification.IdentityVerified, &consentAt,
-		&p.Identity.VisaStatus, &p.Identity.VisaStatus,
+		&passportNationality, &drivingLicenseBool, &drivingLicenseType,
+		&p.Identity.PreferredContactChannel, &accessibilityNeeds, &p.Identity.VideoIntroURL,
+		&p.Preferences.WillingToMentor, &p.Analytics.AvgResponseTimeHours, &p.ProfileCompletenessScore,
+		&lastActive, &backgroundCheckConsent, &consentAt,
+		&jobAlertFrequency, &jobAlertChannel,
 		&visProfile, &visSalary, &visTransReason,
 		&visExp, &visEdu, &visCert,
 		&visSkills, &visPortfolio, &visRef,
-		&p.Verification.PhoneVerified, &p.Verification.IdentityVerified, &p.Verification.IdentityVerified,
+		&p.Verification.PhoneVerified, &linkedinVerified, &p.Verification.IdentityVerified,
 		&p.IsDraft, &p.TrustScore,
 		&p.Identity.PreferredName, &p.Identity.TimeZone, &p.Identity.Nationality,
 		&bioOptimized, &p.Summary.ExecutiveSummary, &p.Summary.CareerObjectives,
@@ -114,12 +122,18 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 		&p.Verification.EmailVerified, &p.Verification.EmploymentVerified, &p.Verification.EducationVerified, &p.Verification.CertificationVerified,
 		&p.Preferences.TravelWillingness,
 		&emailEnc, &phoneEnc, &addressEnc, &p.Identity.FullName,
+		&p.Identity.CoverURL, &p.Identity.SocialLinks.LinkedIn, &p.Identity.SocialLinks.GitHub,
+		&p.Summary.Industry, &p.Privacy.AnonymousMode,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	p.LastActiveAt = lastActive
+
+	if availability.Valid {
+		p.Preferences.AvailabilityDate = availability.Time.Format("2006-01-02")
+	}
 
 	// Populate visibility map
 	p.Privacy.FieldVisibility = map[string]string{
@@ -729,6 +743,11 @@ func (r *Repository) SetVerificationStatus(ctx context.Context, userID string, f
 		return fmt.Errorf("invalid verification field: %s", field)
 	}
 	_, err := r.db.ExecContext(ctx, query, userID, verified)
+	return err
+}
+
+func (r *Repository) UpdateCompletenessScore(ctx context.Context, userID string, score int) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE profiles SET profile_completeness_score = $2 WHERE user_id = $1`, userID, score)
 	return err
 }
 

@@ -395,6 +395,10 @@ func (s *Service) reload(ctx context.Context, userID string) (*domain.Profile, e
 	score := p.CalculateCompleteness()
 	p.ProfileCompletenessScore = score
 
+	if err := s.repo.UpdateCompletenessScore(ctx, userID, score); err != nil {
+		// Log error or continue. Since it's a reload we can still proceed.
+	}
+
 	s.put(ctx, p)
 	if s.events != nil {
 		_ = s.events.Publish(ctx, eventProfileUpdated, userID, nil)

@@ -69,6 +69,7 @@ type IdentitySection struct {
 	WorkAuthorization       string         `json:"work_authorization"`
 	VisaStatus              string         `json:"visa_status"`
 	PreferredContactChannel string         `json:"preferred_contact_channel"`
+	VideoIntroURL           string         `json:"video_intro_url"`
 }
 
 type SocialLinks struct {
@@ -96,6 +97,7 @@ type SummarySection struct {
 	CareerObjectives       string   `json:"career_objectives"`
 	CareerHighlights       []string `json:"career_highlights"`
 	Industries             []string `json:"industries"`
+	Industry               string   `json:"industry"`
 	FunctionalAreas        []string `json:"functional_areas"`
 	PersonalBrandStatement string   `json:"personal_brand_statement"`
 	ElevatorPitch          string   `json:"elevator_pitch"`
@@ -212,16 +214,22 @@ type CareerPreferences struct {
 	DesiredRoles           []string `json:"desired_roles"`
 	DesiredIndustries      []string `json:"desired_industries"`
 	EmploymentTypes        []string `json:"employment_types"`
+	EmploymentType         string   `json:"employment_type"`
 	SalaryMin              int      `json:"salary_min"`
 	SalaryMax              int      `json:"salary_max"`
 	SalaryCurrency         string   `json:"salary_currency"`
+	SalaryVisible          bool     `json:"salary_visible"`
 	NoticePeriod           string   `json:"notice_period"`
 	RemotePreference       string   `json:"remote_preference"`
+	OpenToRemote           bool     `json:"open_to_remote"`
 	OpenToRelocation       bool     `json:"open_to_relocation"`
 	PreferredCountries     []string `json:"preferred_countries"`
 	PreferredCities        []string `json:"preferred_cities"`
 	TravelWillingness      string   `json:"travel_willingness"`
 	CompanySizePreferences []string `json:"company_size_preferences"`
+	AvailabilityDate       string   `json:"availability_date"`
+	ReferralEligible       bool     `json:"referral_eligible"`
+	WillingToMentor        bool     `json:"willing_to_mentor"`
 }
 
 // Section 11 - Verification & Trust
@@ -253,17 +261,19 @@ type EndorsementSummary struct {
 
 // Section 13 - Analytics
 type AnalyticsSummary struct {
-	ProfileViews       int   `json:"profile_views"`
-	SearchAppearances  int   `json:"search_appearances"`
-	RecruiterViews     int   `json:"recruiter_views"`
-	ResumeDownloads    int   `json:"resume_downloads"`
-	PortfolioViews     int   `json:"portfolio_views"`
-	WeeklyProfileViews []int `json:"weekly_profile_views"`
+	ProfileViews         int     `json:"profile_views"`
+	SearchAppearances    int     `json:"search_appearances"`
+	RecruiterViews       int     `json:"recruiter_views"`
+	ResumeDownloads      int     `json:"resume_downloads"`
+	PortfolioViews       int     `json:"portfolio_views"`
+	WeeklyProfileViews   []int   `json:"weekly_profile_views"`
+	AvgResponseTimeHours float64 `json:"avg_response_time_hours"`
 }
 
 // Section 14 - Privacy & Security
 type PrivacySecuritySettings struct {
 	FieldVisibility  map[string]string `json:"field_visibility"` // key: section, value: public, recruiter_only, connections_only, private
+	AnonymousMode    bool              `json:"anonymous_mode"`
 	TwoFactorEnabled bool              `json:"two_factor_enabled"`
 	ActiveSessions   []ActiveSession   `json:"active_sessions"`
 }
@@ -400,6 +410,7 @@ type Repository interface {
 
 	// Verification
 	SetVerificationStatus(ctx context.Context, userID string, field string, verified bool) error
+	UpdateCompletenessScore(ctx context.Context, userID string, score int) error
 }
 
 type AuditLogEntry struct {

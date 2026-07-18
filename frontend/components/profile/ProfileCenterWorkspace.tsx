@@ -367,6 +367,59 @@ export default function ProfileCenterWorkspace({
                         className="w-full bg-secondary/40 border border-border focus:border-primary rounded-xl px-3.5 py-2 outline-none"
                       />
                     </div>
+                    <div className="col-span-2 border-t border-border/40 pt-4 mt-2">
+                      <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                        Languages
+                      </label>
+                      <div className="space-y-2">
+                        {(profile.languages || []).map((lang, index) => (
+                          <div key={index} className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              placeholder="Language name (e.g. English)"
+                              value={lang.name}
+                              onChange={(e) => {
+                                const list = [...(profile.languages || [])];
+                                list[index] = { ...list[index], name: e.target.value };
+                                handleInputChange("languages", list);
+                              }}
+                              className="flex-1 bg-secondary/40 border border-border focus:border-primary rounded-xl px-3.5 py-2 outline-none"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Proficiency (e.g. Native, Fluent)"
+                              value={lang.proficiency}
+                              onChange={(e) => {
+                                const list = [...(profile.languages || [])];
+                                list[index] = { ...list[index], proficiency: e.target.value };
+                                handleInputChange("languages", list);
+                              }}
+                              className="flex-1 bg-secondary/40 border border-border focus:border-primary rounded-xl px-3.5 py-2 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const list = (profile.languages || []).filter((_, i) => i !== index);
+                                handleInputChange("languages", list);
+                              }}
+                              className="p-2 border border-border/85 hover:bg-secondary rounded-xl cursor-pointer text-destructive text-[10px] font-bold uppercase"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const list = [...(profile.languages || []), { name: "", proficiency: "" }];
+                            handleInputChange("languages", list);
+                          }}
+                          className="px-3 py-1.5 border border-border/80 hover:bg-secondary rounded-xl text-[10px] font-bold uppercase cursor-pointer"
+                        >
+                          + Add Language
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4 text-xs">
@@ -430,6 +483,20 @@ export default function ProfileCenterWorkspace({
                           GitHub <ExternalLink className="h-3 w-3" />
                         </a>
                       </div>
+                      {profile.languages && profile.languages.length > 0 && (
+                        <div className="col-span-2 sm:col-span-3 border-t border-border/40 pt-4 mt-2">
+                          <span className="font-bold text-[9px] uppercase tracking-wider text-muted-foreground/60 block mb-2">
+                            Languages
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {profile.languages.map((lang, index) => (
+                              <span key={index} className="px-2.5 py-1 bg-secondary/60 text-foreground font-semibold rounded-lg text-[10px]">
+                                {lang.name} - <span className="text-muted-foreground font-medium">{lang.proficiency}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -2114,8 +2181,42 @@ export default function ProfileCenterWorkspace({
                           {item.desc}
                         </p>
                       </div>
-                      <div className="w-10 h-6 bg-primary rounded-full relative cursor-pointer">
-                        <div className="w-4.5 h-4.5 bg-card rounded-full absolute top-0.75 right-0.75" />
+                      <div
+                        onClick={() => {
+                          if (item.key === "visibility_profile") {
+                            handleInputChange(
+                              "visibility_profile",
+                              profile.visibility_profile === "public" ? "private" : "public"
+                            );
+                          } else if (item.key === "anonymous") {
+                            handleInputChange(
+                              "anonymous_mode",
+                              !profile.anonymous_mode
+                            );
+                          } else if (item.key === "hide_salary") {
+                            handleInputChange(
+                              "visibility_salary",
+                              profile.visibility_salary === "private" ? "public" : "private"
+                            );
+                          }
+                        }}
+                        className={`w-10 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ${
+                          (item.key === "visibility_profile" && profile.visibility_profile === "public") ||
+                          (item.key === "anonymous" && profile.anonymous_mode) ||
+                          (item.key === "hide_salary" && profile.visibility_salary === "private")
+                            ? "bg-primary"
+                            : "bg-secondary"
+                        }`}
+                      >
+                        <div
+                          className={`w-4.5 h-4.5 bg-card rounded-full absolute top-0.75 transition-all duration-200 ${
+                            (item.key === "visibility_profile" && profile.visibility_profile === "public") ||
+                            (item.key === "anonymous" && profile.anonymous_mode) ||
+                            (item.key === "hide_salary" && profile.visibility_salary === "private")
+                              ? "right-0.75"
+                              : "left-0.75"
+                          }`}
+                        />
                       </div>
                     </div>
                   ))}
