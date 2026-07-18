@@ -31,7 +31,7 @@ import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 import { api } from "@/lib/api/client";
 import { profileClient, Profile } from "@/lib/api/profile";
-import { networkClient, Connection } from "@/lib/api/network";
+import { connectionsClient, Connection } from "@/lib/api/connections";
 import SuggestionsCarousel from "@/components/connections/SuggestionsCarousel";
 
 interface DashboardSummary {
@@ -84,11 +84,11 @@ function DashboardContent() {
       const s = await api.get<DashboardSummary>("/me/dashboard");
       setSummary(s);
 
-      const conns = await networkClient.getConnections();
-      setConnections(conns);
+      const conns = await connectionsClient.getConnections(1, 100);
+      setConnections(conns || []);
 
-      const reqs = await networkClient.getIncomingRequests();
-      setIncomingRequests(reqs);
+      const reqs = await connectionsClient.getPendingRequests("incoming");
+      setIncomingRequests(reqs || []);
     } catch (err) {
       setError("Failed to load dashboard data.");
       console.error(err);
@@ -105,7 +105,7 @@ function DashboardContent() {
     if (actionLoading) return;
     setActionLoading(true);
     try {
-      await networkClient.acceptRequest(id);
+      await connectionsClient.acceptConnection(id);
       await loadData();
     } catch (e) {
       console.error(e);
@@ -118,7 +118,7 @@ function DashboardContent() {
     if (actionLoading) return;
     setActionLoading(true);
     try {
-      await networkClient.rejectRequest(id);
+      await connectionsClient.declineConnection(id);
       await loadData();
     } catch (e) {
       console.error(e);
@@ -215,13 +215,13 @@ function DashboardContent() {
           {[
             {
               label: "Active Applications",
-              value: summary?.job_seeker.applications ?? 0,
+              value: summary?.job_seeker?.applications ?? 0,
               icon: Briefcase,
               color: "text-blue-500",
             },
             {
               label: "Saved Openings",
-              value: summary?.job_seeker.saved_jobs ?? 0,
+              value: summary?.job_seeker?.saved_jobs ?? 0,
               icon: Bookmark,
               color: "text-indigo-500",
             },
@@ -361,17 +361,17 @@ function DashboardContent() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs select-none">
-                          {req.requester_name?.charAt(0) || "M"}
+                          {req.user.name?.charAt(0) || "M"}
                         </div>
                         <div>
                           <Link
-                            href={`/profile/${req.requester_id}`}
+                            href={`/profile/${req.user.id}`}
                             className="text-sm font-bold hover:underline"
                           >
-                            {req.requester_name}
+                            {req.user.name}
                           </Link>
                           <p className="text-xs text-muted-foreground line-clamp-1">
-                            {req.requester_headline || "Professional"}
+                            {req.user.headline || "Professional"}
                           </p>
                         </div>
                       </div>
@@ -423,12 +423,9 @@ function DashboardContent() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {connections.map((c) => {
-                    const isReq = c.requester_id === profile.user_id;
-                    const connName = isReq ? c.receiver_name : c.requester_name;
-                    const connHeadline = isReq
-                      ? c.receiver_headline
-                      : c.requester_headline;
-                    const connID = isReq ? c.receiver_id : c.requester_id;
+                    const connName = c.user.name;
+                    const connHeadline = c.user.headline;
+                    const connID = c.user.id;
                     return (
                       <div
                         key={c.id}

@@ -53,26 +53,28 @@ func RegisterGinRoutes(r *gin.Engine, db *sql.DB, auth func(http.Handler) http.H
 	authGin := adaptMiddleware(auth)
 	optAuthGin := optionalAuth(auth)
 
-	// Me endpoint (authenticated)
-	r.GET("/api/profile/me", authGin, h.GetMe)
+	for _, prefix := range []string{"/api/v1/api/profile", "/api/profile"} {
+		// Me endpoint (authenticated)
+		r.GET(prefix+"/me", authGin, h.GetMe)
 
-	// Public profile endpoint (no auth required, but optional token check)
-	r.GET("/api/profile/public/:userId", optAuthGin, h.GetPublicProfile)
+		// Public profile endpoint (no auth required, but optional token check)
+		r.GET(prefix+"/public/:userId", optAuthGin, h.GetPublicProfile)
 
-	// PATCH endpoints (authenticated)
-	g := r.Group("/api/profile/me")
-	g.Use(authGin)
-	{
-		g.PATCH("/basic-info", h.PatchBasicInfo)
-		g.PATCH("/summary", h.PatchSummary)
-		g.PATCH("/experience", h.PatchExperience)
-		g.PATCH("/education", h.PatchEducation)
-		g.PATCH("/skills", h.PatchSkills)
-		g.PATCH("/certifications", h.PatchCertifications)
-		g.PATCH("/projects", h.PatchProjects)
-		g.PATCH("/achievements", h.PatchAchievements)
-		g.PATCH("/contact", h.PatchContact)
-		g.PATCH("/preferences", h.PatchPreferences)
+		// PATCH endpoints (authenticated)
+		g := r.Group(prefix + "/me")
+		g.Use(authGin)
+		{
+			g.PATCH("/basic-info", h.PatchBasicInfo)
+			g.PATCH("/summary", h.PatchSummary)
+			g.PATCH("/experience", h.PatchExperience)
+			g.PATCH("/education", h.PatchEducation)
+			g.PATCH("/skills", h.PatchSkills)
+			g.PATCH("/certifications", h.PatchCertifications)
+			g.PATCH("/projects", h.PatchProjects)
+			g.PATCH("/achievements", h.PatchAchievements)
+			g.PATCH("/contact", h.PatchContact)
+			g.PATCH("/preferences", h.PatchPreferences)
+		}
 	}
 }
 

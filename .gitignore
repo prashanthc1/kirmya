@@ -26,3 +26,7 @@ backend/uploads/
 
 # graphify skill generated output (knowledge graph artifacts, cache)
 graphify-out/
+
+# Go Air hot-reload build directories
+/tmp/
+/backend/tmp/

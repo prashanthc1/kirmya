@@ -59,7 +59,15 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 	var lastActive time.Time
 	var consentAt sql.NullTime
 	var transReasonEnc, salMinEnc, salMaxEnc, salCurrEnc, emailEnc, phoneEnc, addressEnc string
+	var bioOptimized string
 	var visProfile, visSalary, visTransReason, visExp, visEdu, visCert, visSkills, visPortfolio, visRef string
+	var drivingLicenseBool bool
+	var drivingLicenseType string
+	var accessibilityNeeds string
+	var jobAlertFrequency, jobAlertChannel string
+	var backgroundCheckConsent bool
+	var passportNationality string
+	var linkedinVerified bool
 
 	err := r.db.QueryRowContext(ctx, `
 		SELECT COALESCE(p.headline,''), COALESCE(p.about,''), COALESCE(p.photo_url,''),
@@ -85,39 +93,47 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 		       COALESCE(p.personal_brand_statement, ''), COALESCE(p.elevator_pitch, ''),
 		       p.email_verified, p.employment_verified, p.education_verified, p.certification_verified,
 		       COALESCE(p.travel_willingness, ''),
-		       COALESCE(p.email_enc, ''), COALESCE(p.phone_enc, ''), COALESCE(p.address_enc, '')
+		       COALESCE(p.email_enc, ''), COALESCE(p.phone_enc, ''), COALESCE(p.address_enc, ''),
+		       COALESCE(p.full_name, ''), COALESCE(p.cover_url, ''), COALESCE(p.linkedin_url, ''),
+		       COALESCE(p.github_url, ''), COALESCE(p.industry, ''), p.anonymous_mode
 		FROM profiles p
 		WHERE p.user_id = $1 AND p.deleted_at IS NULL`, userID).Scan(
-		&p.Identity.Headline, &p.Identity.Bio, &p.Identity.PhotoURL,
+		&p.Identity.Headline, &p.Identity.About, &p.Identity.PhotoURL,
 		&p.Identity.Bio, &p.Identity.Location, &p.Identity.SocialLinks.Website, &p.Version,
-		&p.Identity.VisaStatus, &p.Identity.Availability, &transReasonEnc, // Pronouns, CareerStatus mapped dynamically
-		&p.Identity.Availability, &p.Preferences.OpenToRelocation, &p.Preferences.OpenToRelocation,
-		&p.Preferences.NoticePeriod, &salMinEnc, &salMaxEnc,
-		&salCurrEnc, &p.Preferences.OpenToRelocation, &p.Preferences.RemotePreference,
-		&availability, &p.Preferences.NoticePeriod, &p.Verification.IdentityVerified,
+		&p.Identity.Pronouns, &p.Identity.CareerStatus, &transReasonEnc,
+		&p.Identity.Availability, &p.Preferences.OpenToRemote, &p.Preferences.OpenToRelocation,
+		&p.Preferences.EmploymentType, &salMinEnc, &salMaxEnc,
+		&salCurrEnc, &p.Preferences.SalaryVisible, &p.Preferences.RemotePreference,
+		&availability, &p.Preferences.NoticePeriod, &p.Preferences.ReferralEligible,
 		&p.AICareerAssistant.GapAnalysis, &p.AICareerAssistant.InterviewPrep, &p.Identity.WorkAuthorization,
-		&p.Identity.Nationality, &p.Verification.IdentityVerified, &p.Identity.VisaStatus,
-		&p.Identity.PreferredContactChannel, &p.Identity.VisaStatus, &p.Identity.CoverURL,
-		&p.Identity.VisaStatus, &p.Analytics.ProfileViews, &p.ProfileCompletenessScore,
-		&lastActive, &p.Verification.IdentityVerified, &consentAt,
-		&p.Identity.VisaStatus, &p.Identity.VisaStatus,
+		&passportNationality, &drivingLicenseBool, &drivingLicenseType,
+		&p.Identity.PreferredContactChannel, &accessibilityNeeds, &p.Identity.VideoIntroURL,
+		&p.Preferences.WillingToMentor, &p.Analytics.AvgResponseTimeHours, &p.ProfileCompletenessScore,
+		&lastActive, &backgroundCheckConsent, &consentAt,
+		&jobAlertFrequency, &jobAlertChannel,
 		&visProfile, &visSalary, &visTransReason,
 		&visExp, &visEdu, &visCert,
 		&visSkills, &visPortfolio, &visRef,
-		&p.Verification.PhoneVerified, &p.Verification.IdentityVerified, &p.Verification.IdentityVerified,
+		&p.Verification.PhoneVerified, &linkedinVerified, &p.Verification.IdentityVerified,
 		&p.IsDraft, &p.TrustScore,
 		&p.Identity.PreferredName, &p.Identity.TimeZone, &p.Identity.Nationality,
-		&p.Identity.Bio, &p.Summary.ExecutiveSummary, &p.Summary.CareerObjectives,
+		&bioOptimized, &p.Summary.ExecutiveSummary, &p.Summary.CareerObjectives,
 		&p.Summary.PersonalBrandStatement, &p.Summary.ElevatorPitch,
 		&p.Verification.EmailVerified, &p.Verification.EmploymentVerified, &p.Verification.EducationVerified, &p.Verification.CertificationVerified,
 		&p.Preferences.TravelWillingness,
-		&emailEnc, &phoneEnc, &addressEnc,
+		&emailEnc, &phoneEnc, &addressEnc, &p.Identity.FullName,
+		&p.Identity.CoverURL, &p.Identity.SocialLinks.LinkedIn, &p.Identity.SocialLinks.GitHub,
+		&p.Summary.Industry, &p.Privacy.AnonymousMode,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	p.LastActiveAt = lastActive
+
+	if availability.Valid {
+		p.Preferences.AvailabilityDate = availability.Time.Format("2006-01-02")
+	}
 
 	// Populate visibility map
 	p.Privacy.FieldVisibility = map[string]string{
@@ -133,9 +149,8 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 	}
 
 	// Decrypt sensitive fields
-	if transReasonEnc != "" {
-		p.Identity.Bio, _ = r.crypt.Decrypt(transReasonEnc)
-	}
+	_ = transReasonEnc // transition_reason is not surfaced on the identity aggregate; no longer clobbers Bio
+	_ = bioOptimized
 	if emailEnc != "" {
 		p.Identity.Email, _ = r.crypt.Decrypt(emailEnc)
 	}
@@ -180,6 +195,9 @@ func (r *Repository) Get(ctx context.Context, userID string, includeDraft bool) 
 	if p.Resumes, err2 = r.loadResumes(ctx, userID); err2 != nil {
 		return nil, err2
 	}
+
+	// Languages (written by setLanguagesQ; previously never read back)
+	p.Identity.Languages, _ = r.loadLanguages(ctx, userID)
 
 	// Load string slices
 	p.Summary.CareerHighlights, _ = r.loadHighlights(ctx, userID)
@@ -356,22 +374,45 @@ func (r *Repository) loadProjects(ctx context.Context, userID string) ([]domain.
 	var out []domain.ProjectItem
 	for rows.Next() {
 		var p domain.ProjectItem
-		var screens, techs []byte
+		var teamSize int // team_size is an int column; TeamMembers is not persisted
+		// screenshots/technologies are Postgres text[] columns (see insertProjectQ);
+		// pq.Array parses them back into []string, matching loadExperiences.
 		if err := rows.Scan(
 			&p.ID, &p.Title, &p.Description, &p.RepositoryURL, &p.LiveDemoURL,
-			&p.VideoURL, &screens, &techs, &p.Timeline,
-			&p.TeamMembers, &p.Metrics, &p.Awards, &p.BusinessImpact,
+			&p.VideoURL, pq.Array(&p.Images), pq.Array(&p.Technologies), &p.Timeline,
+			&teamSize, &p.Metrics, &p.Awards, &p.BusinessImpact,
 		); err != nil {
 			return nil, err
 		}
-		_ = json.Unmarshal(screens, &p.Images)
-		_ = json.Unmarshal(techs, &p.Technologies)
 		out = append(out, p)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (r *Repository) loadLanguages(ctx context.Context, userID string) ([]domain.LanguageItem, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT l.name, COALESCE(pl.proficiency, '')
+		FROM profile_languages pl
+		JOIN languages l ON l.id = pl.language_id
+		WHERE pl.user_id = $1
+		ORDER BY l.name`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []domain.LanguageItem
+	for rows.Next() {
+		var li domain.LanguageItem
+		if err := rows.Scan(&li.Name, &li.Proficiency); err != nil {
+			return nil, err
+		}
+		out = append(out, li)
+	}
+	return out, rows.Err()
 }
 
 func (r *Repository) loadAchievements(ctx context.Context, userID string) ([]domain.AchievementItem, error) {
@@ -560,7 +601,7 @@ func (r *Repository) loadStringTable(ctx context.Context, table, col, userID str
 func (r *Repository) countConnections(ctx context.Context, userID string) (int, error) {
 	var count int
 	err := r.db.QueryRowContext(ctx, `
-		SELECT COUNT(*) FROM user_connections WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`, userID).Scan(&count)
+		SELECT COUNT(*) FROM connections WHERE (user_a_id = $1 OR user_b_id = $1) AND status = 'accepted'`, userID).Scan(&count)
 	return count, err
 }
 
@@ -702,6 +743,11 @@ func (r *Repository) SetVerificationStatus(ctx context.Context, userID string, f
 		return fmt.Errorf("invalid verification field: %s", field)
 	}
 	_, err := r.db.ExecContext(ctx, query, userID, verified)
+	return err
+}
+
+func (r *Repository) UpdateCompletenessScore(ctx context.Context, userID string, score int) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE profiles SET profile_completeness_score = $2 WHERE user_id = $1`, userID, score)
 	return err
 }
 

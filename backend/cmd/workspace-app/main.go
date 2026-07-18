@@ -23,6 +23,17 @@ import (
 func main() {
 	log.SetFlags(log.LstdFlags | log.LUTC)
 
+	// Try loading local .env file first if it exists (for convenient local development)
+	if _, err := os.Stat(".env"); err == nil {
+		if err := secrets.LoadEnvFile(log.Default(), ".env"); err != nil {
+			log.Printf("[startup] warning: failed to load .env: %v", err)
+		}
+	} else if _, err := os.Stat("backend/.env"); err == nil {
+		if err := secrets.LoadEnvFile(log.Default(), "backend/.env"); err != nil {
+			log.Printf("[startup] warning: failed to load backend/.env: %v", err)
+		}
+	}
+
 	// Secrets first: this may export values (e.g. JWT_SECRET, DATABASE_URL) into
 	// the environment before anything reads them. With the default backend it is
 	// a no-op.

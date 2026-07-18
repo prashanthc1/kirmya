@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"workspace-app/internal/common"
@@ -70,12 +72,25 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	h.write(w, p, err)
 }
 
+// e164Pattern validates an international phone number: leading '+', a country
+// digit 1-9, then 7–14 more digits (ITU E.164, min national-number length).
+var e164Pattern = regexp.MustCompile(`^\+[1-9]\d{7,14}$`)
+
 // UpdateMe handles PUT /profiles/me.
 func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	uid := common.UserIDFromContext(r.Context())
 	var req updateProfileRequest
 	if !decode(r, &req) {
 		common.WriteValidationError(w, "invalid request payload")
+		return
+	}
+
+	if req.Phone != nil && *req.Phone != "" && !e164Pattern.MatchString(*req.Phone) {
+		common.WriteValidationError(w, "phone must be in international E.164 format, e.g. +919876543210")
+		return
+	}
+	if req.Email != nil && *req.Email != "" && !strings.Contains(*req.Email, "@") {
+		common.WriteValidationError(w, "invalid email format")
 		return
 	}
 

@@ -141,7 +141,7 @@ export default function ConnectButton({
           <button
             onClick={() => setShowNoteModal(true)}
             disabled={isMutating}
-            className="px-4 py-2 text-sm rounded-xl font-semibold bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-[0.98] text-white shadow-lg shadow-orange-500/10 cursor-pointer transition-all disabled:opacity-50"
+            className="px-4 py-2 text-sm rounded-xl font-semibold bg-primary hover:bg-primary/95 active:scale-[0.98] text-primary-foreground shadow-sm cursor-pointer transition-all disabled:opacity-50"
           >
             Connect
           </button>
@@ -159,7 +159,7 @@ export default function ConnectButton({
       return (
         <button
           disabled
-          className="px-4 py-2 text-sm rounded-xl font-medium bg-white/5 border border-white/10 text-gray-500 flex items-center gap-1.5 cursor-not-allowed"
+          className="px-4 py-2 text-sm rounded-xl font-medium bg-secondary/40 border border-border text-muted-foreground flex items-center gap-1.5 cursor-not-allowed"
         >
           <Clock className="w-4 h-4" />
           Pending
@@ -172,14 +172,14 @@ export default function ConnectButton({
           <button
             onClick={handleAccept}
             disabled={isMutating}
-            className="px-3.5 py-1.5 text-xs rounded-xl font-semibold bg-gradient-to-r from-orange-500 to-amber-500 text-white cursor-pointer active:scale-95 transition-transform"
+            className="px-3.5 py-1.5 text-xs rounded-xl font-semibold bg-primary hover:bg-primary/95 text-primary-foreground cursor-pointer active:scale-95 transition-transform"
           >
             Accept
           </button>
           <button
             onClick={handleDecline}
             disabled={isMutating}
-            className="px-3.5 py-1.5 text-xs rounded-xl font-medium border border-white/10 text-gray-300 hover:bg-white/5 cursor-pointer active:scale-95 transition-transform"
+            className="px-3.5 py-1.5 text-xs rounded-xl font-medium border border-border text-foreground hover:bg-secondary/40 cursor-pointer active:scale-95 transition-transform"
           >
             Decline
           </button>
@@ -192,7 +192,7 @@ export default function ConnectButton({
           <div className="flex gap-1">
             <button
               onClick={handleStartChat}
-              className="px-3 py-1.5 text-xs rounded-l-xl font-medium bg-white/5 hover:bg-white/10 border border-r-0 border-white/10 text-orange-400 flex items-center gap-1.5 cursor-pointer transition-colors"
+              className="px-3 py-1.5 text-xs rounded-l-xl font-medium bg-secondary/20 hover:bg-secondary/40 border border-r-0 border-border text-primary flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               Message
@@ -200,7 +200,7 @@ export default function ConnectButton({
             <button
               onClick={() => setShowDropdown(!showDropdown)}
               disabled={isMutating}
-              className="px-2.5 py-1.5 rounded-r-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 cursor-pointer transition-colors"
+              className="px-2.5 py-1.5 rounded-r-xl bg-secondary/20 hover:bg-secondary/40 border border-border text-muted-foreground cursor-pointer transition-colors"
             >
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
@@ -212,13 +212,13 @@ export default function ConnectButton({
                 className="fixed inset-0 z-10"
                 onClick={() => setShowDropdown(false)}
               />
-              <div className="absolute right-0 mt-2 w-44 rounded-xl bg-gray-900 border border-white/10 shadow-xl z-20 overflow-hidden backdrop-blur-md">
+              <div className="absolute right-0 mt-2 w-44 rounded-xl bg-card border border-border shadow-md z-20 overflow-hidden">
                 <button
                   onClick={() => {
                     setShowDropdown(false);
                     handleRemove();
                   }}
-                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-400 hover:bg-white/5 flex items-center gap-2 cursor-pointer transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-destructive hover:bg-secondary/40 flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <UserX className="w-4 h-4" />
                   Remove Connection
@@ -228,7 +228,7 @@ export default function ConnectButton({
                     setShowDropdown(false);
                     setShowBlockModal(true);
                   }}
-                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-500 hover:bg-red-950/20 border-t border-white/5 flex items-center gap-2 cursor-pointer transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-destructive hover:bg-destructive/10 border-t border-border/40 flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <ShieldAlert className="w-4 h-4" />
                   Block User

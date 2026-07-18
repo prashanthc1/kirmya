@@ -56,6 +56,11 @@ func Load(logger Logger) error {
 	}
 }
 
+// LoadEnvFile manually loads environment variables from a dotenv file (does not override existing env vars).
+func LoadEnvFile(logger Logger, path string) error {
+	return loadFile(logger, path, false)
+}
+
 func overrideEnabled() bool {
 	// Default true: choosing the file backend means the secret store wins.
 	return os.Getenv("SECRETS_OVERRIDE") != "false"

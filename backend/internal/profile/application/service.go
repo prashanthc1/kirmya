@@ -5,6 +5,7 @@ package application
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"time"
 
 	"workspace-app/internal/profile/domain"
@@ -394,6 +395,10 @@ func (s *Service) reload(ctx context.Context, userID string) (*domain.Profile, e
 
 	score := p.CalculateCompleteness()
 	p.ProfileCompletenessScore = score
+
+	if err := s.repo.UpdateCompletenessScore(ctx, userID, score); err != nil {
+		log.Printf("failed to update profile completeness score: %v", err)
+	}
 
 	s.put(ctx, p)
 	if s.events != nil {

@@ -2,7 +2,9 @@
 # A modular monolith platform for connecting job seekers, recruiters, founders, freelancers, mentors during recession
 
 .DEFAULT_GOAL := help
+ifneq ($(OS),Windows_NT)
 SHELL := /bin/bash
+endif
 
 # Variables
 BIN := workspace-app
@@ -15,6 +17,9 @@ VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "unknown")
 LDFLAGS := -ldflags "-X 'main.Version=$(VERSION)' -X 'main.Commit=$(COMMIT)' -X 'main.BuildTime=$(BUILD_TIME)'"
+
+# Check if air is installed and available in PATH
+AIR := $(shell where air 2>nul || which air 2>/dev/null)
 
 .PHONY: help build build-release build-dev run run-dev test test-verbose test-jobs test-ideas test-coverage \
         fmt lint vet tidy deps migrate clean clean-coverage clean-all coverage coverage-html coverage-report \
@@ -130,13 +135,14 @@ run: build
 	@./$(BUILD_DIR)/$(BIN)
 
 run-dev:
-	@echo "🚀 Running in development mode (watch enabled)..."
-	@if command -v CompileDaemon &> /dev/null; then \
-		CompileDaemon -build="$(GO) build -o $(BUILD_DIR)/$(BIN) $(CMD)" -command=$(BUILD_DIR)/$(BIN) -graceful-kill=true; \
-	else \
-		echo "⚠️  CompileDaemon not installed. Install with: go install github.com/githubnemo/CompileDaemon@latest"; \
-		$(GO) run $(CMD); \
-	fi
+	@echo "🚀 Running in development mode (watch enabled via Air)..."
+ifneq ($(AIR),)
+	air -c .air.toml
+else
+	@echo "⚠️  Air not installed or not in PATH. Running without watch mode..."
+	@echo "💡 To install Air: go install github.com/air-verse/air@latest"
+	$(GO) run $(CMD)
+endif
 
 run-migrate: migrate run
 

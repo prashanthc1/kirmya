@@ -90,6 +90,7 @@ export interface Profile {
   // Alerts
   job_alert_frequency: "instant" | "daily" | "weekly" | "";
   job_alert_channel: "email" | "whatsapp" | "push" | "";
+  anonymous_mode?: boolean;
 
   // Privacy Visibility
   visibility_profile: "public" | "recruiters_only" | "mentors_only" | "private";

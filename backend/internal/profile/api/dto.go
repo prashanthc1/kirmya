@@ -9,14 +9,16 @@ import (
 )
 
 type profileResponse struct {
-	UserID   string `json:"user_id"`
-	Headline string `json:"headline"`
-	About    string `json:"about"`
-	PhotoURL string `json:"photo_url"`
-	Bio      string `json:"bio"`
-	Location string `json:"location"`
-	Website  string `json:"website"`
-	Version  int    `json:"version"`
+	UserID      string `json:"user_id"`
+	FullName    string `json:"full_name"`
+	Headline    string `json:"headline"`
+	About       string `json:"about"`
+	PhotoURL    string `json:"photo_url"`
+	Bio         string `json:"bio"`
+	Location    string `json:"location"`
+	Website     string `json:"website"`
+	CoverBanner string `json:"cover_banner"`
+	Version     int    `json:"version"`
 
 	// Core Identity
 	Pronouns     string `json:"pronouns"`
@@ -80,6 +82,14 @@ type profileResponse struct {
 	BackgroundCheckConsent   bool   `json:"background_check_consent"`
 	BackgroundCheckConsentAt string `json:"background_check_consent_at"`
 
+	PreferredName string `json:"preferred_name"`
+	LinkedInURL   string `json:"linkedin_url"`
+	GitHubURL     string `json:"github_url"`
+	PersonalBrand string `json:"personal_brand"`
+	ElevatorPitch string `json:"elevator_pitch"`
+	Industry      string `json:"industry"`
+	AnonymousMode bool   `json:"anonymous_mode"`
+
 	// Job Alerts
 	JobAlertFrequency string `json:"job_alert_frequency"`
 	JobAlertChannel   string `json:"job_alert_channel"`
@@ -102,6 +112,8 @@ type profileResponse struct {
 	Skills         []skillDTO         `json:"skills"`
 	Languages      []languageDTO      `json:"languages"`
 	Portfolio      []portfolioLinkDTO `json:"portfolio"`
+	Projects       []projectDTO       `json:"projects"`
+	Achievements   []achievementDTO   `json:"achievements_list"`
 	Endorsements   []endorsementDTO   `json:"endorsements,omitempty"`
 	References     []referenceDTO     `json:"references,omitempty"`
 }
@@ -157,6 +169,32 @@ type portfolioLinkDTO struct {
 	URL      string `json:"url"`
 }
 
+type projectDTO struct {
+	ID             string   `json:"id,omitempty"`
+	Title          string   `json:"title"`
+	Description    string   `json:"description"`
+	RepositoryURL  string   `json:"repository_url"`
+	LiveDemoURL    string   `json:"live_demo_url"`
+	VideoURL       string   `json:"video_url"`
+	Screenshots    []string `json:"screenshots"`
+	Images         []string `json:"images"`
+	Technologies   []string `json:"technologies"`
+	Timeline       string   `json:"timeline"`
+	Metrics        string   `json:"metrics"`
+	Awards         string   `json:"awards"`
+	BusinessImpact string   `json:"business_impact"`
+}
+
+type achievementDTO struct {
+	ID          string `json:"id,omitempty"`
+	Title       string `json:"title"`
+	IssuerOrOrg string `json:"issuer_or_org"`
+	Date        string `json:"date"`
+	Category    string `json:"category"`
+	Description string `json:"description"`
+	EvidenceURL string `json:"evidence_url"`
+}
+
 type endorsementDTO struct {
 	ID           string `json:"id,omitempty"`
 	ToUserID     string `json:"to_user_id"`
@@ -176,12 +214,17 @@ type referenceDTO struct {
 
 // Request DTOs
 type updateProfileRequest struct {
-	Headline string `json:"headline"`
-	About    string `json:"about"`
-	PhotoURL string `json:"photo_url"`
-	Bio      string `json:"bio"`
-	Location string `json:"location"`
-	Website  string `json:"website"`
+	FullName      string `json:"full_name"`
+	PreferredName string `json:"preferred_name"`
+	Headline      string `json:"headline"`
+	About         string `json:"about"`
+	PhotoURL      string `json:"photo_url"`
+	Bio           string `json:"bio"`
+	Location      string `json:"location"`
+	Website       string `json:"website"`
+	CoverBanner   string `json:"cover_banner"`
+	LinkedInURL   string `json:"linkedin_url"`
+	GitHubURL     string `json:"github_url"`
 
 	Pronouns     string `json:"pronouns"`
 	CareerStatus string `json:"career_status"`
@@ -235,6 +278,30 @@ type updateProfileRequest struct {
 	VisibilitySkills           string `json:"visibility_skills"`
 	VisibilityPortfolio        string `json:"visibility_portfolio"`
 	VisibilityReferences       string `json:"visibility_references"`
+
+	PersonalBrand    string   `json:"personal_brand"`
+	ElevatorPitch    string   `json:"elevator_pitch"`
+	Industry         string   `json:"industry"`
+	AnonymousMode    bool     `json:"anonymous_mode"`
+	CareerObjectives string   `json:"career_objectives"`
+	CareerHighlights []string `json:"career_highlights"`
+	FunctionalAreas  []string `json:"functional_areas"`
+
+	// Contact + collections. Nil (JSON key absent) leaves the section untouched;
+	// a present array (even empty) replaces it. The editor autosave sends the
+	// whole profile, so these carry every section the older subset silently dropped.
+	Email   *string `json:"email"`
+	Phone   *string `json:"phone"`
+	Address *string `json:"address"`
+
+	Experiences    []experienceDTO    `json:"experiences"`
+	Educations     []educationDTO     `json:"educations"`
+	Certifications []certificationDTO `json:"certifications"`
+	Skills         []skillDTO         `json:"skills"`
+	Languages      []languageDTO      `json:"languages"`
+	Portfolio      []portfolioLinkDTO `json:"portfolio"`
+	Projects       []projectDTO       `json:"projects"`
+	Achievements   []achievementDTO   `json:"achievements_list"`
 }
 
 type skillsRequest struct {
@@ -253,24 +320,24 @@ type portfolioRequest struct {
 
 func toResponse(p *domain.Profile) profileResponse {
 	r := profileResponse{
-		UserID: p.UserID, Headline: p.Identity.Headline, About: p.Identity.Bio, PhotoURL: p.Identity.PhotoURL,
+		UserID: p.UserID, FullName: p.Identity.FullName, Headline: p.Identity.Headline, About: p.Identity.About, PhotoURL: p.Identity.PhotoURL,
 		Bio: p.Identity.Bio, Location: p.Identity.Location, Website: p.Identity.SocialLinks.Website, Version: p.Version,
-		Pronouns: p.Identity.VisaStatus, CareerStatus: p.Identity.Availability,
-		TransitionReason: p.Identity.Bio, TargetComebackTimeline: p.Identity.Availability,
-		SupportsNeeded: []string{}, OpenToRemote: p.Preferences.OpenToRelocation, OpenToRelocation: p.Preferences.OpenToRelocation,
+		Pronouns: p.Identity.Pronouns, CareerStatus: p.Identity.CareerStatus,
+		TransitionReason: "", TargetComebackTimeline: p.Identity.Availability,
+		SupportsNeeded: []string{}, OpenToRemote: p.Preferences.OpenToRemote, OpenToRelocation: p.Preferences.OpenToRelocation,
 		RelocationLocations: []string{}, DesiredRoles: p.Preferences.DesiredRoles, DesiredIndustries: p.Preferences.DesiredIndustries,
-		EmploymentType: p.Preferences.NoticePeriod, SalaryMin: p.Preferences.SalaryMin, SalaryMax: p.Preferences.SalaryMax,
-		SalaryCurrency: p.Preferences.SalaryCurrency, SalaryVisible: p.Preferences.OpenToRelocation, WorkMode: p.Preferences.RemotePreference,
-		AvailabilityDate: "", NoticePeriod: p.Preferences.NoticePeriod,
-		ReferralEligible: p.Verification.IdentityVerified, EmailVerified: p.Verification.EmailVerified, PhoneVerified: p.Verification.PhoneVerified,
+		EmploymentType: p.Preferences.EmploymentType, SalaryMin: p.Preferences.SalaryMin, SalaryMax: p.Preferences.SalaryMax,
+		SalaryCurrency: p.Preferences.SalaryCurrency, SalaryVisible: p.Preferences.SalaryVisible, WorkMode: p.Preferences.RemotePreference,
+		AvailabilityDate: p.Preferences.AvailabilityDate, NoticePeriod: p.Preferences.NoticePeriod,
+		ReferralEligible: p.Preferences.ReferralEligible, EmailVerified: p.Verification.EmailVerified, PhoneVerified: p.Verification.PhoneVerified,
 		LinkedinVerified: p.Verification.IdentityVerified, IdVerified: p.Verification.IdentityVerified,
 		CareerNarrative: string(p.AICareerAssistant.GapAnalysis), CoachingMetadata: string(p.AICareerAssistant.InterviewPrep),
 		WorkAuthStatus: p.Identity.WorkAuthorization, PassportNationality: p.Identity.Nationality,
 		DrivingLicenseBool: p.Verification.IdentityVerified, DrivingLicenseType: p.Identity.VisaStatus,
 		PreferredContactChannel: p.Identity.PreferredContactChannel, AccessibilityNeeds: p.Identity.VisaStatus,
-		VideoIntroURL: p.Identity.CoverURL, WillingToMentor: p.Verification.IdentityVerified,
+		VideoIntroURL: p.Identity.VideoIntroURL, WillingToMentor: p.Preferences.WillingToMentor,
 		Email: p.Identity.Email, Phone: p.Identity.Phone, Address: p.Identity.Address,
-		AvgResponseTimeHours: float64(p.Analytics.ProfileViews), ProfileCompletenessScore: p.ProfileCompletenessScore,
+		AvgResponseTimeHours: p.Analytics.AvgResponseTimeHours, ProfileCompletenessScore: p.ProfileCompletenessScore,
 		LastActiveAt: p.LastActiveAt.Format(time.RFC3339), BackgroundCheckConsent: p.Verification.IdentityVerified,
 		BackgroundCheckConsentAt: "", JobAlertFrequency: p.Identity.VisaStatus,
 		JobAlertChannel: p.Identity.VisaStatus, VisibilityProfile: p.Privacy.FieldVisibility["profile"],
@@ -278,12 +345,18 @@ func toResponse(p *domain.Profile) profileResponse {
 		VisibilityExperience: p.Privacy.FieldVisibility["experience"], VisibilityEducation: p.Privacy.FieldVisibility["education"],
 		VisibilityCertifications: p.Privacy.FieldVisibility["certifications"], VisibilitySkills: p.Privacy.FieldVisibility["skills"],
 		VisibilityPortfolio: p.Privacy.FieldVisibility["portfolio"], VisibilityReferences: p.Privacy.FieldVisibility["references"],
+		PreferredName: p.Identity.PreferredName, LinkedInURL: p.Identity.SocialLinks.LinkedIn, GitHubURL: p.Identity.SocialLinks.GitHub,
+		PersonalBrand: p.Summary.PersonalBrandStatement, ElevatorPitch: p.Summary.ElevatorPitch, Industry: p.Summary.Industry,
+		AnonymousMode:  p.Privacy.AnonymousMode,
+		CoverBanner:    p.Identity.CoverURL,
 		Experiences:    make([]experienceDTO, 0, len(p.Experiences)),
 		Educations:     make([]educationDTO, 0, len(p.Educations)),
 		Certifications: make([]certificationDTO, 0, len(p.Certifications)),
 		Skills:         make([]skillDTO, 0, len(p.Skills)),
 		Languages:      make([]languageDTO, 0, len(p.Identity.Languages)),
 		Portfolio:      make([]portfolioLinkDTO, 0, len(p.Projects)),
+		Projects:       make([]projectDTO, 0, len(p.Projects)),
+		Achievements:   make([]achievementDTO, 0, len(p.Achievements)),
 		Endorsements:   make([]endorsementDTO, 0, len(p.Networking.Recommendations)),
 		References:     make([]referenceDTO, 0),
 	}
@@ -348,6 +421,32 @@ func toResponse(p *domain.Profile) profileResponse {
 			Platform: "custom",
 			URL:      pr.LiveDemoURL,
 		})
+		r.Projects = append(r.Projects, projectDTO{
+			ID:             pr.ID,
+			Title:          pr.Title,
+			Description:    pr.Description,
+			RepositoryURL:  pr.RepositoryURL,
+			LiveDemoURL:    pr.LiveDemoURL,
+			VideoURL:       pr.VideoURL,
+			Images:         pr.Images,
+			Screenshots:    pr.Images,
+			Technologies:   pr.Technologies,
+			Timeline:       pr.Timeline,
+			Metrics:        pr.Metrics,
+			Awards:         pr.Awards,
+			BusinessImpact: pr.BusinessImpact,
+		})
+	}
+	for _, ac := range p.Achievements {
+		r.Achievements = append(r.Achievements, achievementDTO{
+			ID:          ac.ID,
+			Title:       ac.Title,
+			IssuerOrOrg: ac.IssuerOrOrg,
+			Date:        ac.Date.Format("2006-01-02"),
+			Category:    ac.Category,
+			Description: ac.Description,
+			EvidenceURL: ac.EvidenceURL,
+		})
 	}
 	for _, rec := range p.Networking.Recommendations {
 		r.Endorsements = append(r.Endorsements, endorsementDTO{
@@ -383,14 +482,21 @@ func (d consentDTO) toDomain() domain.ConsentLog {
 	}
 }
 
+// parseFlexDate accepts the date formats the profile editor emits: full
+// YYYY-MM-DD, month-only YYYY-MM, and year-only YYYY. Returns the zero time for
+// unparseable/sentinel values (e.g. "Present").
+func parseFlexDate(s string) time.Time {
+	for _, layout := range []string{"2006-01-02", "2006-01", "2006"} {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t
+		}
+	}
+	return time.Time{}
+}
+
 func (d experienceDTO) toDomain() domain.WorkExperience {
-	var start, end time.Time
-	if d.StartDate != "" {
-		start, _ = time.Parse("2006-01-02", d.StartDate)
-	}
-	if d.EndDate != "" {
-		end, _ = time.Parse("2006-01-02", d.EndDate)
-	}
+	start := parseFlexDate(d.StartDate)
+	end := parseFlexDate(d.EndDate)
 	return domain.WorkExperience{
 		ID:               d.ID,
 		Position:         d.Title,
@@ -406,10 +512,7 @@ func (d experienceDTO) toDomain() domain.WorkExperience {
 }
 
 func (d educationDTO) toDomain() domain.Education {
-	var grad time.Time
-	if d.EndDate != "" {
-		grad, _ = time.Parse("2006-01-02", d.EndDate)
-	}
+	grad := parseFlexDate(d.EndDate)
 	gpaVal, _ := strconv.ParseFloat(d.Grade, 64)
 	return domain.Education{
 		ID:                 d.ID,
@@ -424,13 +527,8 @@ func (d educationDTO) toDomain() domain.Education {
 }
 
 func (d certificationDTO) toDomain() domain.CertificationItem {
-	var issue, expiry time.Time
-	if d.IssueDate != "" {
-		issue, _ = time.Parse("2006-01-02", d.IssueDate)
-	}
-	if d.ExpiryDate != "" {
-		expiry, _ = time.Parse("2006-01-02", d.ExpiryDate)
-	}
+	issue := parseFlexDate(d.IssueDate)
+	expiry := parseFlexDate(d.ExpiryDate)
 	return domain.CertificationItem{
 		ID:              d.ID,
 		Name:            d.Name,
@@ -464,6 +562,39 @@ func (d portfolioLinkDTO) toDomain() domain.ProjectItem {
 	}
 }
 
+func (d projectDTO) toDomain() domain.ProjectItem {
+	imgs := d.Images
+	if len(d.Screenshots) > 0 {
+		imgs = d.Screenshots
+	}
+	return domain.ProjectItem{
+		ID:             d.ID,
+		Title:          d.Title,
+		Description:    d.Description,
+		RepositoryURL:  d.RepositoryURL,
+		LiveDemoURL:    d.LiveDemoURL,
+		VideoURL:       d.VideoURL,
+		Images:         imgs,
+		Technologies:   d.Technologies,
+		Timeline:       d.Timeline,
+		Metrics:        d.Metrics,
+		Awards:         d.Awards,
+		BusinessImpact: d.BusinessImpact,
+	}
+}
+
+func (d achievementDTO) toDomain() domain.AchievementItem {
+	return domain.AchievementItem{
+		ID:          d.ID,
+		Title:       d.Title,
+		IssuerOrOrg: d.IssuerOrOrg,
+		Date:        parseFlexDate(d.Date),
+		Category:    d.Category,
+		Description: d.Description,
+		EvidenceURL: d.EvidenceURL,
+	}
+}
+
 func (d endorsementDTO) toDomain() domain.Endorsement {
 	return domain.Endorsement{
 		ID:           d.ID,
@@ -487,28 +618,70 @@ func (d referenceDTO) toDomain() domain.Reference {
 
 func (r updateProfileRequest) toDomain() domain.AggregateUpdate {
 	isDraft := true
-	return domain.AggregateUpdate{
-		Identity: &domain.IdentitySection{
-			Headline:                r.Headline,
-			Bio:                     r.Bio,
-			PhotoURL:                r.PhotoURL,
-			Location:                r.Location,
-			PreferredContactChannel: r.PreferredContactChannel,
-			WorkAuthorization:       r.WorkAuthStatus,
-			Nationality:             r.PassportNationality,
+	identity := &domain.IdentitySection{
+		FullName:                r.FullName,
+		PreferredName:           r.PreferredName,
+		Headline:                r.Headline,
+		About:                   r.About,
+		Bio:                     r.Bio,
+		Pronouns:                r.Pronouns,
+		CareerStatus:            r.CareerStatus,
+		PhotoURL:                r.PhotoURL,
+		CoverURL:                r.CoverBanner,
+		VideoIntroURL:           r.VideoIntroURL,
+		Location:                r.Location,
+		PreferredContactChannel: r.PreferredContactChannel,
+		WorkAuthorization:       r.WorkAuthStatus,
+		Nationality:             r.PassportNationality,
+		SocialLinks: domain.SocialLinks{
+			Website:  r.Website,
+			LinkedIn: r.LinkedInURL,
+			GitHub:   r.GitHubURL,
 		},
+	}
+	if r.Email != nil {
+		identity.Email = *r.Email
+	}
+	if r.Phone != nil {
+		identity.Phone = *r.Phone
+	}
+	if r.Address != nil {
+		identity.Address = *r.Address
+	}
+	if r.Languages != nil {
+		langs := make([]domain.LanguageItem, 0, len(r.Languages))
+		for _, l := range r.Languages {
+			langs = append(langs, l.toDomain())
+		}
+		identity.Languages = langs
+	}
+
+	upd := domain.AggregateUpdate{
+		Identity: identity,
 		Summary: &domain.SummarySection{
-			ExecutiveSummary: r.About,
+			ExecutiveSummary:       r.About,
+			CareerObjectives:       r.CareerObjectives,
+			CareerHighlights:       r.CareerHighlights,
+			FunctionalAreas:        r.FunctionalAreas,
+			PersonalBrandStatement: r.PersonalBrand,
+			ElevatorPitch:          r.ElevatorPitch,
+			Industry:               r.Industry,
 		},
 		Preferences: &domain.CareerPreferences{
 			DesiredRoles:      r.DesiredRoles,
 			DesiredIndustries: r.DesiredIndustries,
 			OpenToRelocation:  r.OpenToRelocation,
+			OpenToRemote:      r.OpenToRemote,
 			NoticePeriod:      r.NoticePeriod,
 			RemotePreference:  r.WorkMode,
 			SalaryMin:         r.SalaryMin,
 			SalaryMax:         r.SalaryMax,
 			SalaryCurrency:    r.SalaryCurrency,
+			SalaryVisible:     r.SalaryVisible,
+			AvailabilityDate:  r.AvailabilityDate,
+			ReferralEligible:  r.ReferralEligible,
+			WillingToMentor:   r.WillingToMentor,
+			EmploymentType:    r.EmploymentType,
 		},
 		Privacy: &domain.PrivacySecuritySettings{
 			FieldVisibility: map[string]string{
@@ -522,7 +695,60 @@ func (r updateProfileRequest) toDomain() domain.AggregateUpdate {
 				"portfolio":         r.VisibilityPortfolio,
 				"references":        r.VisibilityReferences,
 			},
+			AnonymousMode: r.AnonymousMode,
 		},
 		IsDraft: &isDraft,
 	}
+
+	// Collections: only replace a section the client actually sent (non-nil).
+	if r.Experiences != nil {
+		exps := make([]domain.WorkExperience, 0, len(r.Experiences))
+		for _, e := range r.Experiences {
+			exps = append(exps, e.toDomain())
+		}
+		upd.Experiences = &exps
+	}
+	if r.Educations != nil {
+		edus := make([]domain.Education, 0, len(r.Educations))
+		for _, e := range r.Educations {
+			edus = append(edus, e.toDomain())
+		}
+		upd.Educations = &edus
+	}
+	if r.Certifications != nil {
+		certs := make([]domain.CertificationItem, 0, len(r.Certifications))
+		for _, c := range r.Certifications {
+			certs = append(certs, c.toDomain())
+		}
+		upd.Certifications = &certs
+	}
+	if r.Skills != nil {
+		skills := make([]domain.SkillItem, 0, len(r.Skills))
+		for _, s := range r.Skills {
+			skills = append(skills, s.toDomain())
+		}
+		upd.Skills = &skills
+	}
+	if r.Projects != nil {
+		projs := make([]domain.ProjectItem, 0, len(r.Projects))
+		for _, p := range r.Projects {
+			projs = append(projs, p.toDomain())
+		}
+		upd.Projects = &projs
+	} else if r.Portfolio != nil {
+		projs := make([]domain.ProjectItem, 0, len(r.Portfolio))
+		for _, p := range r.Portfolio {
+			projs = append(projs, p.toDomain())
+		}
+		upd.Projects = &projs
+	}
+	if r.Achievements != nil {
+		achs := make([]domain.AchievementItem, 0, len(r.Achievements))
+		for _, a := range r.Achievements {
+			achs = append(achs, a.toDomain())
+		}
+		upd.Achievements = &achs
+	}
+
+	return upd
 }

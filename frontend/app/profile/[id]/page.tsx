@@ -24,7 +24,6 @@ import { motion } from "framer-motion";
 import SiteNav from "@/components/shared/SiteNav";
 import SiteFooter from "@/components/shared/SiteFooter";
 import { profileClient, Profile, PublicProfileResponse } from "@/lib/api/profile";
-import { networkClient, ConnectionStatusResponse } from "@/lib/api/network";
 import { ApiError } from "@/lib/api/client";
 import { useConnectionStatus } from "@/hooks/useConnections";
 import ConnectButton from "@/components/connections/ConnectButton";

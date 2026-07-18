@@ -7,8 +7,7 @@ import AuthGuard from "@/components/shared/AuthGuard";
 import { api, getAccessToken } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useNotifications } from "@/components/shared/Notifications";
-import { CircularProgress } from "@mui/material";
-import { Paperclip, Pin, Archive, Trash2, Send, CornerDownLeft, Smile } from "lucide-react";
+import { Paperclip, Pin, Archive, Trash2, Send, Loader2 } from "lucide-react";
 
 interface Conversation {
   id: string;
@@ -251,78 +250,64 @@ export default function InboxPage() {
 
   return (
     <AuthGuard>
-      <div
-        style={{
-          background: "#FBF7F2",
-          fontFamily: "'Public Sans', sans-serif",
-          color: "#2B2620",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
         <SiteNav breadcrumb={[{ label: "Home", href: "/" }, { label: "Inbox" }]} />
 
         {/* Chat Interface Grid */}
-        <div style={{ flex: 1, maxWidth: "1240px", width: "100%", margin: "0 auto", padding: "clamp(20px,3vw,32px) 40px", minHeight: 0 }}>
-          <div style={{ background: "#fff", border: "1px solid #EFE7DC", borderRadius: "22px", overflow: "hidden", display: "grid", gridTemplateColumns: "340px 1fr", height: "calc(100vh - 150px)", minHeight: "520px" }}>
+        <div className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-0">
+          <div className="bg-card border border-border/80 rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-3 h-[calc(100vh-180px)] min-h-[500px] shadow-sm">
             
             {/* Left Conversations Sidebar */}
-            <div style={{ borderRight: "1px solid #EFE7DC", display: "flex", flexDirection: "column", minHeight: 0 }}>
-              <div style={{ padding: "22px 22px 16px", flex: "none" }}>
-                <h1 style={{ fontWeight: 800, fontSize: "22px", margin: "0 0 14px 0" }}>Messages</h1>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#F3ECE2", borderRadius: "10px", padding: "10px 14px" }}>
-                  <span style={{ color: "#8A8175", fontSize: "16px" }}>⌕</span>
+            <div className="border-r border-border/85 flex flex-col min-h-0 bg-card col-span-1">
+              <div className="p-5 border-b border-border/85 flex-shrink-0">
+                <h1 className="text-lg font-extrabold mb-3 tracking-tight">Messages</h1>
+                <div className="flex items-center gap-2 bg-muted/50 border border-border/60 rounded-xl px-3 py-2">
+                  <span className="text-muted-foreground text-sm font-semibold select-none">⌕</span>
                   <input
                     placeholder="Search conversations"
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e.target.value)}
-                    style={{ border: "none", outline: "none", background: "transparent", fontSize: "14px", color: "#2B2620", width: "100%", fontFamily: "inherit" }}
+                    className="border-none outline-none bg-transparent text-sm text-foreground w-full placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
 
               {/* List of active threads */}
-              <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+              <div className="flex-grow overflow-y-auto min-h-0 divide-y divide-border/60">
                 {loadingList ? (
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "32px" }}>
-                    <CircularProgress size={24} style={{ color: "#C2683C" }} />
+                  <div className="flex justify-center items-center py-12">
+                    <Loader2 className="h-6 w-6 text-primary animate-spin" />
                   </div>
                 ) : (
-                  <div>
+                  <div className="divide-y divide-border/65">
                     {filteredConvs.map((c) => (
                       <div
                         key={c.id}
                         onClick={() => setActiveConvId(c.id)}
-                        style={{
-                          padding: "16px 22px",
-                          borderBottom: "1px solid #F3ECE2",
-                          cursor: "pointer",
-                          display: "flex",
-                          gap: "13px",
-                          background: activeConvId === c.id ? "#FBF7F2" : "#ffffff",
-                          borderLeft: activeConvId === c.id ? "4px solid #C2683C" : "4px solid transparent",
-                          position: "relative",
-                        }}
+                        className={`p-4 flex gap-3 cursor-pointer transition-all border-l-4 ${
+                          activeConvId === c.id
+                            ? "bg-primary/5 border-primary"
+                            : "bg-transparent border-transparent hover:bg-muted/30"
+                        }`}
                       >
-                        <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "#4F7C6A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "15px" }}>
+                        <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">
                           {c.title?.charAt(0) || "P"}
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
-                            <span style={{ fontWeight: 600, fontSize: "15px" }}>{c.title}</span>
-                            <span style={{ fontSize: "12px", color: "#A89C8A" }}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-baseline gap-2">
+                            <span className="font-semibold text-sm truncate">{c.title}</span>
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                               {new Date(c.updated_at).toLocaleDateString()}
                             </span>
                           </div>
-                          <div style={{ fontSize: "13px", color: "#5B554C", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "4px" }}>
+                          <div className="text-xs text-muted-foreground truncate mt-1">
                             {c.last_message_preview || "No messages yet."}
                           </div>
                         </div>
                       </div>
                     ))}
                     {filteredConvs.length === 0 && (
-                      <div style={{ textAlign: "center", padding: "40px 20px", color: "#8A8175", fontSize: "14px" }}>
+                      <div className="text-center py-12 text-sm text-muted-foreground">
                         No conversations yet.
                       </div>
                     )}
@@ -332,33 +317,51 @@ export default function InboxPage() {
             </div>
 
             {/* Right Chat Window */}
-            <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div className="col-span-2 flex flex-col min-h-0 bg-muted/10">
               {activeConvId ? (
                 <>
                   {/* Active Header */}
-                  <div style={{ padding: "18px 26px", borderBottom: "1px solid #EFE7DC", display: "flex", alignItems: "center", gap: "14px", flex: "none", background: "#ffffff" }}>
-                    <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "#4F7C6A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "15px" }}>
-                      {activeConv?.title?.charAt(0) || "P"}
+                  <div className="p-4 border-b border-border/85 flex items-center justify-between bg-card flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-sm">
+                        {activeConv?.title?.charAt(0) || "P"}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm truncate">{activeConv?.title}</div>
+                        <div className="text-xs text-muted-foreground">Active Connection</div>
+                      </div>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: "16px" }}>{activeConv?.title}</div>
-                      <div style={{ fontSize: "13px", color: "#8A8175" }}>Active Connection</div>
-                    </div>
-                    <div style={{ display: "flex", gap: "12px" }}>
-                      <button onClick={() => handlePin(activeConvId, !!activeConv?.is_pinned)} style={{ border: "none", background: "transparent", color: activeConv?.is_pinned ? "#C2683C" : "#8A8175", cursor: "pointer" }}>
-                        <Pin size={18} />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePin(activeConvId, !!activeConv?.is_pinned)}
+                        className={`p-2 rounded-full transition-colors ${
+                          activeConv?.is_pinned
+                            ? "text-primary bg-primary/10"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                        title={activeConv?.is_pinned ? "Unpin Chat" : "Pin Chat"}
+                      >
+                        <Pin size={16} />
                       </button>
-                      <button onClick={() => handleArchive(activeConvId, !!activeConv?.is_archived)} style={{ border: "none", background: "transparent", color: activeConv?.is_archived ? "#C2683C" : "#8A8175", cursor: "pointer" }}>
-                        <Archive size={18} />
+                      <button
+                        onClick={() => handleArchive(activeConvId, !!activeConv?.is_archived)}
+                        className={`p-2 rounded-full transition-colors ${
+                          activeConv?.is_archived
+                            ? "text-primary bg-primary/10"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                        title={activeConv?.is_archived ? "Unarchive Chat" : "Archive Chat"}
+                      >
+                        <Archive size={16} />
                       </button>
                     </div>
                   </div>
 
                   {/* Messages Stream */}
-                  <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "26px", display: "flex", flexDirection: "column", gap: "16px", background: "#FCFAF7" }}>
+                  <div className="flex-grow overflow-y-auto min-h-0 p-6 flex flex-col gap-4 bg-muted/5">
                     {loadingMessages ? (
-                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-                        <CircularProgress style={{ color: "#C2683C" }} />
+                      <div className="flex justify-center items-center h-full">
+                        <Loader2 className="h-6 w-6 text-primary animate-spin" />
                       </div>
                     ) : (
                       <>
@@ -367,25 +370,30 @@ export default function InboxPage() {
                           return (
                             <div
                               key={m.id}
-                              style={{
-                                alignSelf: isMe ? "flex-end" : "flex-start",
-                                maxWidth: "74%",
-                                background: isMe ? "#C2683C" : "#ffffff",
-                                color: isMe ? "#ffffff" : "#2B2620",
-                                border: isMe ? "none" : "1px solid #EFE7DC",
-                                borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                                padding: "14px 18px",
-                                position: "relative",
-                                boxShadow: "0 2px 8px rgba(43,38,32,0.02)",
-                              }}
+                              className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm shadow-sm border ${
+                                isMe
+                                  ? "self-end bg-primary text-primary-foreground border-primary/10 rounded-tr-none"
+                                  : "self-start bg-card text-foreground border-border/80 rounded-tl-none"
+                              }`}
                             >
-                              <div style={{ fontSize: "15px", lineHeight: 1.55 }}>
-                                {m.body}
-                              </div>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px", fontSize: "11px", color: isMe ? "rgba(255,255,255,0.7)" : "#A89C8A" }}>
-                                <span>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                              <div className="leading-relaxed break-words">{m.body}</div>
+                              <div
+                                className={`flex items-center gap-2 mt-1.5 text-[10px] ${
+                                  isMe ? "text-primary-foreground/75 justify-end" : "text-muted-foreground"
+                                }`}
+                              >
+                                <span>
+                                  {new Date(m.created_at).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
                                 {isMe && !m.deleted_at && (
-                                  <button onClick={() => handleDeleteMessage(m.id)} style={{ border: "none", background: "transparent", color: "rgba(255,255,255,0.8)", cursor: "pointer", marginLeft: "10px" }}>
+                                  <button
+                                    onClick={() => handleDeleteMessage(m.id)}
+                                    className="opacity-75 hover:opacity-100 transition-opacity ml-1 cursor-pointer"
+                                    title="Delete Message"
+                                  >
                                     <Trash2 size={12} />
                                   </button>
                                 )}
@@ -394,8 +402,8 @@ export default function InboxPage() {
                           );
                         })}
                         {isPartnerTyping && (
-                          <div style={{ alignSelf: "flex-start", background: "transparent", padding: "6px 12px", fontSize: "13px", color: "#8A8175", display: "flex", gap: "6px", alignItems: "center" }}>
-                            <CircularProgress size={12} style={{ color: "#8A8175" }} />
+                          <div className="self-start flex gap-2 items-center text-xs text-muted-foreground italic bg-muted/50 px-3 py-1.5 rounded-full">
+                            <Loader2 className="h-3 w-3 text-muted-foreground animate-spin" />
                             <span>Typing...</span>
                           </div>
                         )}
@@ -405,37 +413,46 @@ export default function InboxPage() {
                   </div>
 
                   {/* Composer Panel Footer */}
-                  <form onSubmit={handleSendMessage} style={{ padding: "16px 22px", borderTop: "1px solid #EFE7DC", flex: "none", display: "flex", gap: "12px", alignItems: "center", background: "#ffffff" }}>
+                  <form
+                    onSubmit={handleSendMessage}
+                    className="p-4 border-t border-border/85 bg-card flex-shrink-0 flex gap-3 items-center"
+                  >
                     <input
                       type="file"
                       id="inbox-file-upload"
                       onChange={handleFileUpload}
-                      style={{ display: "none" }}
+                      className="hidden"
                     />
-                    <label htmlFor="inbox-file-upload" style={{ cursor: "pointer", color: "#8A8175" }}>
-                      <Paperclip size={20} />
+                    <label
+                      htmlFor="inbox-file-upload"
+                      className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors p-2 rounded-xl hover:bg-muted/50 flex-shrink-0"
+                      title="Attach File"
+                    >
+                      <Paperclip size={18} />
                     </label>
                     <input
                       placeholder="Write a message…"
                       value={composedText}
                       onChange={handleComposerChange}
-                      style={{ flex: 1, border: "1px solid #E2D9CC", borderRadius: "100px", padding: "13px 20px", fontSize: "15px", color: "#2B2620", outline: "none", background: "#FCFAF7", fontFamily: "inherit" }}
+                      className="flex-grow bg-muted/30 border border-border/60 focus:border-primary/50 rounded-full px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground"
                     />
                     <button
                       type="submit"
                       disabled={sendingMessage || !composedText.trim()}
-                      style={{ border: "none", background: "#C2683C", color: "#fff", padding: "13px 26px", borderRadius: "100px", cursor: "pointer", fontWeight: 600, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}
+                      className="bg-primary text-primary-foreground hover:bg-primary/95 transition-colors px-5 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     >
                       <span>Send</span>
-                      <Send size={16} />
+                      <Send size={14} />
                     </button>
                   </form>
                 </>
               ) : (
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", color: "#8A8175", padding: "32px", background: "#FCFAF7" }}>
-                  <span style={{ fontSize: "48px" }}>💬</span>
-                  <h3 style={{ margin: "16px 0 6px 0", fontSize: "18px", fontWeight: 700, color: "#2B2620" }}>Your Messages</h3>
-                  <p style={{ margin: 0, fontSize: "14px" }}>Select a conversation from the sidebar or start a new chat from the Network Center.</p>
+                <div className="flex-1 flex flex-col justify-center items-center text-muted-foreground p-8 bg-muted/5">
+                  <span className="text-4xl mb-4 select-none">💬</span>
+                  <h3 className="text-base font-bold text-foreground mb-1">Your Messages</h3>
+                  <p className="text-xs text-center max-w-sm">
+                    Select a conversation from the sidebar or start a new chat from the Network Center.
+                  </p>
                 </div>
               )}
             </div>
